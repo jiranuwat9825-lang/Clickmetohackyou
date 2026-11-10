@@ -209,7 +209,7 @@ function listenGameState() {
         Object.keys(players).forEach(id => {
             const pName = players[id].name;
             const pScore = scores[id] || 0;
-            const isSpyTag = (id === data.spyId && data.status === 'voting') ? ' [Spy]' : '';
+            const isSpyTag = (id === data.spyId && data.status === 'voting' && data.scoreUpdated) ? ' [Spy]' : '';
             const row = document.createElement('div');
             row.className = 'score-row-item';
             row.innerHTML = `<span>${pName}${isSpyTag}</span> <b>${pScore} แต้ม</b>`;
@@ -279,7 +279,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต
+// หน้าจอโหวต (รอจนกว่าทุกคนจะโหวตครบถึงจะสรุปผล)
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -296,9 +296,9 @@ function renderVotingScreen(data) {
     const myVote = votes[myId];
 
     if (isAmISpy) {
-        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุดและ (จะเลือกทายตัวละครหรือไม่ก็ได้):";
+        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอเพื่อนโหวตให้ครบ..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุดและ (จะเลือกทายตัวละครหรือไม่ก็ได้):";
     } else {
-        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy:";
+        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอเพื่อนโหวตให้ครบ..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy:";
     }
 
     activeCandidates.forEach(targetId => {
@@ -313,7 +313,7 @@ function renderVotingScreen(data) {
         let voteCount = 0;
         Object.values(votes).forEach(v => { if (v === targetId) voteCount++; });
 
-        btn.innerHTML = `<span>👤 ${players[targetId].name}</span> <span style="font-size:0.8rem; color:#94a3b8;">(คะแนน: ${voteCount})</span>`;
+        btn.innerHTML = `<span>👤 ${players[targetId].name}</span> <span style="font-size:0.8rem; color:#94a3b8;">(โหวตแล้ว: ${Object.keys(votes).length}/${Object.keys(players).length})</span>`;
         
         if (!myVote) {
             btn.addEventListener('click', () => {
@@ -368,7 +368,8 @@ function renderVotingScreen(data) {
     const totalPlayersCount = Object.keys(players).length;
     const totalVotes = Object.keys(votes).length;
 
-    if (totalVotes >= Math.min(1, totalPlayersCount)) {
+    // เงื่อนไขสำคัญ: ต้องรอให้โหวตครบทุกคนจริงๆ ถึงจะแสดงผลและคำนวณคะแนน
+    if (totalVotes >= totalPlayersCount) {
         voteResult.style.display = 'block';
         if (isHost) hostPostVoteControls.style.display = 'flex';
 
@@ -416,6 +417,7 @@ function renderVotingScreen(data) {
                 <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
 
+            // บันทึกคะแนนรอบเดียวอย่างปลอดภัย ป้องกันบัคบวกซ้ำ
             if (isHost && !data.scoreUpdated) {
                 let updatedScores = data.scores || {};
                 
