@@ -28,7 +28,6 @@ body {
     position: relative;
 }
 
-/* ตารางคะแนนแสดงสูงสุด 6 คนแบบพอดี ไม่ต้องเลื่อน */
 .scoreboard-modern {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
     border: 1px solid rgba(56, 189, 248, 0.4);
@@ -55,7 +54,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    max-height: none; /* ปลดล็อกความสูงเพื่อให้แสดงครบ 6 คนพอดี */
+    max-height: none;
     overflow-y: visible;
 }
 
@@ -275,26 +274,6 @@ input:focus, .category-select:focus {
 .hint-text {
     font-size: 0.8rem;
     color: #cbd5e1;
-}
-
-.timer-container {
-    background: rgba(15, 23, 42, 0.5);
-    padding: 8px;
-    border-radius: 0.75rem;
-    margin-bottom: 8px;
-    border: 1px solid rgba(71, 85, 105, 0.3);
-}
-
-.timer-label {
-    font-size: 0.7rem;
-    color: #94a3b8;
-}
-
-.timer-box {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #fbbf24;
-    letter-spacing: 2px;
 }
 
 .section-title {
