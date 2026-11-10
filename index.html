@@ -55,7 +55,6 @@
             </div>
             <div>
                 <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-bottom: 2px; text-align: left;" id="roundOrTimeLabel">🔄 จำนวนรอบการพูด:</label>
-                <!-- ปรับให้พิมพ์ตัวเลขจำนวนรอบ หรือเวลา (วินาที) ได้อิสระ -->
                 <input type="number" id="settingValueInput" value="2" min="1" max="99" class="category-select" style="text-align: center;">
             </div>
             <button id="confirmCreateBtn" class="btn primary-glow" style="margin-top: 5px;">🚀 ยืนยันสร้างห้อง</button>
@@ -77,7 +76,7 @@
                         <select id="lobbyCategorySelect" class="category-select" style="flex: 2;">
                             <option value="rov">🛡️ ROV</option>
                         </select>
-                        <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center;" title="จำนวนรอบ หรือ เวลา(นาที)">
+                        <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center;">
                     </div>
                 </div>
             </div>
@@ -102,12 +101,10 @@
 
             <div class="turn-box-container" style="background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 0.75rem; margin-bottom: 8px; border: 1px solid rgba(56, 189, 248, 0.4); text-align: center;">
                 <div id="roundIndicator" style="font-size: 0.9rem; color: #fbbf24; font-weight: 700; margin-bottom: 4px;">🔄 กำลังโหลดรอบ...</div>
-                <div id="currentSpeakerBox" style="font-size: 1rem; color: #38bdf8; font-weight: 600;">กำลังรอเริ่มเทิร์น...</div>
                 
-                <button id="endTurnBtn" class="btn primary-glow" style="display: none; margin-top: 8px; padding: 0.5rem; font-size: 0.85rem;">✅ จบเทิร์น (พูดจบแล้ว)</button>
+                <button id="endTurnBtn" class="btn primary-glow" style="display: block; margin: 0 auto; padding: 0.5rem; font-size: 0.85rem; width: 80%;">✅ จบเทิร์น (พูดจบแล้ว)</button>
             </div>
 
-            <!-- แสดงรายชื่อลำดับการพูดทั้งหมด -->
             <div class="turn-order-list-box" style="background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: 0.75rem; margin-bottom: 8px; text-align: left; border: 1px solid rgba(71, 85, 105, 0.4);">
                 <span style="font-size: 0.7rem; color: #38bdf8; font-weight: 700; display: block; margin-bottom: 4px;">📋 ลำดับการพูดตานี้:</span>
                 <div id="fullTurnOrderContainer" style="display: flex; flex-direction: column; gap: 3px; max-height: 90px; overflow-y: auto;"></div>
@@ -133,13 +130,11 @@
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
-            <!-- กล่องแสดงตัวละครของคนอื่นทั้งหมด -->
             <div class="section-title">👥 ตัวละครของเพื่อนๆ ทุกคน:</div>
             <div id="othersRolesGrid" class="hero-grid" style="max-height: 120px;"></div>
 
-            <!-- ส่วนทายตัวละครของตัวเอง -->
             <div class="guess-my-card" style="background: rgba(15, 23, 42, 0.8); padding: 10px; border-radius: 0.75rem; border: 1px solid #38bdf8; margin-top: 5px;">
-                <p id="guessStatusText" style="font-size: 0.85rem; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">🎯 เลือกทายตัวละครของคุณ (เหลือสิทธิ์ตอบ: <span id="remainingAttempts">3</span> ครั้ง):</p>
+                <p id="guessStatusText" style="font-size: 0.85rem; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">🎯 เลือกทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง): <span id="remainingAttempts" style="display:none;">1</span></p>
                 
                 <div id="guessControlsDiv">
                     <select id="myGuessSelect" class="category-select" style="margin-bottom: 6px;">
@@ -149,7 +144,7 @@
                 </div>
             </div>
 
-            <!-- รายชื่อลำดับการพูดในโหมดนี้ -->
+            <!-- แสดงลำดับการพูดธรรมดา (ไม่บอกว่ารอบใคร) -->
             <div class="turn-order-list-box" style="background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: 0.75rem; margin-top: 8px; text-align: left; border: 1px solid rgba(71, 85, 105, 0.4);">
                 <span style="font-size: 0.7rem; color: #38bdf8; font-weight: 700; display: block; margin-bottom: 4px;">📋 ลำดับการพูดตานี้:</span>
                 <div id="whoAmITurnOrderContainer" style="display: flex; flex-direction: column; gap: 3px; max-height: 80px; overflow-y: auto;"></div>
@@ -160,9 +155,9 @@
             </div>
         </div>
 
-        <!-- หน้าจอโหวต (Spyfall) -->
+        <!-- หน้าจอโหวต / สรุปผล -->
         <div id="voteArea" class="box" style="display: none;">
-            <h2>🗳️ ช่วงเวลาโหวตหา Spy!</h2>
+            <h2 id="voteAreaTitle">🗳️ ช่วงเวลาโหวตหา Spy!</h2>
             <p id="voteInstruction" class="status">เลือกคนที่คิดว่าเป็น Spy และทายตัวละครของเขา</p>
             <div id="voteList" class="vote-list compact-vote"></div>
             <div id="voteResult" class="vote-result" style="display: none;"></div>
