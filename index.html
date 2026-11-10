@@ -90,7 +90,8 @@
             <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม / เริ่มรอบใหม่</button>
             <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
 
-            <button id="closeRoomBtn" class="btn danger" style="display: none;">🗑️ ปิดห้อง (ลบห้อง)</button>
+            <!-- เพิ่มระยะห่างปุ่มปิดห้องไม่ให้ติดกับปุ่มบน -->
+            <button id="closeRoomBtn" class="btn danger" style="display: none; margin-top: 15px;">🗑️ ปิดห้อง (ลบห้อง)</button>
         </div>
 
         <!-- หน้าจอเล่นเกม (โหมด Spyfall) -->
@@ -128,7 +129,7 @@
             </div>
 
             <div class="timer-container">
-                <span class="timer-label">⏱️ เวลาที่เหลือ</span>
+                <span id="whoAmIRoundIndicator" class="timer-label" style="color: #fbbf24; font-weight: 700;">🔄 รอบที่ 1/1</span>
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
