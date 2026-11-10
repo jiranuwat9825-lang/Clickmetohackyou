@@ -133,8 +133,8 @@
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
-            <div class="section-title">👥 ตัวละครของเพื่อนๆ ทุกคน:</div>
-            <div id="othersRolesGrid" class="hero-grid" style="max-height: 120px;"></div>
+            <div class="section-title">👥 ตัวละครของเพื่อนๆ ทุกคน (แสดงลำดับและสถานะ):</div>
+            <div id="othersRolesGrid" class="hero-grid" style="max-height: 150px; grid-template-columns: repeat(2, 1fr);"></div>
 
             <div class="guess-my-card" style="background: rgba(15, 23, 42, 0.8); padding: 10px; border-radius: 0.75rem; border: 1px solid #38bdf8; margin-top: 5px;">
                 <p id="guessStatusText" style="font-size: 0.85rem; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">🎯 ค้นหาและทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):</p>
@@ -145,11 +145,6 @@
                     <p id="selectedGuessText" style="font-size: 0.8rem; color: #fbbf24; margin-bottom: 6px; text-align: left;">ยังไม่ได้เลือกตัวละคร</p>
                     <button id="submitMyGuessBtn" class="btn primary-glow">🔒 ยืนยันคำตอบ</button>
                 </div>
-            </div>
-
-            <div class="turn-order-list-box" style="background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: 0.75rem; margin-top: 8px; text-align: left; border: 1px solid rgba(71, 85, 105, 0.4);">
-                <span style="font-size: 0.7rem; color: #38bdf8; font-weight: 700; display: block; margin-bottom: 4px;">📋 ลำดับผู้เล่น:</span>
-                <div id="whoAmITurnOrderContainer" style="display: flex; flex-direction: column; gap: 3px; max-height: 80px; overflow-y: auto;"></div>
             </div>
 
             <div id="whoAmIHostControls" style="display: none; margin-top: 10px;">
