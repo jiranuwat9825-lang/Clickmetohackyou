@@ -3,26 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XO Online Game</title>
+    <title>XO Online Realtime</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>เกม XO ออนไลน์</h1>
-        <div id="status" class="status">กำลังโหลด...</div>
-        <div class="board" id="board">
-            <div class="cell" data-index="0"></div>
-            <div class="cell" data-index="1"></div>
-            <div class="cell" data-index="2"></div>
-            <div class="cell" data-index="3"></div>
-            <div class="cell" data-index="4"></div>
-            <div class="cell" data-index="5"></div>
-            <div class="cell" data-index="6"></div>
-            <div class="cell" data-index="7"></div>
-            <div class="cell" data-index="8"></div>
+        <div id="roomSelection" class="room-box">
+            <p>สร้างห้องใหม่ หรือใส่รหัสห้องเพื่อเข้าร่วม</p>
+            <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น room123)">
+            <button id="joinBtn" class="btn">เข้าเล่น / สร้างห้อง</button>
         </div>
-        <button id="restartBtn" class="btn">เริ่มเกมใหม่</button>
+        
+        <div id="gameArea" style="display: none;">
+            <div id="roleInfo" class="role-info">กำลังโหลดข้อมูล...</div>
+            <div id="status" class="status">รอผู้เล่น...</div>
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button id="restartBtn" class="btn">เริ่มเกมใหม่</button>
+        </div>
     </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
