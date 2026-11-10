@@ -13,7 +13,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ฐานข้อมูลฮีโร่ ROV แยกตามเลน
 const rovLanes = {
     "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica"],
     "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Thorne", "Valhein"],
@@ -43,10 +42,13 @@ const voteList = document.getElementById('voteList');
 const voteResult = document.getElementById('voteResult');
 const backToLobbyBtn = document.getElementById('backToLobbyBtn');
 
+const testGameBtn = document.getElementById('testGameBtn');
+const botDebugBox = document.getElementById('botDebugBox');
+const botStatusList = document.getElementById('botStatusList');
+
 let myName = '';
 let roomId = '';
 
-// ใช้ LocalStorage เพื่อจำ ID เดิมของผู้เล่น ไม่ให้เปลี่ยนมั่วเวลารีเฟรช
 let myId = localStorage.getItem('rov_spy_myid');
 if (!myId) {
     myId = 'user_' + Math.random().toString(36).substring(2, 9);
@@ -56,7 +58,6 @@ if (!myId) {
 let isHost = false;
 let timerInterval = null;
 
-// แสดงรายชื่อฮีโร่รวมทั้งหมด
 const allHeroes = Object.values(rovLanes).flat();
 allHeroes.forEach(hero => {
     const div = document.createElement('div');
@@ -86,6 +87,27 @@ joinBtn.addEventListener('click', () => {
     listenGameState();
 });
 
+// ฟังก์ชันปุ่ม Test Game (เพิ่มบอท 4 ตัว)
+testGameBtn.addEventListener('click', () => {
+    if (!roomId) return;
+    const bots = [
+        { id: 'bot_1', name: '🤖 บอทโรมมิ่ง' },
+        { id: 'bot_2', name: '🤖 บอทแครี่' },
+        { id: 'bot_3', name: '🤖 บอทเลนกลาง' },
+        { id: 'bot_4', name: '🤖 บอทป่า' }
+    ];
+
+    const roomRef = db.ref(`rooms/${roomId}/players`);
+    roomRef.once('value', (snapshot) => {
+        let updates = {};
+        updates[myId] = { name: myName };
+        bots.forEach(bot => {
+            updates[bot.id] = { name: bot.name };
+        });
+        roomRef.set(updates);
+    });
+});
+
 function checkHostAndListen() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
@@ -96,17 +118,18 @@ function checkHostAndListen() {
         const players = data.players || {};
         const playerIds = Object.keys(players);
 
-        // เช็คว่าเราคือคนแรกที่เข้าห้องไหม (เป็น Host)
         if (playerIds.length > 0 && playerIds[0] === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
+            testGameBtn.style.display = 'block';
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
             hostControls.style.display = 'none';
+            testGameBtn.style.display = 'none';
         }
 
         playerIds.forEach((id, index) => {
@@ -117,7 +140,7 @@ function checkHostAndListen() {
     });
 }
 
-// กดเริ่มเกม (สุ่มเลน และสุ่มฮีโร่)
+// กดเริ่มเกม
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -130,35 +153,31 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
-        // 1. สุ่มเลนหลักมา 1 เลน
         const laneKeys = Object.keys(rovLanes);
         const selectedLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
         const laneHeroes = [...rovLanes[selectedLane]];
 
-        // สุ่มตัวละครหลักสำหรับคนปกติ
         const normalHeroIndex1 = Math.floor(Math.random() * laneHeroes.length);
-        const normalHero1 = laneHeroes.splice(normalHeroindex = normalHeroIndex1, 1)[0];
+        const normalHero1 = laneHeroes.splice(normalHeroIndex1, 1)[0];
         const normalHero2 = laneHeroes.length > 0 ? laneHeroes.splice(Math.floor(Math.random() * laneHeroes.length), 1)[0] : normalHero1;
 
-        // สุ่มตัวละครปลอมสำหรับ Spy (จากเลนอื่น)
         const otherLanes = laneKeys.filter(l => l !== selectedLane);
         const randomOtherLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
         const spyHeroes = rovLanes[randomOtherLane];
         const spyHero = spyHeroes[Math.floor(Math.random() * spyHeroes.length)];
 
-        // สุ่มเลือกผู้เล่นที่เป็น Spy
         const spyIndex = Math.floor(Math.random() * playerIds.length);
         
         let rolesData = {};
         playerIds.forEach((id, index) => {
             if (index === spyIndex) {
-                rolesData[id] = spyHero; // ตัวปลอม
+                rolesData[id] = spyHero;
             } else {
                 rolesData[id] = index % 2 === 0 ? normalHero1 : normalHero2;
             }
         });
 
-        const endTime = Date.now() + 300 * 1000; // 5 นาที
+        const endTime = Date.now() + 300 * 1000;
 
         roomRef.update({
             status: 'playing',
@@ -182,10 +201,24 @@ function listenGameState() {
             voteArea.style.display = 'none';
             gameArea.style.display = 'block';
 
-            // ดึงฮีโร่ของตัวเองจาก Firebase มาแสดงผล
             const roles = data.roles || {};
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
+
+            // แสดงกล่องข้อมูลบอทด้านซ้ายล่าง และเรนเดอร์ตัวละครบอท
+            botDebugBox.style.display = 'block';
+            botStatusList.innerHTML = '';
+            const players = data.players || {};
+
+            Object.keys(players).forEach(id => {
+                if (id !== myId && id.startsWith('bot_')) {
+                    const li = document.createElement('li');
+                    const isBotSpy = (id === data.spyId);
+                    li.textContent = `${players[id].name} -> ตัวละคร: ${roles[id]} ${isBotSpy ? '🤫 [SPY]' : ''}`;
+                    if (isBotSpy) li.style.color = '#f43f5e';
+                    botStatusList.appendChild(li);
+                }
+            });
 
             startTimer(data.endTime);
 
@@ -201,11 +234,11 @@ function listenGameState() {
             gameArea.style.display = 'none';
             voteArea.style.display = 'none';
             lobbyArea.style.display = 'block';
+            botDebugBox.style.display = 'none';
         }
     });
 }
 
-// ฟังก์ชันจับเวลา
 function startTimer(endTime) {
     if (timerInterval) clearInterval(timerInterval);
 
@@ -229,7 +262,6 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
