@@ -217,6 +217,24 @@ db.ref('rooms').on('value', (snapshot) => {
             </div>
         `;
 
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = "display: flex; gap: 4px; align-items: center;";
+
+        // ถ้ามีผู้เล่น 0 คน ให้แสดงปุ่มลบห้อง (🗑️)
+        if (pCount === 0) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'join-room-tab-btn';
+            deleteBtn.style.background = '#ef4444';
+            deleteBtn.textContent = '🗑️ ลบ';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm(`ต้องการลบห้อง ${rId} ทิ้งใช่หรือไม่?`)) {
+                    db.ref(`rooms/${rId}`).remove();
+                }
+            });
+            btnContainer.appendChild(deleteBtn);
+        }
+
         const btn = document.createElement('button');
         btn.className = 'join-room-tab-btn';
         btn.textContent = canJoin ? 'เข้าร่วม' : 'ติดเล่น';
@@ -235,7 +253,8 @@ db.ref('rooms').on('value', (snapshot) => {
             });
         }
 
-        card.append(info = card.querySelector('.room-item-info'), btn);
+        btnContainer.appendChild(btn);
+        card.appendChild(btnContainer);
         activeRoomsList.appendChild(card);
     });
 });
@@ -298,8 +317,6 @@ function joinExistingRoom(targetRoomId) {
 
         roomRef.child(`players/${myId}`).set({ name: myName });
         roomRef.child(`players/${myId}`).onDisconnect().remove();
-
-        // ล้างสถานะห้องว่างเมื่อมีคนเข้าห้อง
         roomRef.update({ emptySince: null });
 
         localStorage.setItem('rov_spy_roomid', roomId);
@@ -341,14 +358,13 @@ function checkHostAndListen() {
             return; 
         }
 
-        // ระบบตรวจสอบห้องว่างอัตโนมัติ (ถ้าไม่มีผู้เล่นเหลือเลย ให้เริ่มนับเวลา 1 นาที)
         const players = data.players || {};
         const playerIds = Object.keys(players);
         
         if (playerIds.length === 0) {
             if (!data.emptySince) {
                 roomRef.update({ emptySince: Date.now() });
-            } else if (Date.now() - data.emptySince > 60000) { // เกิน 1 นาที (60000 ms)
+            } else if (Date.now() - data.emptySince > 60000) {
                 roomRef.remove();
             }
         } else if (data.emptySince) {
@@ -493,7 +509,6 @@ function listenGameState() {
         const data = snapshot.val();
         if (!data) return;
 
-        // อัปเดตเช็คห้องว่างทุกครั้งที่ข้อมูลเปลี่ยน
         const players = data.players || {};
         if (Object.keys(players).length === 0) {
             if (!data.emptySince) {
