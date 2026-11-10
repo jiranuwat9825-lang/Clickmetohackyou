@@ -73,13 +73,15 @@ joinBtn.addEventListener('click', () => {
 
     const playerRef = db.ref(`rooms/${roomId}/players/${myId}`);
     playerRef.set({ name: myName });
+    
+    // ถ้าผู้เล่นหลุดหรือปิดเว็บ ให้ลบชื่อตัวเองออกจากห้องอัตโนมัติ
     playerRef.onDisconnect().remove();
 
     checkHostAndListen();
     listenGameState();
 });
 
-// ฟังก์ชันปุ่ม Test Game (เพิ่มบอทโดยให้คุณอยู่ตำแหน่งแรกสุด)
+// ฟังก์ชันปุ่ม Test Game (เพิ่มบอท)
 testGameBtn.addEventListener('click', () => {
     if (!roomId) return;
     
@@ -104,7 +106,13 @@ function checkHostAndListen() {
         const players = data.players || {};
         const playerIds = Object.keys(players);
 
-        if (playerIds.length > 0 && playerIds[0] === myId) {
+        // ถ้าไม่มีผู้เล่นเหลือในห้องเลย ให้ลบห้องทิ้งอัตโนมัติทันที
+        if (playerIds.length === 0) {
+            roomRef.remove();
+            return;
+        }
+
+        if (playerIds[0] === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
@@ -142,29 +150,24 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
-        // 1. สุ่มเลนหลักมา 1 เลนสำหรับคนส่วนใหญ่ในตาคู่นี้
         const laneKeys = Object.keys(rovLanes);
         const selectedLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
         const laneHeroes = [...rovLanes[selectedLane]];
 
-        // 2. สุ่มตัวละครจากเลนหลักนี้แจกให้คนทั่วไป (ให้ทุกคนได้ฮีโร่ในเลนเดียวกัน)
         let availableHeroesForNormals = [...laneHeroes];
 
-        // 3. สุ่มตัวละครหลุดเลนสำหรับ Spy (สุ่มจากเลนอื่นที่ไม่ใช่เลนหลัก)
         const otherLanes = laneKeys.filter(l => l !== selectedLane);
         const randomOtherLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
         const spyHeroes = rovLanes[randomOtherLane];
         const spyHero = spyHeroes[Math.floor(Math.random() * spyHeroes.length)];
 
-        // สุ่มเลือกผู้เล่นที่เป็น Spy
         const spyIndex = Math.floor(Math.random() * playerIds.length);
         
         let rolesData = {};
         playerIds.forEach((id, index) => {
             if (index === spyIndex) {
-                rolesData[id] = spyHero; // Spy ได้ตัวหลุดเลน
+                rolesData[id] = spyHero;
             } else {
-                // คนอื่นสุ่มหยิบฮีโร่จากเลนหลักมาแจกทีละตัว (ไม่ให้ซ้ำกันถ้าเป็นไปได้)
                 if (availableHeroesForNormals.length === 0) availableHeroesForNormals = [...laneHeroes];
                 const rIdx = Math.floor(Math.random() * availableHeroesForNormals.length);
                 rolesData[id] = availableHeroesForNormals.splice(rIdx, 1)[0];
@@ -176,7 +179,7 @@ startBtn.addEventListener('click', () => {
         roomRef.update({
             status: 'playing',
             roles: rolesData,
-            lane: selectedLane, // บันทึกเลนของตาชี้นี้ไว้ให้ทุกคนเห็นตรงกัน
+            lane: selectedLane,
             spyId: playerIds[spyIndex],
             endTime: endTime,
             votes: null
@@ -200,7 +203,6 @@ function listenGameState() {
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
 
-            // แสดงเฉพาะรายชื่อฮีโร่ของ "เลนที่สุ่มได้ในตานั้น" เท่านั้น
             heroGrid.innerHTML = '';
             const currentLane = data.lane;
             if (currentLane && rovLanes[currentLane]) {
@@ -327,11 +329,7 @@ function renderVotingScreen(data) {
 }
 
 backToLobbyBtn.addEventListener('click', () => {
-    db.ref(`rooms/${roomId}`).update({
-        status: 'lobby',
-        roles: null,
-        lane: null,
-        spyId: null,
-        votes: null
-    });
+    // พอกดกลับหน้าล็อบบี้ ให้ล้างข้อมูลห้องทิ้งทั้งหมด เสมือนเคลียร์ใหม่
+    db.ref(`rooms/${roomId}`).remove();
+    window.location.reload();
 });
