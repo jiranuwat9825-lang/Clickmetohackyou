@@ -112,6 +112,28 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
+// --- ระบบแก้ปัญหาพับหน้าจอแล้วหลุด (Visibility Change Reconnect) ---
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        // เมื่อเปิดหน้าจอหรือสลับกลับมาแท็บนี้ ให้บังคับต่อ Firebase connection ใหม่ทันที
+        db.goOnline();
+        if (roomId && myId) {
+            db.ref(`rooms/${roomId}`).once('value', (snap) => {
+                if (!snap.val()) {
+                    // ถ้าห้องถูกลบไประหว่างพับจอ ให้รีเซ็ตกลับหน้าแรก
+                    localStorage.removeItem('rov_spy_roomid');
+                    location.reload();
+                } else {
+                    // ต่อข้อมูลผู้เล่นในห้องเดิมซ้ำเพื่อความเสถียร
+                    db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName || savedName || "ผู้เล่น" });
+                    db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
+                }
+            });
+        }
+    }
+});
+
+// ตรวจสอบระบบจำห้อง (Auto-Reconnect)
 const savedRoomId = localStorage.getItem('rov_spy_roomid');
 if (savedRoomId) {
     roomId = savedRoomId;
@@ -181,6 +203,23 @@ backToHomeBtn.addEventListener('click', () => {
     createRoomModal.style.display = 'none';
     roomSelection.style.display = 'flex';
 });
+
+// ปุ่มรีเซ็ตข้อมูลทั้งหมด (Emergency Reset)
+const resetDataBtn = document.createElement('button');
+resetDataBtn.className = 'btn secondary-btn';
+resetDataBtn.style.cssText = "margin-top: 15px; font-size: 0.75rem; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;";
+resetDataBtn.textContent = "🔄 รีเซ็ตข้อมูลและออกจากห้องทั้งหมด";
+resetDataBtn.addEventListener('click', () => {
+    if (confirm('ต้องการล้างข้อมูลแคชและรีเซ็ตสถานะทั้งหมดหรือไม่?')) {
+        if (roomId && myId) {
+            db.ref(`rooms/${roomId}/players/${myId}`).remove();
+        }
+        localStorage.removeItem('rov_spy_roomid');
+        localStorage.removeItem('rov_spy_myname');
+        location.reload();
+    }
+});
+roomSelection.appendChild(resetDataBtn);
 
 db.ref('rooms').on('value', (snapshot) => {
     const rooms = snapshot.val();
@@ -385,14 +424,6 @@ function checkHostAndListen() {
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
         
-        // ปรับ Label ในหน้าตั้งค่า lobby ตามโหมด
-        const settingLabelEl = document.querySelector('label[for="lobbySettingValueInput"], .host-settings label:nth-of-type(3)');
-        if (mode === 'whoami') {
-            if(lobbySettingValueInput.previousElementSibling) lobbySettingValueInput.previousElementSibling.textContent = 'เวลาจำกัด (นาที):';
-        } else {
-            if(lobbySettingValueInput.previousElementSibling) lobbySettingValueInput.previousElementSibling.textContent = 'จำนวนรอบการพูด:';
-        }
-
         if (hostId === myId) {
             isHost = true;
             startBtn.style.display = 'block';
@@ -429,7 +460,6 @@ startBtn.addEventListener('click', () => {
         const catData = getCategoryData(catKey);
         const setVal = data.settingValue || (gameMode === 'whoami' ? 3 : 2);
 
-        // โหมด ฉันคือใคร เล่นได้ 2 คนขึ้นไป, Spyfall ต้อง 3 คนขึ้นไป
         const minPlayers = gameMode === 'whoami' ? 2 : 3;
         if (playerIds.length < minPlayers) {
             alert(`โหมดนี้ต้องมีผู้เล่นอย่างน้อย ${minPlayers} คนขึ้นไป!`);
@@ -469,7 +499,7 @@ startBtn.addEventListener('click', () => {
             playerIds.forEach((id) => {
                 const idx = Math.floor(Math.random() * allItems.length);
                 rolesData[id] = allItems[idx];
-                attemptsData[id] = 1; // สิทธิ์ตอบ 1 ครั้ง
+                attemptsData[id] = 1;
             });
         }
 
@@ -650,8 +680,6 @@ function listenGameState() {
                 }
 
                 setupSearchDropdown(data.category);
-
-                // แสดงปุ่มข้ามเวลาสำหรับหัวหน้าห้อง
                 whoAmIHostControls.style.display = isHost ? 'block' : 'none';
             }
 
@@ -682,7 +710,6 @@ function startWhoAmITimer(endTime, rId, data) {
         const s = (timeLeft % 60).toString().padStart(2, '0');
         whoAmITimer.textContent = `${m}:${s}`;
 
-        // เช็คเงื่อนไขจบเกม: 1. หมดเวลา, 2. ทุกคนใช้สิทธิ์ตอบหมดแล้ว, 3. ทุกคนตอบถูกครบทุกคนแล้ว
         const players = data.players || {};
         const pIds = Object.keys(players);
         const attempts = data.attempts || {};
@@ -754,7 +781,7 @@ submitMyGuessBtn.addEventListener('click', () => {
         let guessedCorrectly = data.guessedCorrectly || {};
         let correctOrder = data.correctOrder || [];
 
-        attempts[myId] = 0; // ใช้สิทธิ์หมดแล้ว (ไม่ว่าจะถูกหรือผิด)
+        attempts[myId] = 0;
 
         let isCorrect = (guessVal.toLowerCase() === myRealRole.toLowerCase());
         if (isCorrect) {
@@ -773,7 +800,6 @@ submitMyGuessBtn.addEventListener('click', () => {
             correctOrder: correctOrder
         });
 
-        // ตรวจสอบทันทีว่าทุกคนตอบครบหรือยัง ถ้าครบแล้วตัดไปหน้าโหวต/สรุปผลทันที
         setTimeout(() => {
             roomRef.once('value', (snap) => {
                 const updatedData = snap.val();
@@ -847,7 +873,7 @@ function renderVotingScreen(data) {
                 const totalCorrect = correctOrder.length;
 
                 correctOrder.forEach((pId, idx) => {
-                    const pts = totalCorrect - idx; // คนแรกได้แต้มเยอะสุด ลดหลั่นลงมา
+                    const pts = totalCorrect - idx;
                     scores[pId] = (scores[pId] || 0) + pts;
                 });
 
@@ -874,8 +900,6 @@ function renderVotingScreen(data) {
             htmlStr += `<p style="font-size:0.85rem; margin:4px 0;"><b>${pName}:</b> ${role} ${isCorrect ? `✅ (ตอบถูกอันดับที่ ${correctOrder.indexOf(pId) + 1} ได้ +${ptsAwarded} แต้ม)` : '❌ (0 แต้ม)'}</p>`;
         });
         voteResult.innerHTML = htmlStr;
-        
-        nextRoundBtn.textContent = "🔄 เริ่มเกมรอบใหม่ (กลับล็อบบี้)";
         return;
     }
 
