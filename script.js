@@ -447,7 +447,6 @@ startBtn.addEventListener('click', () => {
             endTime: gameMode === 'whoami' ? Date.now() + setVal * 60 * 1000 : null,
             attempts: attemptsData,
             guessedCorrectly: {},
-            correctOrder: [], // เก็บรายชื่อคนที่ตอบถูกตามลำดับก่อนหลัง
             currentGroup: selectedGroupKey,
             votes: null,
             guess: null,
@@ -514,6 +513,7 @@ function listenGameState() {
                     const div = document.createElement('div');
                     div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
                     div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
+                    fullTrustOrderContainer?.appendChild(div); // safe check
                     fullTurnOrderContainer.appendChild(div);
                 });
 
@@ -550,17 +550,41 @@ function listenGameState() {
                 const roles = data.roles || {};
                 const attempts = data.attempts || {};
                 const guessedCorrectly = data.guessedCorrectly || {};
+                const turnOrder = data.turnOrder || [];
+                const currentTurnIndex = data.currentTurnIndex || 0;
 
-                Object.keys(players).forEach(pId => {
-                    if (pId !== myId) {
+                // เรียงลำดับตัวละครของเพื่อนตาม turnOrder
+                turnOrder.forEach((pId) => {
+                    if (pId !== myId && players[pId]) {
                         const div = document.createElement('div');
                         div.className = 'hero-item';
-                        
-                        // เมื่อคนนั้นตอบเสร็จแล้ว (ไม่ว่าจะถูกหรือผิด) ให้ขึ้นเครื่องหมายติ๊กถูก ✅
+
                         const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
-                        const checkIcon = isDone ? ' ✅' : '';
-                        
-                        div.innerHTML = `<b>${players[pId].name}${checkIcon}:</b><br><span style="color:#38bdf8;">${roles[pId]}</span>`;
+                        const isCorrect = guessedCorrectly[pId];
+                        const isCurrentTurn = (turnOrder[currentTurnIndex] === pId);
+
+                        // ตั้งค่าสีและสถานะตามเงื่อนไขใหม่
+                        let borderColor = "rgba(56, 189, 248, 0.1)";
+                        let bgStyle = "background: rgba(30, 41, 59, 0.9);";
+                        let statusText = "";
+
+                        if (isCurrentTurn && !isDone) {
+                            borderColor = "#fbbf24"; // สีเหลืองเมื่อถึงเทิร์น
+                            bgStyle = "background: rgba(251, 191, 36, 0.2); border: 2px solid #fbbf24;";
+                        }
+
+                        if (isDone) {
+                            if (isCorrect) {
+                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;"; // เขียวและจางลง
+                                statusText = '<br><span style="color:#22c55e; font-size:0.7rem;">(ตอบถูก ✅)</span>';
+                            } else {
+                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;"; // เทาและจางลง
+                                statusText = '<br><span style="color:#94a3b8; font-size:0.7rem;">(ตอบผิด ❌)</span>';
+                            }
+                        }
+
+                        div.style.cssText = bgStyle + " padding: 8px; border-radius: 6px; text-align: center;";
+                        div.innerHTML = `<b>${players[pId].name}</b><br><span style="color:#38bdf8;">${roles[pId]}</span>${statusText}`;
                         othersRolesGrid.appendChild(div);
                     }
                 });
@@ -581,20 +605,11 @@ function listenGameState() {
 
                 setupSearchDropdown(data.category);
 
-                const turnOrder = data.turnOrder || [];
-                const correctIds = new Set(Object.keys(guessedCorrectly).filter(id => guessedCorrectly[id]));
+                // ซ่อนกล่องรายชื่อด้านล่าง เนื่องจากย้ายลำดับและสถานะไปไว้ในกรอบรวมด้านบนแล้ว
                 whoAmITurnOrderContainer.innerHTML = '';
-                
-                let visibleIdx = 0;
-                turnOrder.forEach((id) => {
-                    const p = players[id];
-                    if (!p || correctIds.has(id)) return;
-                    visibleIdx++;
-                    const div = document.createElement('div');
-                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:rgba(15, 23, 42, 0.4); color:#cbd5e1;`;
-                    div.innerHTML = `${visibleIdx}. ${p.name} ${id === myId ? '(you)' : ''}`;
-                    whoAmITurnOrderContainer.appendChild(div);
-                });
+                if (whoAmITurnOrderContainer.parentElement) {
+                    whoAmITurnOrderContainer.parentElement.style.display = 'none';
+                }
             }
 
         } else if (data.status === 'voting') {
@@ -671,7 +686,7 @@ function setupSearchDropdown(catKey) {
     };
 }
 
-// กดส่งคำตอบ Search ในโหมด "ฉันคือใคร" (คำนวณคะแนนตามลำดับคนที่ตอบถูกก่อน-หลัง)
+// กดส่งคำตอบ Search ในโหมด "ฉันคือใคร"
 submitMyGuessBtn.addEventListener('click', () => {
     const guessVal = selectedSearchGuess || myGuessSearch.value.trim();
     if (!guessVal) {
@@ -688,89 +703,19 @@ submitMyGuessBtn.addEventListener('click', () => {
         let attempts = data.attempts || {};
         let guessedCorrectly = data.guessedCorrectly || {};
         let correctOrder = data.correctOrder || [];
-        let scores = data.scores || {};
 
         attempts[myId] = 0; // ใช้สิทธิ์หมดแล้ว
 
         if (guessVal.toLowerCase() === myRealRole.toLowerCase()) {
+            alert('🎉 ยินดีด้วย! คุณทายถูก!');
             guessedCorrectly[myId] = true;
             if (!correctOrder.includes(myId)) {
                 correctOrder.push(myId);
             }
-            alert('🎉 ยินดีด้วย! คุณทายถูก!');
         } else {
             alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}" ได้ 0 คะแนน`);
         }
 
-        // คํานวณแจกคะแนนใหม่ตามลำดับคนที่ตอบถูก (คนแรกได้มากสุด ลดหลั่นกัน คนสุดท้ายที่ตอบถูกได้ 1 แต้ม, ตอบผิด/ไม่ทัน ได้ 0)
-        // สมมติมีคนตอบถูก N คน คนที่ 1 ได้ N แต้ม, คนที่ 2 ได้ N-1 แต้ม, ... คนที่ N ได้ 1 แต้ม
-        const totalCorrect = correctOrder.length;
-        correctOrder.forEach((pId, idx) => {
-            // ลำดับแรกสุดจะได้คะแนน = totalCorrect, ลำดับถัดไปลดลงทีละ 1 (ต่ำสุดคือ 1 แต้ม)
-            const earnedPoints = totalCorrect - idx;
-            // เซ็ตคะแนนรวม = คะแนนเก่าก่อนหน้านี้ + คะแนนรอบนี้
-            // (เพื่อให้ง่ายและไม่ทับซ้อน เราจะคำนวณคะแนนรอบนี้บวกเพิ่มเข้าไป)
-        });
-
-        // อัปเดตรอบนี้: คำนวณคะแนนเฉพาะคนที่อยู่ใน correctOrder
-        // ให้คนแรกได้ N แต้ม, คนที่สองได้ N-1, ... คนสุดท้ายได้ 1 แต้ม
-        // เราจะคำนวณคะแนนใหม่ทั้งหมดสำหรับทุกคนที่มีชื่อใน correctOrder ในรอบนี้
-        let roundScores = {};
-        correctOrder.forEach((pId, idx) => {
-            roundScores[pId] = totalCorrect - idx; 
-        });
-
-        // รวมคะแนนสะสม (เคลียร์คะแนนรอบเก่าของโหมดนี้แล้วบวกใหม่ หรือใช้ตัวแปร scores)
-        // เพื่อความชัวร์ อัปเดตตารางคะแนนสะสมโดยดึงค่าเดิมมาบวกเพิ่มเฉพาะรอบนี้
-        roomRef.transaction((current) => {
-            if (!current) return;
-            current.attempts = attempts;
-            current.guessedCorrectly = guessedCorrectly;
-            current.correctOrder = correctOrder;
-
-            current.scores = current.scores || {};
-            // คำนวณแต้มรอบนี้ให้แต่ละคน
-            const curCorrect = current.correctOrder || [];
-            const n = curCorrect.length;
-            curCorrect.forEach((pId, index) => {
-                // สมมติเก็บบันทึกคะแนนรอบล่าสุดไว้ หรือคำนวณทับ
-                // ให้คนแรกได้ n แต้ม, คนที่สองได้ n-1 ... คนสุดท้ายได้ 1 แต้ม
-            });
-            return current;
-        });
-
-        // บันทึกแบบตรงไปตรงมาเพื่อให้ง่ายต่อการคำนวณแต้มลำดับ
-        let newScores = data.scores || {};
-        // ให้คะแนนตามลำดับใน correctOrder
-        correctOrder.forEach((pId, idx) => {
-            const points = totalCorrect - idx;
-            // กำหนดคะแนนรอบนี้ให้ (สมมติคะแนนสะสม = คะแนนเดิม + แต้มตามลำดับ)
-            // ป้องกันการบวกซ้ำ ให้ใช้วิธีคำนวณสดจาก correctOrder ได้เลย
-        });
-
-        // เขียนทับแต้มรอบนี้ให้ถูกต้องตามลำดับ
-        let finalScores = {};
-        Object.keys(data.players || {}).forEach(pId => {
-            finalScores[pId] = data.scores && data.scores[pId] ? data.scores[pId] : 0; // คงคะแนนเก่าจากรอบก่อนๆ ไว้ก่อน
-        });
-
-        // หักแต้มรอบก่อนหน้าของโหมดนี้ออก (ถ้ามีบันทึก) หรือคำนวณคะแนนรอบปัจจุบันบวกเข้าไป
-        correctOrder.forEach((pId, idx) => {
-            const roundPts = totalCorrect - idx;
-            // สมมติแต้มสะสมเดิม + แต้มรอบนี้
-            // เพื่อไม่ให้กดซ้ำแล้วบวกเพิ่มเรื่อยๆ ให้ใช้วิธีเซ็ตค่าคะแนนรอบนี้ทับเฉพาะกิจ หรือคำนวณจากส้ารчกลาง
-        });
-
-        // ให้โค้ดคำนวณแบบแม่นยำ: คนแรกได้ N แต้ม คนสุดท้ายได้ 1 แต้ม
-        let updatedScores = {...data.scores};
-        // รีเซ็ตคะแนนรอบนี้ของทุกคนก่อนแล้วบวกตามลำดับใหม่
-        correctOrder.forEach((pId, idx) => {
-            const pts = totalCorrect - idx;
-            // สมมติเราเก็บคะแนนสะสมจากรอบก่อนๆ ไว้ หรือให้ระบบคำนวณง่ายๆ:
-            // ให้คนตอบถูกคนแรกได้คะแนนมากสุด
-        });
-
-        // อัปเดตลง Firebase โดยตรง
         roomRef.update({
             attempts: attempts,
             guessedCorrectly: guessedCorrectly,
@@ -836,14 +781,13 @@ function renderVotingScreen(data) {
         voteResult.style.display = 'block';
         if (isHost) {
             hostPostVoteControls.style.display = 'flex';
-            // คำนวณและบันทึกคะแนนสะสมให้ผู้เล่นตามลำดับคนที่ตอบถูกคนแรก-คนสุดท้าย (ถ้ายังไม่ได้บันทึก)
             if (!data.scoreUpdated) {
                 let scores = data.scores || {};
                 const correctOrder = data.correctOrder || [];
                 const totalCorrect = correctOrder.length;
 
                 correctOrder.forEach((pId, idx) => {
-                    const pts = totalCorrect - idx; // คนแรกได้ N, คนถัดไปลดหลั่น, คนสุดท้ายได้ 1
+                    const pts = totalCorrect - idx; // คนแรกได้คะแนนเยอะสุด ลดหลั่นลงมา คนสุดท้ายที่ถูกได้ 1 แต้ม
                     scores[pId] = (scores[pId] || 0) + pts;
                 });
 
