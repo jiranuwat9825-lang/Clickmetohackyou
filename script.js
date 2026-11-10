@@ -229,29 +229,27 @@ db.ref('rooms').on('value', (snapshot) => {
             canJoin = false;
         }
 
+        // ระบบคำนวณเวลานับถอยหลังลบห้อง (ถ้าไม่มีผู้เล่น 0 คน)
+        if (pCount === 0) {
+            if (!rData.emptySince) {
+                db.ref(`rooms/${rId}/emptySince`).set(Date.now());
+            } else {
+                const elapsed = Date.now() - rData.emptySince;
+                const timeLeft = Math.max(0, Math.ceil((60000 - elapsed) / 1000));
+                if (timeLeft <= 0) {
+                    db.ref(`rooms/${rId}`).remove();
+                    return; // ข้ามการแสดงผลห้องนี้ถ้าหมดเวลาพอดี
+                }
+                statusText = `⚠️ ห้องร้าง (ลบใน ${timeLeft}s)`;
+            }
+        }
+
         card.innerHTML = `
             <div class="room-item-info">
                 <span class="room-item-name">🏠 ห้อง: ${rId} (${pCount} คน)</span>
-                <span class="room-item-status">${mode} | ${statusText}</span>
+                <span class="room-item-status" ${pCount === 0 ? 'style="color:#fbbf24;"' : ''}>${mode} | ${statusText}</span>
             </div>
         `;
-
-        const btnContainer = document.createElement('div');
-        btnContainer.style.cssText = "display: flex; gap: 4px; align-items: center;";
-
-        if (pCount === 0) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'join-room-tab-btn';
-            deleteBtn.style.background = '#ef4444';
-            deleteBtn.textContent = '🗑️ ลบ';
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (confirm(`ต้องการลบห้อง ${rId} ทิ้งใช่หรือไม่?`)) {
-                    db.ref(`rooms/${rId}`).remove();
-                }
-            });
-            btnContainer.appendChild(deleteBtn);
-        }
 
         const btn = document.createElement('button');
         btn.className = 'join-room-tab-btn';
@@ -271,8 +269,7 @@ db.ref('rooms').on('value', (snapshot) => {
             });
         }
 
-        btnContainer.appendChild(btn);
-        card.appendChild(btnContainer);
+        card.appendChild(btn);
         activeRoomsList.appendChild(card);
     });
 });
