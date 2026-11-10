@@ -87,19 +87,20 @@ joinBtn.addEventListener('click', () => {
     listenGameState();
 });
 
-// ฟังก์ชันปุ่ม Test Game (เพิ่มบอทโดยไม่ให้ทับตำแหน่งหัวหน้าห้องของคุณ)
+// ฟังก์ชันปุ่ม Test Game (บังคับให้คุณอยู่ตำแหน่งแรกสุด เสมอ)
 testGameBtn.addEventListener('click', () => {
     if (!roomId) return;
-    const bots = {
-        'bot_1': { name: '🤖 บอทโรมมิ่ง' },
-        'bot_2': { name: '🤖 บอทแครี่' },
-        'bot_3': { name: '🤖 บอทเลนกลาง' },
-        'bot_4': { name: '🤖 บอทป่า' }
-    };
+    
+    // สร้างก้อนข้อมูลใหม่โดยให้คุณขึ้นต้นด้วยเครื่องหมาย _ (เพื่อให้ขึ้นก่อนบอทเสมอไม่ว่าจะเรียงยังไง) หรือกำหนดโครงสร้างเป๊ะๆ
+    const sortedPlayers = {};
+    sortedPlayers[myId] = { name: myName };
+    sortedPlayers['z_bot_1'] = { name: '🤖 บอทโรมมิ่ง' };
+    sortedPlayers['z_bot_2'] = { name: '🤖 บอทแครี่' };
+    sortedPlayers['z_bot_3'] = { name: '🤖 บอทเลนกลาง' };
+    sortedPlayers['z_bot_4'] = { name: '🤖 บอทป่า' };
 
-    // ใช้ update เพื่อเพิ่มบอทเข้าไปโดยคงตัวตนของคุณ (myId) ไว้เป็นคนแรกสุด
-    db.ref(`rooms/${roomId}/players`).update(bots);
-    testGameBtn.style.display = 'none'; // ซ่อนปุ่มหลังกดแล้ว
+    db.ref(`rooms/${roomId}/players`).set(sortedPlayers);
+    testGameBtn.style.display = 'none';
 });
 
 function checkHostAndListen() {
@@ -119,8 +120,7 @@ function checkHostAndListen() {
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
             
-            // ถ้ายังไม่มีบอทในห้อง ให้แสดงปุ่ม Test Game
-            if (!players['bot_1']) {
+            if (!players['z_bot_1']) {
                 testGameBtn.style.display = 'block';
             }
         } else {
@@ -209,7 +209,7 @@ function listenGameState() {
             const players = data.players || {};
 
             Object.keys(players).forEach(id => {
-                if (id !== myId && id.startsWith('bot_')) {
+                if (id !== myId && id.includes('bot')) {
                     const li = document.createElement('li');
                     const isBotSpy = (id === data.spyId);
                     li.textContent = `${players[id].name} -> ตัวละคร: ${roles[id]} ${isBotSpy ? '🤫 [SPY]' : ''}`;
