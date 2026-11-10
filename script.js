@@ -15,10 +15,10 @@ const db = firebase.database();
 
 const rovLanes = {
     "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica"],
-    "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Thorne", "Valhein"],
+    "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion"],
     "ออฟเลน (Dark Slayer Lane)": ["Florentino", "Yena", "Ryoma", "Maloch", "Lu Bu", "Allain", "Veres", "Omen", "Airi", "Amily", "Arthur", "Astrid", "Skud", "Taara", "Qi", "Richter", "Rourke", "Zuka", "Tachi", "Dextra", "Biron"],
     "ป่า (Jungle / Assassin)": ["Nakroth", "Murad", "Butterfly", "Aoi", "Keera", "Zill", "Kriknak", "Quillen", "Enzo", "Sinestrea", "Wukong", "Paine", "Bright", "Kaine"],
-    "โรมมิ่ง / ซัพพอร์ต (Roaming)": ["Grakk", "Alice", "Thane", "Toro", "Zip", "Aya", "Arum", "Cresht", "Baldum", "Mina", "Omega", "Annette", "Schnaug", "Helen", "Krizzix", "Rouie", "Lumburr", "Ming", "Dolia"]
+    "โรมมิ่ง / ซัพพอร์ต (Roaming)": ["Grakk", "Alice", "Thane", "Toro", "Zip", "Aya", "Arum", "Cresht", "Baldum", "Mina", "Omega", "Annette", "Helen", "Krizzix", "Rouie", "Lumburr", "Ming", "Dolia"]
 };
 
 const roomSelection = document.getElementById('roomSelection');
@@ -58,14 +58,6 @@ if (!myId) {
 let isHost = false;
 let timerInterval = null;
 
-const allHeroes = Object.values(rovLanes).flat();
-allHeroes.forEach(hero => {
-    const div = document.createElement('div');
-    div.className = 'hero-item';
-    div.textContent = hero;
-    heroGrid.appendChild(div);
-});
-
 joinBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
@@ -87,11 +79,10 @@ joinBtn.addEventListener('click', () => {
     listenGameState();
 });
 
-// ฟังก์ชันปุ่ม Test Game (บังคับให้คุณอยู่ตำแหน่งแรกสุด เสมอ)
+// ฟังก์ชันปุ่ม Test Game (เพิ่มบอทโดยให้คุณอยู่ตำแหน่งแรกสุด)
 testGameBtn.addEventListener('click', () => {
     if (!roomId) return;
     
-    // สร้างก้อนข้อมูลใหม่โดยให้คุณขึ้นต้นด้วยเครื่องหมาย _ (เพื่อให้ขึ้นก่อนบอทเสมอไม่ว่าจะเรียงยังไง) หรือกำหนดโครงสร้างเป๊ะๆ
     const sortedPlayers = {};
     sortedPlayers[myId] = { name: myName };
     sortedPlayers['z_bot_1'] = { name: '🤖 บอทโรมมิ่ง' };
@@ -113,7 +104,6 @@ function checkHostAndListen() {
         const players = data.players || {};
         const playerIds = Object.keys(players);
 
-        // เช็คว่าคุณคือคนแรกสุดในรายชื่อไหม (Host)
         if (playerIds.length > 0 && playerIds[0] === myId) {
             isHost = true;
             startBtn.style.display = 'block';
@@ -152,27 +142,32 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
+        // 1. สุ่มเลนหลักมา 1 เลนสำหรับคนส่วนใหญ่ในตาคู่นี้
         const laneKeys = Object.keys(rovLanes);
         const selectedLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
         const laneHeroes = [...rovLanes[selectedLane]];
 
-        const normalHeroIndex1 = Math.floor(Math.random() * laneHeroes.length);
-        const normalHero1 = laneHeroes.splice(normalHeroIndex1, 1)[0];
-        const normalHero2 = laneHeroes.length > 0 ? laneHeroes.splice(Math.floor(Math.random() * laneHeroes.length), 1)[0] : normalHero1;
+        // 2. สุ่มตัวละครจากเลนหลักนี้แจกให้คนทั่วไป (ให้ทุกคนได้ฮีโร่ในเลนเดียวกัน)
+        let availableHeroesForNormals = [...laneHeroes];
 
+        // 3. สุ่มตัวละครหลุดเลนสำหรับ Spy (สุ่มจากเลนอื่นที่ไม่ใช่เลนหลัก)
         const otherLanes = laneKeys.filter(l => l !== selectedLane);
         const randomOtherLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
         const spyHeroes = rovLanes[randomOtherLane];
         const spyHero = spyHeroes[Math.floor(Math.random() * spyHeroes.length)];
 
+        // สุ่มเลือกผู้เล่นที่เป็น Spy
         const spyIndex = Math.floor(Math.random() * playerIds.length);
         
         let rolesData = {};
         playerIds.forEach((id, index) => {
             if (index === spyIndex) {
-                rolesData[id] = spyHero;
+                rolesData[id] = spyHero; // Spy ได้ตัวหลุดเลน
             } else {
-                rolesData[id] = index % 2 === 0 ? normalHero1 : normalHero2;
+                // คนอื่นสุ่มหยิบฮีโร่จากเลนหลักมาแจกทีละตัว (ไม่ให้ซ้ำกันถ้าเป็นไปได้)
+                if (availableHeroesForNormals.length === 0) availableHeroesForNormals = [...laneHeroes];
+                const rIdx = Math.floor(Math.random() * availableHeroesForNormals.length);
+                rolesData[id] = availableHeroesForNormals.splice(rIdx, 1)[0];
             }
         });
 
@@ -181,6 +176,7 @@ startBtn.addEventListener('click', () => {
         roomRef.update({
             status: 'playing',
             roles: rolesData,
+            lane: selectedLane, // บันทึกเลนของตาชี้นี้ไว้ให้ทุกคนเห็นตรงกัน
             spyId: playerIds[spyIndex],
             endTime: endTime,
             votes: null
@@ -203,6 +199,19 @@ function listenGameState() {
             const roles = data.roles || {};
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
+
+            // แสดงเฉพาะรายชื่อฮีโร่ของ "เลนที่สุ่มได้ในตานั้น" เท่านั้น
+            heroGrid.innerHTML = '';
+            const currentLane = data.lane;
+            if (currentLane && rovLanes[currentLane]) {
+                document.querySelector('.section-title').textContent = `ฮีโร่ในเลนปัจจุบัน (${currentLane}):`;
+                rovLanes[currentLane].forEach(hero => {
+                    const div = document.createElement('div');
+                    div.className = 'hero-item';
+                    div.textContent = hero;
+                    heroGrid.appendChild(div);
+                });
+            }
 
             botDebugBox.style.display = 'block';
             botStatusList.innerHTML = '';
@@ -321,6 +330,7 @@ backToLobbyBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({
         status: 'lobby',
         roles: null,
+        lane: null,
         spyId: null,
         votes: null
     });
