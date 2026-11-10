@@ -28,34 +28,6 @@ body {
     position: relative;
 }
 
-/* ปุ่ม Test Game มุมขวาบน */
-.test-btn-corner {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    border: 1px solid #34d399;
-    color: white;
-    padding: 5px 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.test-btn-corner:hover {
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
-    transform: translateY(-2px);
-}
-.test-icon {
-    font-size: 0.8rem;
-}
-
 .scoreboard-modern {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
     border: 1px solid rgba(56, 189, 248, 0.4);
@@ -268,32 +240,6 @@ input:focus {
     color: #e2e8f0;
     text-align: center;
     border: 1px solid rgba(56, 189, 248, 0.1);
-}
-
-.bot-debug-box {
-    margin-top: 8px;
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px dashed rgba(56, 189, 248, 0.4);
-    padding: 8px;
-    border-radius: 0.75rem;
-    text-align: left;
-    max-height: 100px;
-    overflow-y: auto;
-}
-.bot-debug-box h4 {
-    font-size: 0.75rem;
-    color: #38bdf8;
-    margin-bottom: 3px;
-}
-.bot-debug-box ul {
-    list-style: none;
-    padding-left: 0;
-}
-.bot-debug-box li {
-    font-size: 0.7rem;
-    color: #cbd5e1;
-    padding: 2px 0;
-    border-bottom: 1px solid rgba(30, 41, 59, 0.5);
 }
 
 .compact-vote {
