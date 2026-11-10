@@ -1,4 +1,4 @@
-// --- ตั้งค่า Firebase (รวม databaseURL ที่จำเป็นแล้ว) ---
+// --- ตั้งค่า Firebase (ใช้ค่าเดิมของคุณได้เลย) ---
 const firebaseConfig = {
     apiKey: "AIzaSyC3IuOtFTc200JcUmpVe1GEv13nCj1EM8",
     authDomain: "xo-game-e5fdd.firebaseapp.com",
@@ -10,133 +10,169 @@ const firebaseConfig = {
     measurementId: "G-4RHMNWP5ZJ"
 };
 
-// เริ่มต้นใช้งาน Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// รายชื่อสถานที่ในเกม Spyfall
+const locations = [
+    "สถานีอวกาศ", "ธนาคาร", "คาสิโน", "โรงพยาบาล", 
+    "กองถ่ายหนัง", "สถานีตำรวจ", "เรือสำราญ", "โรงเรียน", 
+    "ฐานทัพทหาร", "โรงแรมหรู", "ซูเปอร์มาร์เก็ต", "สวนสนุก"
+];
+
 const roomSelection = document.getElementById('roomSelection');
+const lobbyArea = document.getElementById('lobbyArea');
 const gameArea = document.getElementById('gameArea');
+const nameInput = document.getElementById('nameInput');
 const roomInput = document.getElementById('roomInput');
 const joinBtn = document.getElementById('joinBtn');
-const statusText = document.getElementById('status');
-const roleInfo = document.getElementById('roleInfo');
+const roomTitle = document.getElementById('roomTitle');
+const playerList = document.getElementById('playerList');
+const startBtn = document.getElementById('startBtn');
+const waitText = document.getElementById('waitText');
+const roleTitle = document.getElementById('roleTitle');
+const roleDesc = document.getElementById('roleDesc');
+const locationGrid = document.getElementById('locationGrid');
 const restartBtn = document.getElementById('restartBtn');
-const cells = document.querySelectorAll('.cell');
 
+let myName = '';
 let roomId = '';
-let myRole = ''; // 'X' หรือ 'O'
+let myId = 'user_' + Math.random().toString(36).substring(2, 9);
+let isHost = false;
+
+// เรนเดอร์รายชื่อสถานที่ให้ทุกคนเห็น
+locations.forEach(loc => {
+    const div = document.createElement('div');
+    div.className = 'loc-item';
+    div.textContent = loc;
+    locationGrid.appendChild(div);
+});
 
 joinBtn.addEventListener('click', () => {
+    myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
-    if (!roomId) {
-        alert('กรุณากรอกชื่อห้องก่อนครับ');
+
+    if (!myName || !roomId) {
+        alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
         return;
     }
 
     roomSelection.style.display = 'none';
-    gameArea.style.display = 'block';
+    lobbyArea.style.display = 'block';
+    roomTitle.textContent = `ห้อง: ${roomId}`;
 
-    const roomRef = db.ref('rooms/' + roomId);
-    roomRef.once('value', (snapshot) => {
-        const roomData = snapshot.val();
-        if (!roomData || !roomData.playerX) {
-            myRole = 'X';
-            roomRef.set({
-                board: ['', '', '', '', '', '', '', '', ''],
-                turn: 'X',
-                playerX: true,
-                playerO: false,
-                winner: null
-            });
-        } else if (!roomData.playerO) {
-            myRole = 'O';
-            roomRef.update({ playerO: true });
-        } else {
-            myRole = 'Spectator (ผู้ชม)';
-            alert('ห้องนี้มีผู้เล่นครบ 2 คนแล้ว คุณจะเข้ามาเป็นผู้ชม');
-        }
+    const playerRef = db.ref(`rooms/${roomId}/players/${myId}`);
+    playerRef.set({ name: myName });
+    playerRef.onDisconnect().remove();
 
-        roleInfo.textContent = `คุณคือผู้เล่น: ${myRole}`;
-        listenGameData();
-    });
+    checkHostAndListen();
+    listenGameState();
 });
 
-function listenGameData() {
-    const roomRef = db.ref('rooms/' + roomId);
+function checkHostAndListen() {
+    const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
 
-        data.board.forEach((val, index) => {
-            cells[index].textContent = val;
-            cells[index].className = 'cell';
-            if (val === 'X') cells[index].classList.add('x');
-            if (val === 'O') cells[index].classList.add('o');
-        });
+        // อัปเดตรายชื่อผู้เล่น
+        playerList.innerHTML = '';
+        const players = data.players || {};
+        const playerIds = Object.keys(players);
 
-        if (data.winner) {
-            if (data.winner === 'Draw') {
-                statusText.textContent = `เสมอ กัน! 🤝`;
-            } else {
-                statusText.textContent = `ผู้เล่น ${data.winner} ชนะแล้ว! 🎉`;
-            }
+        // คนแรกที่เข้าห้องคือ Host
+        if (playerIds[0] === myId) {
+            isHost = true;
+            startBtn.style.display = 'block';
+            waitText.style.display = 'none';
         } else {
-            if (data.turn === myRole) {
-                statusText.textContent = `ตาของคุณ! (${myRole})`;
-            } else {
-                statusText.textContent = `รอตาของฝ่ายตรงข้าม (${data.turn})`;
-            }
+            isHost = false;
+            startBtn.style.display = 'none';
+            waitText.style.display = 'block';
         }
+
+        playerIds.forEach(id => {
+            const li = document.createElement('li');
+            li.textContent = `👤 ${players[id].name} ${id === playerIds[0] ? '(หัวหน้าห้อง)' : ''}`;
+            playerList.appendChild(li);
+        });
     });
 }
 
-cells.forEach((cell, index) => {
-    cell.addEventListener('click', () => {
-        if (myRole !== 'X' && myRole !== 'O') return;
+// กดเริ่มเกม (เฉพาะ Host)
+startBtn.addEventListener('click', () => {
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        const players = data.players || {};
+        const playerIds = Object.keys(players);
 
-        const roomRef = db.ref('rooms/' + roomId);
-        roomRef.once('value', (snapshot) => {
-            const data = snapshot.val();
+        if (playerIds.length < 3) {
+            alert('ต้องมีผู้เล่นอย่างน้อย 3 คนถึงจะเริ่มเกมได้!');
+            return;
+        }
 
-            if (data.turn === myRole && data.board[index] === '' && !data.winner) {
-                let newBoard = data.board;
-                newBoard[index] = myRole;
-
-                let nextTurn = myRole === 'X' ? 'O' : 'X';
-                let winner = checkWinner(newBoard);
-
-                roomRef.update({
-                    board: newBoard,
-                    turn: nextTurn,
-                    winner: winner
-                });
+        // สุ่มเลือกสถานที่
+        const secretLocation = locations[Math.floor(Math.random() * locations.length)];
+        
+        // สุ่มเลือกคนเป็น Spy (เลือก index สุ่มจากผู้เล่นทั้งหมด)
+        const spyIndex = Math.floor(Math.random() * playerIds.length);
+        
+        let rolesData = {};
+        playerIds.forEach((id, index) => {
+            if (index === spyIndex) {
+                rolesData[id] = 'SPY';
+            } else {
+                rolesData[id] = secretLocation;
             }
+        });
+
+        // อัปเดตสถานะเกมลง Firebase
+        roomRef.update({
+            status: 'playing',
+            location: secretLocation,
+            roles: rolesData
         });
     });
 });
 
-function checkWinner(b) {
-    const wins = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
-    ];
-    for (let i = 0; i < wins.length; i++) {
-        const [x, y, z] = wins[i];
-        if (b[x] && b[x] === b[y] && b[x] === b[z]) {
-            return b[x];
+// ฟังสถานะการเปลี่ยนหน้าจอ (Lobby -> Game)
+function listenGameState() {
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        if (data.status === 'playing') {
+            lobbyArea.style.display = 'none';
+            gameArea.style.display = 'block';
+
+            const myRole = data.roles[myId];
+            if (myRole === 'SPY') {
+                roleTitle.textContent = "🤫 คุณคือ: สายลับ (Spy)!";
+                roleDesc.textContent = "คุณไม่รู้สถานที่ พยายามเนียนและหลอกถามคนอื่นเพื่อทายสถานที่ให้ถูก!";
+            } else {
+                roleTitle.textContent = `📍 สถานที่ลับคือ: ${myRole}`;
+                roleDesc.textContent = "ช่วยกันตั้งคำถามและจับพิรุธว่าใครคือสายลับ!";
+            }
+
+            if (isHost) {
+                restartBtn.style.display = 'block';
+            }
+        } else if (data.status === 'lobby') {
+            gameArea.style.display = 'none';
+            lobbyArea.style.display = 'block';
+            restartBtn.style.display = 'none';
         }
-    }
-    if (!b.includes('')) return 'Draw';
-    return null;
+    });
 }
 
+// ปุ่มรีเซ็ตกลับมารอหน้าล็อบบี้
 restartBtn.addEventListener('click', () => {
-    if (myRole !== 'X' && myRole !== 'O') return;
-    const roomRef = db.ref('rooms/' + roomId);
+    const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.update({
-        board: ['', '', '', '', '', '', '', '', ''],
-        turn: 'X',
-        winner: null
+        status: 'lobby',
+        location: null,
+        roles: null
     });
 });
