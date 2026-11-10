@@ -14,20 +14,10 @@
             <span class="test-icon">🤖</span> Test Bot
         </button>
 
-        <!-- Scoreboard ดีไซน์ใหม่ตรงกลางด้านบน -->
+        <!-- Scoreboard แสดงคะแนนรายบุคคล -->
         <div id="scoreBoard" class="scoreboard-modern" style="display: none;">
-            <div class="score-header">🏆 คะแนนสะสม</div>
-            <div class="score-body">
-                <div class="score-item player">
-                    <span class="score-label">ผู้เล่นทั่วไป</span>
-                    <span id="playerScoreVal" class="score-num">0</span>
-                </div>
-                <div class="score-divider">VS</div>
-                <div class="score-item spy">
-                    <span class="score-label">ฝ่าย Spy</span>
-                    <span id="spyScoreVal" class="score-num">0</span>
-                </div>
-            </div>
+            <div class="score-header">🏆 ตารางคะแนนสะสม</div>
+            <div id="scoreListBody" class="score-list-body"></div>
         </div>
 
         <div class="header-badge">🎮 ROV PARTY GAME</div>
@@ -87,7 +77,7 @@
             <div id="voteList" class="vote-list compact-vote"></div>
             <div id="voteResult" class="vote-result" style="display: none;"></div>
             
-            <!-- ปุ่มควบคุมหลังจบโหวต (รวมปุ่มเริ่มรอบถัดไปสำหรับหัวหน้าห้อง) -->
+            <!-- ปุ่มควบคุมหลังจบโหวต -->
             <div id="hostPostVoteControls" style="display: none; margin-top: 10px; gap: 8px; flex-direction: column;">
                 <button id="nextRoundBtn" class="btn primary-glow">🔄 เริ่มรอบถัดไป</button>
                 <button id="backToLobbyBtn" class="btn danger">🏠 ปิดห้องและกลับหน้าแรก</button>
