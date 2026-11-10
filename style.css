@@ -56,14 +56,15 @@ body {
     font-size: 0.8rem;
 }
 
-/* Scoreboard ดีไซน์ใหม่ตรงกลางด้านบน */
+/* Scoreboard รายบุคคลแบบใหม่ */
 .scoreboard-modern {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
     border: 1px solid rgba(56, 189, 248, 0.4);
     border-radius: 12px;
-    padding: 8px 14px;
+    padding: 8px 12px;
     margin-bottom: 15px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-align: left;
 }
 
 .score-header {
@@ -72,45 +73,32 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 2px;
+    text-align: center;
 }
 
-.score-body {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-}
-
-.score-item {
+.score-list-body {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 4px;
+    max-height: 90px;
+    overflow-y: auto;
 }
 
-.score-label {
-    font-size: 0.7rem;
-    color: #94a3b8;
-}
-
-.score-num {
-    font-size: 1.2rem;
-    font-weight: 700;
-}
-
-.score-item.player .score-num {
-    color: #38bdf8;
-}
-
-.score-item.spy .score-num {
-    color: #f43f5e;
-}
-
-.score-divider {
+.score-row-item {
+    display: flex;
+    justify-content: space-between;
     font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.score-row-item b {
+    color: #38bdf8;
 }
 
 .header-badge {
