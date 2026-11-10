@@ -28,10 +28,11 @@ body {
     position: relative;
 }
 
+/* ปุ่ม Test Game มุมขวาบน */
 .test-btn-corner {
     position: absolute;
     top: 15px;
-    left: 20px;
+    right: 20px;
     background: linear-gradient(135deg, #059669 0%, #10b981 100%);
     border: 1px solid #34d399;
     color: white;
