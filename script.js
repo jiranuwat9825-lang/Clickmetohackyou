@@ -48,6 +48,7 @@ const closeRoomBtn = document.getElementById('closeRoomBtn');
 
 const heroName = document.getElementById('heroName');
 const heroGrid = document.getElementById('heroGrid');
+const turnOrderText = document.getElementById('turnOrderText');
 const hostControls = document.getElementById('hostControls');
 const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 const timerDisplay = document.getElementById('timer');
@@ -205,14 +206,12 @@ joinRoomBtn.addEventListener('click', () => {
     });
 });
 
-// เปลี่ยนหมวดหมู่จาก Dropdown ในหน้า Lobby (เฉพาะ Host)
 categorySelect.addEventListener('change', (e) => {
     if (!isHost || !roomId) return;
     const newCat = e.target.value;
     db.ref(`rooms/${roomId}/category`).set(newCat);
 });
 
-// ปุ่มปิดห้อง (สำหรับ Host)
 closeRoomBtn.addEventListener('click', () => {
     if (!roomId) return;
     if (confirm('คุณต้องการปิดห้องและลบห้องนี้ใช่หรือไม่?')) {
@@ -251,15 +250,15 @@ function checkHostAndListen() {
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
-            hostCategoryBox.style.display = 'block'; // แสดงช่องเลือกหมวดหมู่ให้ Host
-            closeRoomBtn.style.display = 'block';   // แสดงปุ่มปิดห้องให้ Host
+            hostCategoryBox.style.display = 'block';
+            closeRoomBtn.style.display = 'block';
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
             hostControls.style.display = 'none';
-            hostCategoryBox.style.display = 'none';  // ซ่อนช่องเลือกหมวดหมู่สำหรับผู้เล่นทั่วไป
-            closeRoomBtn.style.display = 'none';    // ซ่อนปุ่มปิดห้องสำหรับผู้เล่นทั่วไป
+            hostCategoryBox.style.display = 'none';
+            closeRoomBtn.style.display = 'none';
         }
 
         playerIds.forEach((id) => {
@@ -271,7 +270,7 @@ function checkHostAndListen() {
     });
 }
 
-// กดเริ่มเกม
+// กดเริ่มเกม (สุ่มลำดับผู้เล่น)
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -284,6 +283,13 @@ startBtn.addEventListener('click', () => {
         if (playerIds.length < 3) {
             alert('ต้องมีผู้เล่นอย่างน้อย 3 คนถึงจะเริ่มเกมได้!');
             return;
+        }
+
+        // สุ่มลำดับผู้เล่น (Shuffle Array)
+        let shuffledPlayerIds = [...playerIds];
+        for (let i = shuffledPlayerIds.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledPlayerIds[i], shuffledPlayerIds[j]] = [shuffledPlayerIds[j], shuffledPlayerIds[i]];
         }
 
         const laneKeys = Object.keys(catData.lanes);
@@ -318,6 +324,7 @@ startBtn.addEventListener('click', () => {
         roomRef.update({
             status: 'playing',
             roles: rolesData,
+            turnOrder: shuffledPlayerIds,
             currentGroup: selectedGroupKey,
             spyId: spyId,
             endTime: endTime,
@@ -360,6 +367,11 @@ function listenGameState() {
             const roles = data.roles || {};
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
+
+            // แสดงลำดับการเล่นที่สุ่มมา
+            const tOrder = data.turnOrder || [];
+            let orderNames = tOrder.map(id => players[id] ? players[id].name : '').filter(Boolean);
+            turnOrderText.textContent = orderNames.join(' ➔ ');
 
             heroGrid.innerHTML = '';
             const catKey = data.category || 'rov';
@@ -417,7 +429,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต
+// หน้าจอโหวต (บล็อกห้ามโหวตชื่อตัวเอง)
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -438,13 +450,17 @@ function renderVotingScreen(data) {
     const myVote = votes[myId];
 
     if (isAmISpy) {
-        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุดและ (จะเลือกทายตัวละครหรือไม่ก็ได้):";
+        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุด (ห้ามโหวตตัวเอง):";
     } else {
-        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy:";
+        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy (ห้ามโหวตตัวเอง):";
     }
 
     activeCandidates.forEach(targetId => {
         if (!players[targetId]) return;
+        
+        // ห้ามแสดงปุ่มโหวตชื่อตัวเอง
+        if (targetId === myId) return;
+
         const btn = document.createElement('button');
         btn.className = 'vote-btn';
         if (selectedVoteTarget === targetId) {
@@ -639,6 +655,7 @@ nextRoundBtn.addEventListener('click', () => {
         roomRef.update({
             status: 'lobby',
             roles: null,
+            turnOrder: null,
             currentGroup: null,
             spyId: null,
             votes: null,
