@@ -229,7 +229,7 @@ db.ref('rooms').on('value', (snapshot) => {
             canJoin = false;
         }
 
-        // ระบบคำนวณเวลานับถอยหลังลบห้อง (ถ้าไม่มีผู้เล่น 0 คน)
+        // ระบบนับถอยหลังลบห้อง (กรณีไม่มีผู้เล่น 0 คน)
         if (pCount === 0) {
             if (!rData.emptySince) {
                 db.ref(`rooms/${rId}/emptySince`).set(Date.now());
@@ -238,7 +238,7 @@ db.ref('rooms').on('value', (snapshot) => {
                 const timeLeft = Math.max(0, Math.ceil((60000 - elapsed) / 1000));
                 if (timeLeft <= 0) {
                     db.ref(`rooms/${rId}`).remove();
-                    return; // ข้ามการแสดงผลห้องนี้ถ้าหมดเวลาพอดี
+                    return;
                 }
                 statusText = `⚠️ ห้องร้าง (ลบใน ${timeLeft}s)`;
             }
