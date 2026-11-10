@@ -59,7 +59,6 @@ const closeRoomBtn = document.getElementById('closeRoomBtn');
 const heroName = document.getElementById('heroName');
 const heroGrid = document.getElementById('heroGrid');
 const roundIndicator = document.getElementById('roundIndicator');
-const currentSpeakerBox = document.getElementById('currentSpeakerBox');
 const endTurnBtn = document.getElementById('endTurnBtn');
 const fullTurnOrderContainer = document.getElementById('fullTurnOrderContainer');
 const hostControls = document.getElementById('hostControls');
@@ -68,7 +67,6 @@ const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 // ตัวแปรโหมด ฉันคือใคร
 const whoAmITimer = document.getElementById('whoAmITimer');
 const othersRolesGrid = document.getElementById('othersRolesGrid');
-const remainingAttempts = document.getElementById('remainingAttempts');
 const myGuessSelect = document.getElementById('myGuessSelect');
 const submitMyGuessBtn = document.getElementById('submitMyGuessBtn');
 const guessControlsDiv = document.getElementById('guessControlsDiv');
@@ -77,6 +75,7 @@ const whoAmITurnOrderContainer = document.getElementById('whoAmITurnOrderContain
 const whoAmIHostControls = document.getElementById('whoAmIHostControls');
 const whoAmISkipBtn = document.getElementById('whoAmISkipBtn');
 
+const voteAreaTitle = document.getElementById('voteAreaTitle');
 const voteList = document.getElementById('voteList');
 const voteResult = document.getElementById('voteResult');
 const scoreBoard = document.getElementById('scoreBoard');
@@ -100,7 +99,6 @@ let isHost = false;
 let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
-// เปลี่ยนป้ายกำกับตามโหมดเกมที่เลือก
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
@@ -127,7 +125,6 @@ backToHomeBtn.addEventListener('click', () => {
     roomSelection.style.display = 'flex';
 });
 
-// โหลดรายชื่อห้อง
 db.ref('rooms').on('value', (snapshot) => {
     const rooms = snapshot.val();
     activeRoomsList.innerHTML = '';
@@ -153,7 +150,7 @@ db.ref('rooms').on('value', (snapshot) => {
             statusText = '🎮 กำลังเล่น';
             canJoin = false;
         } else if (rStatus === 'voting') {
-            statusText = '🗳️ กำลังโหวต';
+            statusText = '🗳️ สรุปผล';
             canJoin = false;
         }
 
@@ -186,7 +183,6 @@ db.ref('rooms').on('value', (snapshot) => {
     });
 });
 
-// ยืนยันสร้างห้อง
 confirmCreateBtn.addEventListener('click', () => {
     roomId = newRoomInput.value.trim();
     const gameMode = gameModeSelect.value;
@@ -313,7 +309,7 @@ function checkHostAndListen() {
     });
 }
 
-// กดเริ่มเกม
+// เริ่มเกม (สุ่มลำดับใหม่ทุกตา)
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -330,7 +326,6 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
-        // สุ่มลำดับผู้เล่นใหม่ทุกตา
         let shuffledPlayerIds = [...playerIds];
         for (let i = shuffledPlayerIds.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -357,12 +352,11 @@ startBtn.addEventListener('click', () => {
                 if (id !== spyId) rolesData[id] = normalItem;
             });
         } else {
-            // โหมด ฉันคือใคร: สุ่มตัวละครให้ทุกคนไม่ซ้ำกัน (หรือสุ่มจากลิสต์)
             playerIds.forEach((id) => {
                 if (groupItems.length === 0) groupItems = [...catData.lanes[selectedGroupKey]];
                 const idx = Math.floor(Math.random() * groupItems.length);
                 rolesData[id] = groupItems.splice(idx, 1)[0];
-                attemptsData[id] = 3; // ให้สิทธิ์ตอบผิดคนละ 3 ครั้ง
+                attemptsData[id] = 1; // สิทธิ์ตอบคนละ 1 ครั้ง
             });
         }
 
@@ -380,6 +374,7 @@ startBtn.addEventListener('click', () => {
             totalRounds: gameMode === 'spyfall' ? setVal : 1,
             endTime: gameMode === 'whoami' ? Date.now() + setVal * 60 * 1000 : null,
             attempts: attemptsData,
+            guessedCorrectly: {},
             currentGroup: selectedGroupKey,
             votes: null,
             guess: null,
@@ -389,7 +384,7 @@ startBtn.addEventListener('click', () => {
         };
 
         if (gameMode === 'spyfall') {
-            updateObj.spyId = Object.keys(rolesData).find(k => rolesData[k] !== Object.values(rolesData).find(v => v)); // หรือหาตัวสปาย
+            updateObj.spyId = Object.keys(rolesData).find(k => rolesData[k] !== Object.values(rolesData).find(v => v));
         }
 
         roomRef.update(updateObj);
@@ -430,12 +425,10 @@ function listenGameState() {
                 const roles = data.roles || {};
                 heroName.textContent = roles[myId] || "...";
 
-                // แสดงลำดับการพูดทั้งหมด
                 const turnOrder = data.turnOrder || [];
                 const currentTurnIndex = data.currentTurnIndex || 0;
                 const currentRound = data.currentRound || 1;
                 const totalRounds = data.totalRounds || 2;
-                const currentSpeakerId = turnOrder[currentTurnIndex];
 
                 roundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
                 
@@ -446,17 +439,9 @@ function listenGameState() {
                     const isCurrent = (idx === currentTurnIndex);
                     const div = document.createElement('div');
                     div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
-                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈 (กำลังพูด)' : ''}`;
+                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
                     fullTurnOrderContainer.appendChild(div);
                 });
-
-                if (currentSpeakerId === myId) {
-                    currentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว!`;
-                    endTurnBtn.style.display = 'block';
-                } else {
-                    currentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> พูด...`;
-                    endTurnBtn.style.display = 'none';
-                }
 
                 heroGrid.innerHTML = '';
                 const catKey = data.category || 'rov';
@@ -477,9 +462,8 @@ function listenGameState() {
                 gameArea.style.display = 'none';
                 whoAmIArea.style.display = 'block';
 
-                startWhoAmITimer(data.endTime, roomId);
+                startWhoAmITimer(data.endTime, roomId, data);
 
-                // แสดงตัวละครของคนอื่น (ยกเว้นตัวเอง)
                 othersRolesGrid.innerHTML = '';
                 const roles = data.roles || {};
                 Object.keys(players).forEach(pId => {
@@ -491,19 +475,22 @@ function listenGameState() {
                     }
                 });
 
-                // อัปเดตสิทธิ์การตอบ
                 const attempts = data.attempts || {};
-                const myRemaining = attempts[myId] ?? 3;
-                remainingAttempts.textContent = myRemaining;
+                const guessedCorrectly = data.guessedCorrectly || {};
+                const myAttempts = attempts[myId] ?? 1;
+                const isAlreadyCorrect = guessedCorrectly[myId];
 
-                if (myRemaining <= 0) {
+                if (isAlreadyCorrect) {
                     guessControlsDiv.style.display = 'none';
-                    guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบครบ 3 ครั้งแล้ว รอลุ้นเพื่อนคนอื่น!`;
+                    guessStatusText.textContent = `🎉 คุณทายถูกแล้ว! รอลุ้นเพื่อนคนอื่น`;
+                } else if (myAttempts <= 0) {
+                    guessControlsDiv.style.display = 'none';
+                    guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบไปแล้ว (0 ครั้ง)`;
                 } else {
                     guessControlsDiv.style.display = 'block';
+                    guessStatusText.textContent = `🎯 เลือกทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
                 }
 
-                // เติมตัวเลือกใน Dropdown สำหรับทายตัวเอง
                 const catKey = data.category || 'rov';
                 const catData = categoriesData[catKey] || categoriesData['rov'];
                 const currentGroup = data.currentGroup;
@@ -519,7 +506,7 @@ function listenGameState() {
                     }
                 }
 
-                // ลำดับการพูดโหมดฉันคือใคร
+                // ลำดับการพูด (แสดงแค่รายชื่อเรียงตามเทิร์น)
                 const turnOrder = data.turnOrder || [];
                 const currentTurnIndex = data.currentTurnIndex || 0;
                 whoAmITurnOrderContainer.innerHTML = '';
@@ -529,7 +516,7 @@ function listenGameState() {
                     const isCurrent = (idx === currentTurnIndex);
                     const div = document.createElement('div');
                     div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
-                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈 (กำลังพูด)' : ''}`;
+                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
                     whoAmITurnOrderContainer.appendChild(div);
                 });
             }
@@ -553,15 +540,19 @@ function listenGameState() {
 }
 
 // ตัวจับเวลาโหมด ฉันคือใคร
-function startWhoAmITimer(endTime, rId) {
+function startWhoAmITimer(endTime, rId, data) {
     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
     whoAmITimerInterval = setInterval(() => {
         const timeLeft = Math.floor((endTime - Date.now()) / 1000);
-        if (timeLeft <= 0) {
+        
+        // เช็คเงื่อนไขจบเกม: ถ้าทุกคนใช้สิทธิ์หมดแล้ว หรือเวลาหมด
+        let attempts = data.attempts || {};
+        let allUsed = Object.keys(data.players || {}).every(pId => (attempts[pId] ?? 1) <= 0 || data.guessedCorrectly?.[pId]);
+
+        if (timeLeft <= 0 || allUsed) {
             clearInterval(whoAmITimerInterval);
             whoAmITimer.textContent = "00:00";
-            // หมดเวลา ให้จบเกม
-            if (isHost) {
+            if (isHost && data.status === 'playing') {
                 db.ref(`rooms/${rId}`).update({ status: 'voting' });
             }
         } else {
@@ -572,11 +563,11 @@ function startWhoAmITimer(endTime, rId) {
     }, 1000);
 }
 
-// กดส่งคำตอบในโหมด "ฉันคือใคร"
+// กดส่งคำตอบในโหมด "ฉันคือใคร" (สิทธิ์ตอบ 1 ครั้ง)
 submitMyGuessBtn.addEventListener('click', () => {
     const guessVal = myGuessSelect.value;
     if (!guessVal) {
-        alert('กรุณาเลือกตัวละครก่อนกดonยืนยัน');
+        alert('กรุณาเลือกตัวละครก่อนกดconfirmคำตอบ');
         return;
     }
 
@@ -587,24 +578,37 @@ submitMyGuessBtn.addEventListener('click', () => {
 
         const myRealRole = data.roles[myId];
         let attempts = data.attempts || {};
-        let myAttempts = attempts[myId] ?? 3;
+        let guessedCorrectly = data.guessedCorrectly || {};
+        let scores = data.scores || {};
+
+        attempts[myId] = 0; // ใช้สิทธิ์หมดแล้ว (1 ครั้ง)
 
         if (guessVal.toLowerCase() === myRealRole.toLowerCase()) {
-            alert('🎉 ยินดีด้วย! คุณทายตัวละครของตัวเองถูกต้อง!');
-            // ให้คะแนนพิเศษ และจบเกมหรือให้คนอื่นเล่นต่อ
-            let scores = data.scores || {};
-            scores[myId] = (scores[myId] || 0) + 3; // ทายถูกได้ 3 แต้ม
-            roomRef.update({ scores: scores, status: 'voting' });
+            alert('🎉 ยินดีด้วย! คุณทายถูก ได้รับ +1 คะแนน!');
+            guessedCorrectly[myId] = true;
+            scores[myId] = (scores[myId] || 0) + 1; // ทายถูกได้ 1 คะแนน
         } else {
-            myAttempts -= 1;
-            attempts[myId] = myAttempts;
-            if (myAttempts <= 0) {
-                alert('❌ ทายผิด! สิทธิ์ของคุณหมดลงแล้ว (0 ครั้ง)');
-            } else {
-                alert(`❌ ทายผิด! คุณเหลือสิทธิ์ตอบอีก ${myAttempts} ครั้ง`);
-            }
-            roomRef.child('attempts').set(attempts);
+            alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}" ได้ 0 คะแนน`);
         }
+
+        roomRef.update({
+            attempts: attempts,
+            guessedCorrectly: guessedCorrectly,
+            scores: scores
+        });
+
+        // เช็คว่าทุกคนหมดสิทธิ์หรือยัง ถ้าหมดแล้วตัดเข้าหน้าสรุปผลเลย
+        setTimeout(() => {
+            roomRef.once('value', (snap) => {
+                const updatedData = snap.val();
+                if (!updatedData || updatedData.status !== 'playing') return;
+                const allPlayers = Object.keys(updatedData.players || {});
+                const finished = allPlayers.every(pId => (updatedData.attempts?.[pId] ?? 1) <= 0 || updatedData.guessedCorrectly?.[pId]);
+                if (finished && isHost) {
+                    roomRef.update({ status: 'voting' });
+                }
+            });
+        }, 500);
     });
 });
 
@@ -645,29 +649,35 @@ function renderVotingScreen(data) {
     hostPostVoteControls.style.display = 'none';
 
     const players = data.players || {};
+    const gameMode = data.gameMode || 'spyfall';
+
+    if (gameMode === 'whoami') {
+        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนโหมด ฉันคือใคร";
+        voteInstruction.textContent = "เฉลยตัวละครและสรุปแต้มของรอบนี้:";
+        voteResult.style.display = 'block';
+        if (isHost) hostPostVoteControls.style.display = 'flex';
+        
+        let htmlStr = `<h3 style="color:#38bdf8; margin-bottom:8px;">👥 เฉลยตัวละคร:</h3>`;
+        Object.keys(players).forEach(pId => {
+            const pName = players[pId].name;
+            const role = data.roles[pId];
+            const isCorrect = data.guessedCorrectly?.[pId];
+            htmlStr += `<p style="font-size:0.85rem; margin:4px 0;"><b>${pName}:</b> ${role} ${isCorrect ? '✅ (ทายถูก +1 แต้ม)' : '❌ (0 แต้ม)'}</p>`;
+        });
+        voteResult.innerHTML = htmlStr;
+        return;
+    }
+
+    voteAreaTitle.textContent = "🗳️ ช่วงเวลาโหวตหา Spy!";
     const votes = data.votes || {};
     const guessData = data.guess || {};
     const spyGuessData = data.spyGuess || {};
-    const gameMode = data.gameMode || 'spyfall';
     const isAmISpy = (myId === data.spyId);
     
     const catKey = data.category || 'rov';
     const catData = categoriesData[catKey] || categoriesData['rov'];
     const currentGroup = data.currentGroup;
     const currentGroupItems = (currentGroup && catData.lanes[currentGroup]) ? catData.lanes[currentGroup] : [];
-
-    if (gameMode === 'whoami') {
-        voteResult.style.display = 'block';
-        if (isHost) hostPostVoteControls.style.display = 'flex';
-        voteInstruction.textContent = "🏁 จบเกมโหมด ฉันคือใคร - สรุปตัวละครของทุกคน:";
-        
-        let htmlStr = `<h3>👥 เฉลยตัวละครทั้งหมด:</h3>`;
-        Object.keys(players).forEach(pId => {
-            htmlStr += `<p style="font-size:0.85rem; margin:4px 0;"><b>${players[pId].name}:</b> ${data.roles[pId]}</p>`;
-        });
-        voteResult.innerHTML = htmlStr;
-        return;
-    }
 
     const activeCandidates = data.tieCandidates || Object.keys(players);
     const myVote = votes[myId];
@@ -814,6 +824,7 @@ function renderVotingScreen(data) {
     }
 }
 
+// ปุ่มเริ่มรอบถัดไปสำหรับหัวหน้าห้อง (คงคะแนนเดิมไว้ แต่เคลียร์สถานะเริ่มตาใหม่)
 nextRoundBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -832,6 +843,7 @@ nextRoundBtn.addEventListener('click', () => {
             guess: null,
             spyGuess: null,
             attempts: null,
+            guessedCorrectly: null,
             tieCandidates: null,
             tieHandled: false,
             scoreUpdated: false
