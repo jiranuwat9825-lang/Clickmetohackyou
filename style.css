@@ -28,6 +28,35 @@ body {
     position: relative;
 }
 
+/* ปุ่ม Test Game มุมขวาบนสุด ดีไซน์พรีเมียม */
+.test-btn-corner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border: 1px solid #34d399;
+    color: white;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.test-btn-corner:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.7);
+    transform: translateY(-2px);
+}
+.test-icon {
+    font-size: 0.9rem;
+}
+
 .header-badge {
     display: inline-block;
     background: linear-gradient(135deg, #38bdf8, #6366f1);
@@ -67,27 +96,6 @@ h1 {
     font-size: 0.9rem;
     color: #94a3b8;
     text-align: left;
-}
-
-/* ปุ่ม Test Game มุมขวาบน */
-.test-btn {
-    position: absolute;
-    top: -15px;
-    right: 0;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid #10b981;
-    color: #34d399;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.test-btn:hover {
-    background: #10b981;
-    color: white;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
 }
 
 .input-group {
