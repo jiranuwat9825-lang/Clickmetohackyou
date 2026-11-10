@@ -19,6 +19,8 @@
         
         <!-- หน้าล็อบบี้รอมต -->
         <div id="lobbyArea" class="box" style="display: none;">
+            <!-- ปุ่ม Test Game มุมขวาบน -->
+            <button id="testGameBtn" class="test-btn">Test Game (เพิ่มบอท)</button>
             <h2 id="roomTitle">ชื่อห้อง</h2>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
@@ -42,6 +44,12 @@
 
             <h3 class="section-title">ฮีโร่ทั้งหมดในแพตช์นี้:</h3>
             <div class="hero-grid" id="heroGrid"></div>
+
+            <!-- กล่องแสดงบทบาทบอทด้านซ้ายล่าง (เฉพาะโหมดทดสอบ) -->
+            <div id="botDebugBox" class="bot-debug-box" style="display: none;">
+                <h4>🤖 สถานะบอท (Debug View):</h4>
+                <ul id="botStatusList"></ul>
+            </div>
         </div>
 
         <!-- หน้าจอโหวต -->
