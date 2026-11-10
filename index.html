@@ -18,7 +18,7 @@
         <div class="header-badge">🎮 PARTY GAME</div>
         <h1>Spyfall Party Edition</h1>
         
-        <!-- หน้าใส่ชื่อและห้อง พร้อมเลือกหมวดหมู่ -->
+        <!-- หน้าใส่ชื่อและห้อง พร้อมเลือกหมวดหมู่ และรายชื่อห้องที่มีอยู่ -->
         <div id="roomSelection" class="box">
             <div class="input-group">
                 <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
@@ -29,10 +29,17 @@
             <div class="input-group">
                 <select id="categorySelect" class="category-select">
                     <option value="rov">🛡️ หมวดหมู่: ROV (Arena of Valor)</option>
-                    <!-- สามารถเพิ่มหมวดหมู่อื่นๆ ในอนาคตได้ตรงนี้ -->
                 </select>
             </div>
-            <button id="joinBtn" class="btn primary-glow">เข้าห้องเกม</button>
+            <button id="joinBtn" class="btn primary-glow">สร้างห้อง / เข้าห้อง</button>
+
+            <!-- ส่วนแสดงรายชื่อห้องที่กำลังเปิดอยู่เพื่อให้กด Tab Join ได้ -->
+            <div class="active-rooms-container">
+                <h3 class="section-title" style="margin-top: 10px;">🏠 ห้องที่เปิดอยู่ขณะนี้:</h3>
+                <div id="activeRoomsList" class="active-rooms-list">
+                    <p class="no-room-text">กำลังโหลดรายชื่อห้อง...</p>
+                </div>
+            </div>
         </div>
         
         <!-- หน้าล็อบบี้รอเพื่อน -->
