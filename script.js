@@ -112,19 +112,16 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// --- ระบบแก้ปัญหาพับหน้าจอแล้วหลุด (Visibility Change Reconnect) ---
+// ระบบแก้ปัญหาพับหน้าจอแล้วหลุด (Visibility Change Reconnect)
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        // เมื่อเปิดหน้าจอหรือสลับกลับมาแท็บนี้ ให้บังคับต่อ Firebase connection ใหม่ทันที
         db.goOnline();
         if (roomId && myId) {
             db.ref(`rooms/${roomId}`).once('value', (snap) => {
                 if (!snap.val()) {
-                    // ถ้าห้องถูกลบไประหว่างพับจอ ให้รีเซ็ตกลับหน้าแรก
                     localStorage.removeItem('rov_spy_roomid');
                     location.reload();
                 } else {
-                    // ต่อข้อมูลผู้เล่นในห้องเดิมซ้ำเพื่อความเสถียร
                     db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName || savedName || "ผู้เล่น" });
                     db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
                 }
@@ -133,7 +130,6 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// ตรวจสอบระบบจำห้อง (Auto-Reconnect)
 const savedRoomId = localStorage.getItem('rov_spy_roomid');
 if (savedRoomId) {
     roomId = savedRoomId;
@@ -424,6 +420,11 @@ function checkHostAndListen() {
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
         
+        // ปรับ Label ในหน้าตั้งค่า lobby ตามโหมด
+        if (lobbySettingValueInput.previousElementSibling) {
+            lobbySettingValueInput.previousElementSibling.textContent = mode === 'whoami' ? '⏱️ เวลาจำกัด (นาที):' : '🔄 จำนวนรอบการพูด:';
+        }
+
         if (hostId === myId) {
             isHost = true;
             startBtn.style.display = 'block';
