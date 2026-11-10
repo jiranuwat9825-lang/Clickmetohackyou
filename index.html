@@ -18,7 +18,7 @@
         <div class="header-badge">🎮 PARTY GAME</div>
         <h1>Spyfall Party Edition</h1>
         
-        <!-- หน้าใส่ชื่อและห้อง พร้อมเลือกหมวดหมู่ และรายชื่อห้องที่มีอยู่ -->
+        <!-- หน้าใส่ชื่อและห้อง พร้อมแยกปุ่มสร้างห้อง (เลือกหมวดหมู่ได้) และปุ่มเข้าร่วม -->
         <div id="roomSelection" class="box">
             <div class="input-group">
                 <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
@@ -26,16 +26,22 @@
             <div class="input-group">
                 <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)" autocomplete="off">
             </div>
-            <div class="input-group">
+            
+            <!-- เลือกหมวดหมู่เฉพาะตอนสร้างห้องใหม่ -->
+            <div class="input-group" style="background: rgba(15, 23, 42, 0.4); padding: 8px; border-radius: 0.75rem; border: 1px dashed rgba(56, 189, 248, 0.3);">
+                <label style="font-size: 0.75rem; color: #38bdf8; display: block; margin-bottom: 4px; text-align: left;">✨ สำหรับผู้สร้างห้องใหม่เท่านั้น:</label>
                 <select id="categorySelect" class="category-select">
                     <option value="rov">🛡️ หมวดหมู่: ROV (Arena of Valor)</option>
+                    <!-- เพิ่มหมวดหมู่อื่นๆ ในอนาคตตรงนี้ได้ -->
                 </select>
+                <button id="createRoomBtn" class="btn primary-glow" style="margin-top: 8px;">🔨 สร้างห้องใหม่</button>
             </div>
-            <button id="joinBtn" class="btn primary-glow">สร้างห้อง / เข้าห้อง</button>
 
-            <!-- ส่วนแสดงรายชื่อห้องที่กำลังเปิดอยู่เพื่อให้กด Tab Join ได้ -->
+            <button id="joinRoomBtn" class="btn secondary-btn" style="margin-top: 4px;">🚪 เข้าร่วมห้องที่มีอยู่</button>
+
+            <!-- ส่วนแสดงรายชื่อห้องที่เปิดอยู่ -->
             <div class="active-rooms-container">
-                <h3 class="section-title" style="margin-top: 10px;">🏠 ห้องที่เปิดอยู่ขณะนี้:</h3>
+                <h3 class="section-title" style="margin-top: 5px;">🏠 ห้องที่เปิดอยู่ขณะนี้ (คลิกเพื่อ Join):</h3>
                 <div id="activeRoomsList" class="active-rooms-list">
                     <p class="no-room-text">กำลังโหลดรายชื่อห้อง...</p>
                 </div>
