@@ -79,12 +79,24 @@ joinBtn.addEventListener('click', () => {
     lobbyArea.style.display = 'block';
     roomTitle.textContent = `ห้อง: ${roomId}`;
 
-    const playerRef = db.ref(`rooms/${roomId}/players/${myId}`);
-    playerRef.set({ name: myName });
-    playerRef.onDisconnect().remove();
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.once('value', (snapshot) => {
+        const roomData = snapshot.val();
+        let hostId = roomData ? roomData.hostId : null;
 
-    checkHostAndListen();
-    listenGameState();
+        // ถ้าห้องยังไม่มี host ให้ตั้งคนแรกที่เข้าห้องเป็น host ถาวร
+        if (!hostId) {
+            hostId = myId;
+            roomRef.child('hostId').set(hostId);
+        }
+
+        const playerRef = roomRef.child(`players/${myId}`);
+        playerRef.set({ name: myName });
+        playerRef.onDisconnect().remove();
+
+        checkHostAndListen();
+        listenGameState();
+    });
 });
 
 testGameBtn.addEventListener('click', () => {
@@ -110,13 +122,15 @@ function checkHostAndListen() {
         playerList.innerHTML = '';
         const players = data.players || {};
         const playerIds = Object.keys(players);
+        const hostId = data.hostId;
 
         if (playerIds.length === 0) {
             roomRef.remove();
             return;
         }
 
-        if (playerIds[0] === myId) {
+        // เช็คว่าไอดีเราตรงกับ hostId ที่ถูกล็อกไว้ไหม
+        if (hostId === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
@@ -133,9 +147,10 @@ function checkHostAndListen() {
             testGameBtn.style.display = 'none';
         }
 
-        playerIds.forEach((id, index) => {
+        playerIds.forEach((id) => {
             const li = document.createElement('li');
-            li.innerHTML = `👤 ${players[id].name} ${index === 0 ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
+            const isThisHost = (id === hostId);
+            li.innerHTML = `👤 ${players[id].name} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
             playerList.appendChild(li);
         });
     });
@@ -176,8 +191,6 @@ startBtn.addEventListener('click', () => {
         });
 
         const endTime = Date.now() + 300 * 1000;
-
-        // รักษาคะแนนเดิมของแต่ละคนไว้ ถ้ายังไม่มีให้เริ่มที่ 0
         let currentScores = data.scores || {};
         playerIds.forEach(id => {
             if (currentScores[id] === undefined) {
@@ -214,7 +227,6 @@ function listenGameState() {
             return;
         }
 
-        // อัปเดตตารางคะแนนรายบุคคลมุมบน
         const scores = data.scores || {};
         const players = data.players || {};
         scoreListBody.innerHTML = '';
@@ -305,7 +317,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต
+// หน้าจอโหวต (แสดงรายชื่อครบถ้วนรวมถึง Spy ให้เลือกโหวต)
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -317,7 +329,8 @@ function renderVotingScreen(data) {
     const isAmISpy = (myId === data.spyId);
     const currentLaneHeroes = rovLanes[data.lane] || [];
 
-    const activeCandidates = data.tieCandidates || Object.keys(players).filter(id => id !== data.spyId);
+    // แสดงรายชื่อผู้เล่นทั้งหมดให้ครบถ้วนรวมถึง Spy เพื่อให้กดโหวตได้
+    const activeCandidates = data.tieCandidates || Object.keys(players);
     const myVote = votes[myId];
 
     if (isAmISpy) {
@@ -432,25 +445,28 @@ function renderVotingScreen(data) {
         const spyName = players[data.spyId] ? players[data.spyId].name : "ไม่ทราบชื่อ";
         const realSpyHero = data.roles[data.spyId] || "-";
 
-        // ตรวจสอบการทายตัวละครและบันทึกคะแนนรายบุคคล
+        const firstVoterId = Object.keys(votes)[0];
+        const playerGuess = guessData[firstVoterId] || "";
+        let isHeroGuessedCorrectly = (playerGuess.toLowerCase() === realSpyHero.toLowerCase());
+
         if (isTargetSpy) {
             voteResult.innerHTML = `
                 <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
                 <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
                 <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นจับ Spy สำเร็จ!</p>
+                <p style="font-size:0.75rem; color:#cbd5e1;">🎯 ทายตัวละคร: "${playerGuess}" ${isHeroGuessedCorrectly ? '<b style="color:#22c55e;">(ถูกต้อง! รับโบนัส 2 แต้มคนเดียว)</b>' : '<b style="color:#ef4444;">(ผิด ตัวจริงคือ ' + realSpyHero + ')</b>'}</p>
                 <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
 
             if (isHost && !data.scoreUpdated) {
                 let updatedScores = data.scores || {};
-                // ให้คะแนนผู้เล่นทุกคนที่ร่วมโหวต (+1) และคนทายตัวละครถูก (+2)
                 Object.keys(votes).forEach(voterId => {
                     if (updatedScores[voterId] === undefined) updatedScores[voterId] = 0;
                     let pGuess = guessData[voterId] || "";
                     if (pGuess.toLowerCase() === realSpyHero.toLowerCase()) {
-                        updatedScores[voterId] += 2; // ทายตัวละครถูกได้ 2 แต้มคนเดียว
+                        updatedScores[voterId] += 2;
                     } else {
-                        updatedScores[voterId] += 1; // ทายถูกตัวได้ 1 แต้ม
+                        updatedScores[voterId] += 1;
                     }
                 });
                 db.ref(`rooms/${roomId}`).update({
@@ -471,7 +487,7 @@ function renderVotingScreen(data) {
                 let updatedScores = data.scores || {};
                 const spyId = data.spyId;
                 if (updatedScores[spyId] === undefined) updatedScores[spyId] = 0;
-                updatedScores[spyId] += 2; // Spy ชนะได้ 2 แต้ม
+                updatedScores[spyId] += 2;
 
                 db.ref(`rooms/${roomId}`).update({
                     scores: updatedScores,
