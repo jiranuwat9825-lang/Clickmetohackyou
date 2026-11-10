@@ -13,13 +13,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ฐานข้อมูลฮีโร่ ROV อัปเดตครบถ้วนทุกตัวและทุกเลนล่าสุด
+// ฐานข้อมูลฮีโร่ ROV อัปเดตครบถ้วนและถูกต้องตามเลนเมต้าปัจจุบัน
 const rovLanes = {
     "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica", "Erin", "Stuart"],
-    "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Bonnie", "Yue", "Dyadia", "Heino"],
-    "ออฟเลน (Dark Slayer Lane)": ["Florentino", "Yena", "Ryoma", "Maloch", "Lu Bu", "Allain", "Veres", "Omen", "Airi", "Amily", "Arthur", "Astrid", "Skud", "Taara", "Qi", "Richter", "Rourke", "Zuka", "Tachi", "Dextra", "Biron", "Bijan", "Yan", "Wonder Woman"],
-    "ป่า (Jungle / Assassin)": ["Nakroth", "Murad", "Butterfly", "Aoi", "Keera", "Zill", "Kriknak", "Quillen", "Enzo", "Sinestrea", "Wukong", "Paine", "Bright", "Kaine", "Zanis"],
-    "โรมมิ่ง / ซัพพอร์ต (Roaming)": ["Grakk", "Alice", "Thane", "Toro", "Zip", "Aya", "Arum", "Cresht", "Baldum", "Mina", "Omega", "Annette", "Helen", "Krizzix", "Rouie", "Lumburr", "Ming", "Dolia", "TeeMee", "Chaugnar", "Arduin"]
+    "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Bonnie", "Yue", "Dyadia", "Heino", "Gildur", "Azzen'Ka", "Ishar"],
+    "ออฟเลน (Dark Slayer Lane)": ["Florentino", "Yena", "Ryoma", "Maloch", "Lu Bu", "Allain", "Veres", "Omen", "Airi", "Amily", "Arthur", "Astrid", "Skud", "Taara", "Qi", "Richter", "Rourke", "Zuka", "Tachi", "Dextra", "Biron", "Bijan", "Yan", "Wonder Woman", "Arduin", "Mortos", "Max", "Errol", "Volkath", "Ata"],
+    "ป่า (Jungle / Assassin)": ["Nakroth", "Murad", "Butterfly", "Aoi", "Keera", "Zill", "Kriknak", "Quillen", "Enzo", "Sinestrea", "Wukong", "Paine", "Bright", "Kaine", "Zanis", "Zephys"],
+    "โรมมิ่ง / ซัพพอร์ต (Roaming)": ["Grakk", "Alice", "Thane", "Toro", "Zip", "Aya", "Arum", "Cresht", "Baldum", "Mina", "Omega", "Annette", "Helen", "Krizzix", "Rouie", "Lumburr", "Ming", "Dolia", "TeeMee", "Chaugnar", "Sephera", "Xeniel", "Ormarr", "Wiro", "Roxie"]
 };
 
 const roomSelection = document.getElementById('roomSelection');
@@ -272,7 +272,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต (นับผลโหวตตัดสินจากหัวหน้าห้องเป็นหลักทันที)
+// หน้าจอโหวต (แสดงรายชื่อครบถ้วนแบบกะทัดรัด ไม่ต้องเลื่อน)
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -281,13 +281,13 @@ function renderVotingScreen(data) {
     const players = data.players || {};
     const votes = data.votes || {};
     const playerIds = Object.keys(players);
-    const hostId = playerIds[0]; // ไอดีของหัวหน้าห้อง
-    const hostVote = votes[hostId]; // โหวตของหัวหน้าห้อง
+    const hostId = playerIds[0];
+    const hostVote = votes[hostId];
 
     const pListTitle = document.createElement('p');
     pListTitle.className = 'subtitle';
     pListTitle.textContent = isHost 
-        ? (hostVote ? "✅ คุณ (หัวหน้าห้อง) ยืนยันผลโหวตแล้ว!" : "👉 หัวหน้าห้องคลิกเลือกผู้เล่นที่ต้องการโหวต:")
+        ? (hostVote ? "✅ หัวหน้าห้องยืนยันผลโหวตแล้ว" : "👉 หัวหน้าห้องคลิกเลือกผู้เล่นที่ต้องการโหวต:")
         : "⏳ กำลังรอหัวหน้าห้องทำการตัดสินใจโหวต...";
     voteList.appendChild(pListTitle);
 
@@ -296,13 +296,12 @@ function renderVotingScreen(data) {
         btn.className = 'vote-btn';
         if (selectedVoteTarget === targetId) {
             btn.style.borderColor = '#38bdf8';
-            btn.style.background = 'rgba(56, 189, 248, 0.2)';
+            btn.style.background = 'rgba(56, 189, 248, 0.25)';
         }
 
         let isHostVotedThis = (hostVote === targetId);
-        btn.textContent = `👤 ${players[targetId].name} ${isHostVotedThis ? '🗳️ [หัวหน้าห้องเลือก]' : ''}`;
+        btn.innerHTML = `<span>👤 ${players[targetId].name}</span> ${isHostVotedThis ? '<span style="color:#38bdf8; font-weight:700;">🗳️ [เลือกแล้ว]</span>' : ''}`;
         
-        // ถ้าเราเป็น Host และยังไม่ได้กดยืนยัน
         if (isHost && !hostVote) {
             btn.addEventListener('click', () => {
                 selectedVoteTarget = targetId;
@@ -315,11 +314,10 @@ function renderVotingScreen(data) {
         voteList.appendChild(btn);
     });
 
-    // ถ้าเราเป็น Host เลือกคนแล้วแต่ยังไม่กดยืนยัน ให้แสดงปุ่มยืนยัน
     if (isHost && !hostVote && selectedVoteTarget) {
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'btn primary-glow';
-        confirmBtn.style.marginTop = '10px';
+        confirmBtn.style.marginTop = '4px';
         confirmBtn.textContent = `🔒 ยืนยันโหวตให้ ${players[selectedVoteTarget].name}`;
         confirmBtn.addEventListener('click', () => {
             db.ref(`rooms/${roomId}/votes/${hostId}`).set(selectedVoteTarget);
@@ -327,7 +325,6 @@ function renderVotingScreen(data) {
         voteList.appendChild(confirmBtn);
     }
 
-    // ถ้ายืนยันผลโหวตของ Host เรียบร้อยแล้ว แสดงผลลัพธ์และตัดสินแพ้ชนะทันที
     if (hostVote) {
         voteResult.style.display = 'block';
         const suspectName = players[hostVote] ? players[hostVote].name : "ไม่ทราบชื่อ";
@@ -337,17 +334,17 @@ function renderVotingScreen(data) {
 
         if (isTargetSpy) {
             voteResult.innerHTML = `
-                <h3>🔍 ผลการเปิดเผยบทบาท</h3>
-                <p style="margin: 8px 0;">คนที่หัวหน้าห้องโหวตคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#22c55e; font-weight:700; font-size: 1.1rem;">🎉 ทายถูก! ผู้เล่นฝั่งทีมผู้เล่นชนะทันที!</p>
-                <p style="font-size:0.85rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
+                <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
+                <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
+                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ผู้เล่นฝั่งทีมผู้เล่นชนะทันที!</p>
+                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
         } else {
             voteResult.innerHTML = `
-                <h3>🔍 ผลการเปิดเผยบทบาท</h3>
-                <p style="margin: 8px 0;">คนที่หัวหน้าห้องโหวตคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#ef4444; font-weight:700; font-size: 1.1rem;">❌ ทายผิด! ฝั่ง Spy เป็นฝ่ายชนะ!</p>
-                <p style="font-size:0.85rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
+                <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
+                <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
+                <p style="color:#ef4444; font-weight:700; font-size: 1rem;">❌ ทายผิด! ฝั่ง Spy เป็นฝ่ายชนะ!</p>
+                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
         }
     }
