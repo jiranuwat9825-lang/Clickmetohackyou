@@ -149,6 +149,78 @@ input:focus, .category-select:focus {
     box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
 }
 
+/* สไตล์กล่องรายชื่อห้องที่เปิดอยู่ */
+.active-rooms-container {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 0.75rem;
+    padding: 10px;
+    margin-top: 5px;
+    text-align: left;
+}
+
+.active-rooms-list {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.no-room-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    padding: 10px;
+}
+
+.room-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    font-size: 0.8rem;
+}
+
+.room-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.room-item-name {
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.room-item-status {
+    font-size: 0.65rem;
+    color: #94a3b8;
+}
+
+.join-room-tab-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.join-room-tab-btn:hover {
+    background: #047857;
+}
+.join-room-tab-btn:disabled {
+    background: #475569;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
 .player-list {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(71, 85, 105, 0.4);
