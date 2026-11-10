@@ -1,12 +1,12 @@
 // --- นำค่า Config ของคุณมาใส่ตรงนี้ ---
 const firebaseConfig = {
-    apiKey: "ใส่_apiKey_ของคุณตรงนี้",
-    authDomain: "ใส่_authDomain_ของคุณตรงนี้",
-    databaseURL: "ใส่_databaseURL_ของคุณตรงนี้",
-    projectId: "ใส่_projectId_ของคุณตรงนี้",
-    storageBucket: "ใส่_storageBucket_ของคุณตรงนี้",
-    messagingSenderId: "ใส่_messagingSenderId_ของคุณตรงนี้",
-    appId: "ใส่_appId_ของคุณตรงนี้"
+  apiKey: "AIzaSyC3IuOtFTc2OOJclUMpVe1GEv13nCjlEM8",
+  authDomain: "xo-game-e5fdd.firebaseapp.com",
+  projectId: "xo-game-e5fdd",
+  storageBucket: "xo-game-e5fdd.firebasestorage.app",
+  messagingSenderId: "890496938682",
+  appId: "1:890496938682:web:c99edd29e9639415ac4883",
+  measurementId: "G-4RHMNWP5ZJ"
 };
 
 firebase.initializeApp(firebaseConfig);
