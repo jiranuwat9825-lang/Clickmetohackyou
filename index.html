@@ -3,46 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spyfall ROV Online</title>
+    <title>Spyfall ROV Edition</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Spyfall ROV Edition</h1>
+        <div class="header-badge">🎮 ROV PARTY GAME</div>
+        <h1>Spyfall ROV Edition</h1>
         
         <!-- หน้าใส่ชื่อและห้อง -->
         <div id="roomSelection" class="box">
-            <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ">
-            <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น rov99)">
-            <button id="joinBtn" class="btn">เข้าห้องเกม</button>
+            <div class="input-group">
+                <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น rov99)" autocomplete="off">
+            </div>
+            <button id="joinBtn" class="btn primary-glow">เข้าห้องเกม</button>
         </div>
         
         <!-- หน้าล็อบบี้รอมต -->
         <div id="lobbyArea" class="box" style="display: none;">
-            <!-- ปุ่ม Test Game มุมขวาบน -->
-            <button id="testGameBtn" class="test-btn">Test Game (เพิ่มบอท)</button>
-            <h2 id="roomTitle">ชื่อห้อง</h2>
+            <button id="testGameBtn" class="test-btn">🤖 Test Game (เพิ่มบอท)</button>
+            <h2 id="roomTitle" class="room-title">ชื่อห้อง</h2>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
-            <button id="startBtn" class="btn" style="display: none;">เริ่มเกม ROV</button>
-            <p id="waitText" class="status">รอหัวหน้าห้องกดเริ่มเกม...</p>
+            <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม ROV</button>
+            <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
         </div>
 
         <!-- หน้าจอเล่นเกม -->
         <div id="gameArea" class="box" style="display: none;">
-            <div class="role-card" id="roleCard">
-                <h2>ตัวละคร ROV ของคุณ</h2>
+            <div class="role-card">
+                <span class="card-tag">ตัวละครลับของคุณ</span>
                 <p id="heroName" class="hero-highlight">กำลังโหลด...</p>
-                <p class="hint-text">จำตัวละครของคุณไว้ให้ดี แล้วเริ่มจับพิรุธเพื่อน!</p>
+                <p class="hint-text">🤫 เก็บความลับไว้ให้ดี แล้วเริ่มจับพิรุธเพื่อน!</p>
             </div>
             
-            <div class="timer-box">เวลารอบนี้: <span id="timer">05:00</span></div>
+            <div class="timer-container">
+                <span class="timer-label">เวลาที่เหลือ</span>
+                <div class="timer-box"><span id="timer">05:00</span></div>
+            </div>
             
-            <div id="hostControls" style="display: none; margin-bottom: 15px;">
-                <button id="skipToVoteBtn" class="btn secondary">⏩ ข้ามไปหน้าโหวตทันที</button>
+            <div id="hostControls" style="display: none; margin-bottom: 10px;">
+                <button id="skipToVoteBtn" class="btn warning">⏩ ข้ามไปหน้าโหวตทันที</button>
             </div>
 
-            <h3 class="section-title">ฮีโร่ทั้งหมดในแพตช์นี้:</h3>
+            <h3 class="section-title">🛡️ ฮีโร่ทั้งหมดในเลนปัจจุบัน:</h3>
             <div class="hero-grid" id="heroGrid"></div>
 
             <!-- กล่องแสดงบทบาทบอทด้านซ้ายล่าง (เฉพาะโหมดทดสอบ) -->
@@ -58,7 +66,7 @@
             <p class="status">ใครคือคนที่ได้ตัวละครไม่เหมือนเพื่อน? คลิกเลือกโหวตเลย!</p>
             <div id="voteList" class="vote-list"></div>
             <div id="voteResult" class="vote-result" style="display: none;"></div>
-            <button id="backToLobbyBtn" class="btn" style="display: none; margin-top: 15px;">กลับหน้าล็อบบี้</button>
+            <button id="backToLobbyBtn" class="btn danger" style="display: none; margin-top: 15px;">🔄 ปิดห้องและกลับหน้าแรก</button>
         </div>
     </div>
 
