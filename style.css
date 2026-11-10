@@ -1,157 +1,424 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party Game Hub</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <main class="container">
-        <div id="scoreBoard" class="scoreboard" style="display:none;">
-            <div class="score-header">🏆 ตารางคะแนน</div>
-            <div id="scoreListBody" class="score-list"></div>
-        </div>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Prompt', sans-serif;
+}
 
-        <div class="header-badge">🎮 PARTY GAME</div>
-        <h1>Party Game Hub</h1>
+body {
+    background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
 
-        <section id="roomSelection" class="box">
-            <input id="nameInput" type="text" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
-            <button id="showCreateModalBtn" class="btn primary">🔨 สร้างห้องใหม่</button>
+.container {
+    text-align: center;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 2rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+}
 
-            <div class="active-rooms">
-                <h3 class="section-title">🏠 ห้องที่เปิดอยู่</h3>
-                <div id="activeRoomsList" class="active-rooms-list">
-                    <p class="empty-text">กำลังโหลดรายชื่อห้อง...</p>
-                </div>
-            </div>
-        </section>
+.scoreboard-modern {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
 
-        <section id="createRoomModal" class="box" style="display:none;">
-            <h2 class="room-title">⚙️ ตั้งค่าห้องใหม่</h2>
-            <input id="newRoomInput" type="text" placeholder="ชื่อห้อง เช่น room99" autocomplete="off">
+.score-header {
+    color: #38bdf8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 2px;
+    text-align: center;
+}
 
-            <label for="gameModeSelect">🎮 โหมดเกม</label>
-            <select id="gameModeSelect" class="form-control">
-                <option value="spyfall">🕵️ Spyfall</option>
-                <option value="whoami">❓ ฉันคือใคร</option>
-            </select>
+.score-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: none;
+    overflow-y: visible;
+}
 
-            <label for="categorySelect">🛡️ หมวดหมู่</label>
-            <select id="categorySelect" class="form-control">
-                <option value="rov">ROV (Arena of Valor)</option>
-                <option value="valorant">Valorant</option>
-            </select>
+.score-row-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
 
-            <label id="settingLabel" for="settingValueInput">🔄 จำนวนรอบการพูด</label>
-            <input id="settingValueInput" type="number" min="1" step="1" value="2">
+.score-row-item b {
+    color: #38bdf8;
+}
 
-            <button id="confirmCreateBtn" class="btn primary">🚀 ยืนยันสร้างห้อง</button>
-            <button id="backToHomeBtn" class="btn secondary">🔙 กลับ</button>
-        </section>
+.header-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    color: #0f172a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
-        <section id="lobbyArea" class="box" style="display:none;">
-            <h2 id="roomTitle" class="room-title"></h2>
-            <p id="roomInfo" class="category-badge"></p>
+.category-badge-view {
+    display: inline-block;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
 
-            <div id="hostSettingsBox" class="host-settings" style="display:none;">
-                <strong>⚙️ ตั้งค่าห้อง (หัวหน้าห้อง)</strong>
-                <label for="lobbyGameModeSelect">โหมดเกม</label>
-                <select id="lobbyGameModeSelect" class="form-control">
-                    <option value="spyfall">🕵️ Spyfall</option>
-                    <option value="whoami">❓ ฉันคือใคร</option>
-                </select>
+h1 {
+    margin-bottom: 1rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #38bdf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-                <label for="lobbyCategorySelect">หมวดหมู่</label>
-                <select id="lobbyCategorySelect" class="form-control">
-                    <option value="rov">ROV (Arena of Valor)</option>
-                    <option value="valorant">Valorant</option>
-                </select>
+.box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+}
 
-                <label id="lobbySettingLabel" for="lobbySettingValueInput">จำนวนรอบการพูด</label>
-                <input id="lobbySettingValueInput" type="number" min="1" step="1" value="2">
-            </div>
+.room-title {
+    color: #38bdf8;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
 
-            <h3 class="section-title">ผู้เล่นในห้อง</h3>
-            <ul id="playerList" class="player-list"></ul>
-            <button id="startBtn" class="btn primary" style="display:none;">🚀 เริ่มเกม / เริ่มรอบใหม่</button>
-            <p id="waitText" class="status-text">⏳ รอหัวหน้าห้องเริ่มเกม...</p>
-            <button id="closeRoomBtn" class="btn danger" style="display:none;">🗑️ ปิดห้อง</button>
-        </section>
+.subtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-align: left;
+    margin-bottom: 2px;
+}
 
-        <section id="gameArea" class="box" style="display:none;">
-            <div class="role-card">
-                <span class="card-tag">ตัวละครของคุณ</span>
-                <p id="heroName" class="hero-name">กำลังโหลด...</p>
-                <p class="hint-text">เก็บตัวละครไว้เป็นความลับ</p>
-            </div>
+.input-group {
+    width: 100%;
+}
 
-            <div class="turn-panel">
-                <div id="roundIndicator" class="round-indicator"></div>
-                <div id="currentSpeakerBox" class="speaker-text"></div>
-                <button id="endTurnBtn" class="btn primary" style="display:none;">✅ จบเทิร์น</button>
-            </div>
+input, .category-select {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    background: rgba(15, 23, 42, 0.8);
+    color: white;
+    font-size: 0.9rem;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+}
 
-            <div class="turn-order-box">
-                <strong>📋 ลำดับการพูด</strong>
-                <div id="fullTurnOrderContainer" class="turn-order-list"></div>
-            </div>
+input:focus, .category-select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
 
-            <button id="skipToVoteBtn" class="btn warning" style="display:none;">⏩ ข้ามไปโหวต</button>
+.active-rooms-container {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 0.75rem;
+    padding: 8px;
+    margin-top: 2px;
+    text-align: left;
+}
 
-            <h3 id="heroListTitle" class="section-title">ตัวละครในตำแหน่ง</h3>
-            <div id="heroGrid" class="hero-grid"></div>
-        </section>
+.active-rooms-list {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+}
 
-        <section id="whoAmIArea" class="box" style="display:none;">
-            <div class="role-card whoami-card">
-                <span class="card-tag">❓ คุณเป็นตัวละครอะไร?</span>
-                <p class="hint-text">คุณเห็นตัวละครของคนอื่น แต่ไม่เห็นตัวละครของตัวเอง</p>
-            </div>
+.no-room-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    padding: 6px;
+}
 
-            <div class="timer-panel">
-                <span>⏱️ เวลาที่เหลือ</span>
-                <strong id="whoAmITimer">00:00</strong>
-            </div>
+.room-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    font-size: 0.8rem;
+}
 
-            <h3 class="section-title">👥 ตัวละครของผู้เล่นคนอื่น</h3>
-            <div id="othersRolesGrid" class="hero-grid"></div>
+.room-item-info {
+    display: flex;
+    flex-direction: column;
+}
 
-            <div class="guess-panel">
-                <p id="guessStatusText">🎯 คุณมีสิทธิ์ตอบ 1 ครั้ง</p>
-                <div id="guessControlsDiv" class="guess-controls">
-                    <select id="myGuessSelect" class="form-control">
-                        <option value="">-- เลือกคำตอบ --</option>
-                    </select>
-                    <button id="submitMyGuessBtn" class="btn primary">🔒 ยืนยันคำตอบ</button>
-                </div>
-            </div>
+.room-item-name {
+    font-weight: 700;
+    color: #38bdf8;
+}
 
-            <div class="turn-order-box">
-                <strong>📋 ลำดับผู้เล่น</strong>
-                <div id="whoAmITurnOrderContainer" class="turn-order-list"></div>
-            </div>
+.room-item-status {
+    font-size: 0.65rem;
+    color: #94a3b8;
+}
 
-            <button id="whoAmISkipBtn" class="btn warning" style="display:none;">⏩ จบเกมทันที</button>
-        </section>
+.join-room-tab-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.join-room-tab-btn:hover {
+    background: #047857;
+}
+.join-room-tab-btn:disabled {
+    background: #475569;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
 
-        <section id="voteArea" class="box" style="display:none;">
-            <h2 id="voteAreaTitle">🗳️ โหวตหา Spy</h2>
-            <p id="voteInstruction" class="status-text"></p>
-            <div id="voteList" class="vote-list"></div>
-            <div id="voteResult" class="result-box" style="display:none;"></div>
+.player-list {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 0.75rem;
+    padding: 8px;
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 5px;
+    text-align: left;
+}
 
-            <div id="hostPostVoteControls" class="host-controls" style="display:none;">
-                <button id="nextRoundBtn" class="btn primary">🔄 เริ่มรอบถัดไป</button>
-                <button id="backToLobbyBtn" class="btn danger">🗑️ ปิดห้อง</button>
-            </div>
-        </section>
-    </main>
+.player-list li {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.player-list li:last-child {
+    border-bottom: none;
+}
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+.role-card {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.6), rgba(30, 41, 59, 0.8));
+    padding: 1.2rem;
+    border-radius: 1rem;
+    margin-bottom: 0.4rem;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.hero-highlight {
+    font-size: 2rem;
+    color: #38bdf8;
+    font-weight: 700;
+    margin: 0.2rem 0;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.hint-text {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.section-title {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 110px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 8px;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(71, 85, 105, 0.4);
+}
+
+.hero-item {
+    background: rgba(30, 41, 59, 0.9);
+    padding: 6px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    color: #e2e8f0;
+    text-align: center;
+    border: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+.compact-vote {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: none;
+    overflow-y: visible;
+}
+
+.vote-btn {
+    background: rgba(51, 65, 85, 0.7);
+    color: white;
+    border: 1px solid rgba(71, 85, 105, 0.6);
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.vote-btn:hover {
+    background: rgba(14, 165, 233, 0.3);
+    border-color: #38bdf8;
+}
+
+select {
+    width: 100%;
+    padding: 0.7rem;
+    border-radius: 0.6rem;
+    border: 1px solid #38bdf8;
+    background: #0f172a;
+    color: white;
+    font-size: 0.9rem;
+    margin-top: 6px;
+    outline: none;
+}
+
+.vote-result {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 0.9rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    margin-top: 8px;
+}
+
+.btn {
+    width: 100%;
+    border: none;
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.primary-glow {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    color: #0f172a;
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+}
+.primary-glow:hover {
+    background: linear-gradient(135deg, #0ea5e9, #0369a1);
+    transform: translateY(-1px);
+}
+
+.secondary-btn {
+    background: rgba(51, 65, 85, 0.9);
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    color: #e2e8f0;
+}
+.secondary-btn:hover {
+    background: rgba(71, 85, 105, 0.9);
+    color: white;
+}
+
+.btn.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    padding: 0.7rem;
+}
+.btn.warning:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.btn.danger {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    padding: 0.7rem;
+}
+.btn.danger:hover {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+.status {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.status-pulse {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
