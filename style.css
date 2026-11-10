@@ -531,7 +531,7 @@ input:focus, .category-select:focus {
     color: white;
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
     padding: 0.7rem;
-    margin-top: 6px;
+    margin-top: 15px;
 }
 
 .btn.danger:hover {
