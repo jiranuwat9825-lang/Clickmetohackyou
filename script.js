@@ -46,8 +46,7 @@ const botDebugBox = document.getElementById('botDebugBox');
 const botStatusList = document.getElementById('botStatusList');
 
 const scoreBoard = document.getElementById('scoreBoard');
-const playerScoreVal = document.getElementById('playerScoreVal');
-const spyScoreVal = document.getElementById('spyScoreVal');
+const scoreListBody = document.getElementById('scoreListBody');
 const hostPostVoteControls = document.getElementById('hostPostVoteControls');
 const nextRoundBtn = document.getElementById('nextRoundBtn');
 const backToLobbyBtn = document.getElementById('backToLobbyBtn');
@@ -177,7 +176,14 @@ startBtn.addEventListener('click', () => {
         });
 
         const endTime = Date.now() + 300 * 1000;
-        const currentScores = data.scores || { player: 0, spy: 0 };
+
+        // รักษาคะแนนเดิมของแต่ละคนไว้ ถ้ายังไม่มีให้เริ่มที่ 0
+        let currentScores = data.scores || {};
+        playerIds.forEach(id => {
+            if (currentScores[id] === undefined) {
+                currentScores[id] = 0;
+            }
+        });
 
         roomRef.update({
             status: 'playing',
@@ -208,9 +214,19 @@ function listenGameState() {
             return;
         }
 
-        const scores = data.scores || { player: 0, spy: 0 };
-        playerScoreVal.textContent = scores.player;
-        spyScoreVal.textContent = scores.spy;
+        // อัปเดตตารางคะแนนรายบุคคลมุมบน
+        const scores = data.scores || {};
+        const players = data.players || {};
+        scoreListBody.innerHTML = '';
+        Object.keys(players).forEach(id => {
+            const pName = players[id].name;
+            const pScore = scores[id] || 0;
+            const isSpyTag = (id === data.spyId && data.status === 'voting') ? ' [Spy]' : '';
+            const row = document.createElement('div');
+            row.className = 'score-row-item';
+            row.innerHTML = `<span>${pName}${isSpyTag}</span> <b>${pScore} แต้ม</b>`;
+            scoreListBody.appendChild(row);
+        });
         scoreBoard.style.display = 'block';
 
         if (data.status === 'playing') {
@@ -236,7 +252,6 @@ function listenGameState() {
 
             botDebugBox.style.display = 'block';
             botStatusList.innerHTML = '';
-            const players = data.players || {};
 
             Object.keys(players).forEach(id => {
                 if (id !== myId && id.includes('bot')) {
@@ -290,7 +305,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต (เช็คเงื่อนไข Spy ห้ามโหวต, รีโหวตกรณีคะแนนเท่ากัน)
+// หน้าจอโหวต
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -302,7 +317,6 @@ function renderVotingScreen(data) {
     const isAmISpy = (myId === data.spyId);
     const currentLaneHeroes = rovLanes[data.lane] || [];
 
-    // เช็คว่าใครคือผู้มีสิทธิ์โหวต (ทุกคนยกเว้น Spy)
     const activeCandidates = data.tieCandidates || Object.keys(players).filter(id => id !== data.spyId);
     const myVote = votes[myId];
 
@@ -312,7 +326,6 @@ function renderVotingScreen(data) {
         voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy และทายตัวละคร:";
     }
 
-    // หากไม่ใช่ Spy ถึงจะแสดงปุ่มให้โหวต
     if (!isAmISpy) {
         activeCandidates.forEach(targetId => {
             if (!players[targetId]) return;
@@ -339,7 +352,6 @@ function renderVotingScreen(data) {
 
             voteList.appendChild(btn);
 
-            // แสดง Dropdown ทายตัวละครเมื่อเลือกเป้าหมายแล้ว
             if (selectedVoteTarget === targetId && !myVote) {
                 const selectHero = document.createElement('select');
                 
@@ -379,7 +391,6 @@ function renderVotingScreen(data) {
         });
     }
 
-    // คำนวณผลโหวตเมื่อผู้เล่นทั่วไปโหวตครบทุกคน
     const validVotersCount = Object.keys(players).filter(id => id !== data.spyId).length;
     const totalVotes = Object.keys(votes).length;
 
@@ -401,7 +412,6 @@ function renderVotingScreen(data) {
             }
         }
 
-        // กรณีคะแนนเท่ากัน ให้รีโหวตใหม่โดยเลือกเฉพาะคนที่คะแนนเท่ากัน
         if (topTargets.length > 1 && !data.tieHandled) {
             if (isHost) {
                 db.ref(`rooms/${roomId}`).update({
@@ -422,27 +432,29 @@ function renderVotingScreen(data) {
         const spyName = players[data.spyId] ? players[data.spyId].name : "ไม่ทราบชื่อ";
         const realSpyHero = data.roles[data.spyId] || "-";
 
-        // เช็คว่าคนที่โหวตถูกทายตัวละครถูกไหม (เช็คจากโหวตของ Host หรือผู้เล่นหลักคนแรก)
-        const firstVoterId = Object.keys(votes)[0];
-        const playerGuess = guessData[firstVoterId] || "";
-        let isHeroGuessedCorrectly = (playerGuess.toLowerCase() === realSpyHero.toLowerCase());
-
+        // ตรวจสอบการทายตัวละครและบันทึกคะแนนรายบุคคล
         if (isTargetSpy) {
-            let pointsEarned = isHeroGuessedCorrectly ? 2 : 1;
-
             voteResult.innerHTML = `
                 <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
                 <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นชนะ (${pointsEarned} คะแนน)!</p>
-                <p style="font-size:0.75rem; color:#cbd5e1;">🎯 ทายตัวละคร: "${playerGuess}" ${isHeroGuessedCorrectly ? '<b style="color:#22c55e;">(ถูกต้อง! รับโบนัส 2 แต้มคนเดียว)</b>' : '<b style="color:#ef4444;">(ผิด ตัวจริงคือ ' + realSpyHero + ')</b>'}</p>
+                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นจับ Spy สำเร็จ!</p>
                 <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
 
             if (isHost && !data.scoreUpdated) {
-                const currentScores = data.scores || { player: 0, spy: 0 };
-                currentScores.player += pointsEarned;
+                let updatedScores = data.scores || {};
+                // ให้คะแนนผู้เล่นทุกคนที่ร่วมโหวต (+1) และคนทายตัวละครถูก (+2)
+                Object.keys(votes).forEach(voterId => {
+                    if (updatedScores[voterId] === undefined) updatedScores[voterId] = 0;
+                    let pGuess = guessData[voterId] || "";
+                    if (pGuess.toLowerCase() === realSpyHero.toLowerCase()) {
+                        updatedScores[voterId] += 2; // ทายตัวละครถูกได้ 2 แต้มคนเดียว
+                    } else {
+                        updatedScores[voterId] += 1; // ทายถูกตัวได้ 1 แต้ม
+                    }
+                });
                 db.ref(`rooms/${roomId}`).update({
-                    scores: currentScores,
+                    scores: updatedScores,
                     scoreUpdated: true
                 });
             }
@@ -456,10 +468,13 @@ function renderVotingScreen(data) {
             `;
 
             if (isHost && !data.scoreUpdated) {
-                const currentScores = data.scores || { player: 0, spy: 0 };
-                currentScores.spy += 2;
+                let updatedScores = data.scores || {};
+                const spyId = data.spyId;
+                if (updatedScores[spyId] === undefined) updatedScores[spyId] = 0;
+                updatedScores[spyId] += 2; // Spy ชนะได้ 2 แต้ม
+
                 db.ref(`rooms/${roomId}`).update({
-                    scores: currentScores,
+                    scores: updatedScores,
                     scoreUpdated: true
                 });
             }
