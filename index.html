@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spyfall ROV Edition</title>
+    <title>Spyfall Party Game</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -15,16 +15,22 @@
             <div id="scoreListBody" class="score-list-body"></div>
         </div>
 
-        <div class="header-badge">🎮 ROV PARTY GAME</div>
-        <h1>Spyfall ROV Edition</h1>
+        <div class="header-badge">🎮 PARTY GAME</div>
+        <h1>Spyfall Party Edition</h1>
         
-        <!-- หน้าใส่ชื่อและห้อง -->
+        <!-- หน้าใส่ชื่อและห้อง พร้อมเลือกหมวดหมู่ -->
         <div id="roomSelection" class="box">
             <div class="input-group">
                 <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
             </div>
             <div class="input-group">
-                <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น rov99)" autocomplete="off">
+                <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <select id="categorySelect" class="category-select">
+                    <option value="rov">🛡️ หมวดหมู่: ROV (Arena of Valor)</option>
+                    <!-- สามารถเพิ่มหมวดหมู่อื่นๆ ในอนาคตได้ตรงนี้ -->
+                </select>
             </div>
             <button id="joinBtn" class="btn primary-glow">เข้าห้องเกม</button>
         </div>
@@ -32,9 +38,10 @@
         <!-- หน้าล็อบบี้รอเพื่อน -->
         <div id="lobbyArea" class="box" style="display: none;">
             <h2 id="roomTitle" class="room-title">ชื่อห้อง</h2>
+            <p id="roomCategoryBadge" class="category-badge-view">หมวดหมู่: ROV</p>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
-            <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม ROV</button>
+            <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม</button>
             <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
         </div>
 
@@ -55,7 +62,7 @@
                 <button id="skipToVoteBtn" class="btn warning">⏩ ข้ามไปหน้าโหวตทันที</button>
             </div>
 
-            <h3 class="section-title">🛡️ ฮีโร่ทั้งหมดในเลนปัจจุบัน:</h3>
+            <h3 class="section-title">🛡️ รายชื่อทั้งหมดในหมวดนี้:</h3>
             <div class="hero-grid" id="heroGrid"></div>
         </div>
 
