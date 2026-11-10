@@ -83,7 +83,6 @@ const selectedGuessText = document.getElementById('selectedGuessText');
 const submitMyGuessBtn = document.getElementById('submitMyGuessBtn');
 const guessControlsDiv = document.getElementById('guessControlsDiv');
 const guessStatusText = document.getElementById('guessStatusText');
-const whoAmITurnOrderContainer = document.getElementById('whoAmITurnOrderContainer');
 const whoAmIHostControls = document.getElementById('whoAmIHostControls');
 const whoAmISkipBtn = document.getElementById('whoAmISkipBtn');
 
