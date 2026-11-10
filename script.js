@@ -200,23 +200,6 @@ backToHomeBtn.addEventListener('click', () => {
     roomSelection.style.display = 'flex';
 });
 
-// ปุ่มรีเซ็ตข้อมูลทั้งหมด (Emergency Reset)
-const resetDataBtn = document.createElement('button');
-resetDataBtn.className = 'btn secondary-btn';
-resetDataBtn.style.cssText = "margin-top: 15px; font-size: 0.75rem; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;";
-resetDataBtn.textContent = "🔄 รีเซ็ตข้อมูลและออกจากห้องทั้งหมด";
-resetDataBtn.addEventListener('click', () => {
-    if (confirm('ต้องการล้างข้อมูลแคชและรีเซ็ตสถานะทั้งหมดหรือไม่?')) {
-        if (roomId && myId) {
-            db.ref(`rooms/${roomId}/players/${myId}`).remove();
-        }
-        localStorage.removeItem('rov_spy_roomid');
-        localStorage.removeItem('rov_spy_myname');
-        location.reload();
-    }
-});
-roomSelection.appendChild(resetDataBtn);
-
 db.ref('rooms').on('value', (snapshot) => {
     const rooms = snapshot.val();
     activeRoomsList.innerHTML = '';
@@ -420,7 +403,6 @@ function checkHostAndListen() {
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
         
-        // ปรับ Label ในหน้าตั้งค่า lobby ตามโหมด
         if (lobbySettingValueInput.previousElementSibling) {
             lobbySettingValueInput.previousElementSibling.textContent = mode === 'whoami' ? '⏱️ เวลาจำกัด (นาที):' : '🔄 จำนวนรอบการพูด:';
         }
