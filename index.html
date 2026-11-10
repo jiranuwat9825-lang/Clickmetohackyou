@@ -9,16 +9,25 @@
 </head>
 <body>
     <div class="container">
-        <!-- ปุ่ม Test Game มุมขวาบนสุด -->
+        <!-- ปุ่ม Test Game มุมซ้ายบน -->
         <button id="testGameBtn" class="test-btn-corner" style="display: none;">
             <span class="test-icon">🤖</span> Test Bot
         </button>
 
-        <!-- ตารางคะแนนมุมขวาบน -->
-        <div id="scoreBoard" class="scoreboard-corner" style="display: none;">
-            <div class="score-title">🏆 คะแนนสะสม</div>
-            <div class="score-row"><span>ผู้เล่น:</span> <b id="playerScoreVal">0</b></div>
-            <div class="score-row"><span>Spy:</span> <b id="spyScoreVal">0</b></div>
+        <!-- Scoreboard ดีไซน์ใหม่ตรงกลางด้านบน -->
+        <div id="scoreBoard" class="scoreboard-modern" style="display: none;">
+            <div class="score-header">🏆 คะแนนสะสม</div>
+            <div class="score-body">
+                <div class="score-item player">
+                    <span class="score-label">ผู้เล่นทั่วไป</span>
+                    <span id="playerScoreVal" class="score-num">0</span>
+                </div>
+                <div class="score-divider">VS</div>
+                <div class="score-item spy">
+                    <span class="score-label">ฝ่าย Spy</span>
+                    <span id="spyScoreVal" class="score-num">0</span>
+                </div>
+            </div>
         </div>
 
         <div class="header-badge">🎮 ROV PARTY GAME</div>
