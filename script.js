@@ -34,7 +34,8 @@ const voteArea = document.getElementById('voteArea');
 const nameInput = document.getElementById('nameInput');
 const roomInput = document.getElementById('roomInput');
 const categorySelect = document.getElementById('categorySelect');
-const joinBtn = document.getElementById('joinBtn');
+const createRoomBtn = document.getElementById('createRoomBtn');
+const joinRoomBtn = document.getElementById('joinRoomBtn');
 const activeRoomsList = document.getElementById('activeRoomsList');
 
 const roomTitle = document.getElementById('roomTitle');
@@ -71,13 +72,13 @@ let timerInterval = null;
 let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
-// โหลดรายชื่อห้องทั้งหมดที่เปิดอยู่แบบเรียลไทม์เพื่อทำปุ่ม Join ทันที
+// โหลดรายชื่อห้องทั้งหมดเพื่อกด Tab Join
 db.ref('rooms').on('value', (snapshot) => {
     const rooms = snapshot.val();
     activeRoomsList.innerHTML = '';
 
     if (!rooms || Object.keys(rooms).length === 0) {
-        activeRoomsList.innerHTML = `<p class="no-room-text">ยังไม่มีห้องที่เปิดอยู่ในขณะนี้ สร้างห้องใหม่ด้านบนได้เลย!</p>`;
+        activeRoomsList.innerHTML = `<p class="no-room-text">ยังไม่มีห้องที่เปิดอยู่ กดสร้างห้องใหม่ด้านบนได้เลย!</p>`;
         return;
     }
 
@@ -91,14 +92,14 @@ db.ref('rooms').on('value', (snapshot) => {
         const card = document.createElement('div');
         card.className = 'room-item-card';
 
-        let statusText = '⏳ กำลังรอผู้เล่น (Lobby)';
+        let statusText = '⏳ รอผู้เล่น (Lobby)';
         let canJoin = true;
 
         if (rStatus === 'playing') {
-            statusText = '🎮 กำลังเล่นเกมอยู่';
+            statusText = '🎮 กำลังเล่นเกม';
             canJoin = false;
         } else if (rStatus === 'voting') {
-            statusText = '🗳️ กำลังช่วงลงคะแนน';
+            statusText = '🗳️ กำลังโหวต';
             canJoin = false;
         }
 
@@ -111,13 +112,13 @@ db.ref('rooms').on('value', (snapshot) => {
 
         const btn = document.createElement('button');
         btn.className = 'join-room-tab-btn';
-        btn.textContent = canJoin ? 'เข้าร่วม' : 'ติดเล่นอยู่';
+        btn.textContent = canJoin ? 'เข้าร่วม' : 'ติดเล่น';
         btn.disabled = !canJoin;
 
         if (canJoin) {
             btn.addEventListener('click', () => {
                 roomInput.value = rId;
-                joinBtn.click();
+                joinRoomBtn.click();
             });
         }
 
@@ -126,7 +127,8 @@ db.ref('rooms').on('value', (snapshot) => {
     });
 });
 
-joinBtn.addEventListener('click', () => {
+// 1. ปุ่มสร้างห้องใหม่ (เลือกหมวดหมู่ได้)
+createRoomBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
     const selectedCategory = categorySelect.value;
@@ -139,10 +141,9 @@ joinBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
         const roomData = snapshot.val();
-        
-        // เช็คความปลอดภัย: ถ้าห้องเริ่มเล่นไปแล้ว ห้ามกด Join เข้าห้องเด็ดขาด
-        if (roomData && roomData.status && roomData.status !== 'lobby' && roomData.status !== '') {
-            alert('❌ ห้องนี้กำลังอยู่ในระหว่างการเล่นเกม ไม่สามารถเข้าร่วมได้ในขณะนี้ ต้องรอจนกว่าจะจบรอบ!');
+
+        if (roomData) {
+            alert('❌ ชื่อห้องนี้มีอยู่แล้ว กรุณาใช้ชื่อห้องอื่น หรือกดปุ่ม "เข้าร่วมห้อง" ด้านล่าง');
             return;
         }
 
@@ -150,14 +151,49 @@ joinBtn.addEventListener('click', () => {
         lobbyArea.style.display = 'block';
         roomTitle.textContent = `ห้อง: ${roomId}`;
 
-        let hostId = roomData ? roomData.hostId : null;
+        // ตั้งค่าผู้สร้างเป็น Host และบันทึกหมวดหมู่
+        roomRef.set({
+            hostId: myId,
+            category: selectedCategory,
+            status: 'lobby'
+        });
 
-        if (!hostId) {
-            hostId = myId;
-            roomRef.child('hostId').set(hostId);
-            roomRef.child('category').set(selectedCategory);
-            roomRef.child('status').set('lobby');
+        const playerRef = roomRef.child(`players/${myId}`);
+        playerRef.set({ name: myName });
+        playerRef.onDisconnect().remove();
+
+        checkHostAndListen();
+        listenGameState();
+    });
+});
+
+// 2. ปุ่มเข้าร่วมห้องที่มีอยู่ (ใช้หมวดหมู่ตามที่ห้องนั้นตั้งไว้)
+joinRoomBtn.addEventListener('click', () => {
+    myName = nameInput.value.trim();
+    roomId = roomInput.value.trim();
+
+    if (!myName || !roomId) {
+        alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
+        return;
+    }
+
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.once('value', (snapshot) => {
+        const roomData = snapshot.val();
+
+        if (!roomData) {
+            alert('❌ ไม่พบห้องนี้ กรุณาตรวจสอบชื่อห้องหรือกดสร้างห้องใหม่');
+            return;
         }
+
+        if (roomData.status && roomData.status !== 'lobby' && roomData.status !== '') {
+            alert('❌ ห้องนี้กำลังอยู่ในระหว่างการเล่นเกม ไม่สามารถเข้าร่วมได้ ต้องรอจนกว่าจะจบรอบ!');
+            return;
+        }
+
+        roomSelection.style.display = 'none';
+        lobbyArea.style.display = 'block';
+        roomTitle.textContent = `ห้อง: ${roomId}`;
 
         const playerRef = roomRef.child(`players/${myId}`);
         playerRef.set({ name: myName });
@@ -574,7 +610,7 @@ function renderVotingScreen(data) {
     }
 }
 
-// ปุ่มเริ่มรอบถัดไปสำหรับหัวหน้าห้อง (เปลี่ยนสถานะกลับเป็น lobby เพื่อเปิดให้คนอื่นกด Join ได้)
+// ปุ่มเริ่มรอบถัดไปสำหรับหัวหน้าห้อง
 nextRoundBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
