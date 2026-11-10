@@ -4,7 +4,7 @@ const firebaseConfig = {
     authDomain: "xo-game-e5fdd.firebaseapp.com",
     databaseURL: "https://xo-game-e5fdd-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "xo-game-e5fdd",
-    storageBucket: "xo-game-e5fdd.firebasestorage.app",
+    storageBucket: "xo-game-e5fdd.appspot.com",
     messagingSenderId: "890496938682",
     appId: "1:890496938682:web:c99edd29e639415ac4883",
     measurementId: "G-4RHMNWP5ZJ"
@@ -127,7 +127,7 @@ function checkHostAndListen() {
 
         playerIds.forEach((id, index) => {
             const li = document.createElement('li');
-            li.textContent = `👤 ${players[id].name} ${index === 0 ? '(หัวหน้าห้อง)' : ''}`;
+            li.innerHTML = `👤 ${players[id].name} ${index === 0 ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
             playerList.appendChild(li);
         });
     });
@@ -146,25 +146,21 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
-        // 1. สุ่มเลนหลักมา 1 เลนสำหรับทุกคนในตาคู่นี้
         const laneKeys = Object.keys(rovLanes);
         const selectedLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
         let laneHeroes = [...rovLanes[selectedLane]];
 
-        // สุ่มเลือกผู้เล่นที่เป็น Spy
         const spyIndex = Math.floor(Math.random() * playerIds.length);
         const spyId = playerIds[spyIndex];
 
         let rolesData = {};
 
-        // 2. สุ่มตัวละครให้ Spy ก่อนจากเลนเดียวกัน (แต่ต้องไม่ซ้ำกับคนอื่น)
         const spyHeroIdx = Math.floor(Math.random() * laneHeroes.length);
         rolesData[spyId] = laneHeroes.splice(spyHeroIdx, 1)[0];
 
-        // 3. สุ่มตัวละครให้ผู้เล่นที่เหลือจากเลนเดียวกัน (อาจจะซ้ำกันได้ระหว่างคนทั่วไป เพื่อให้ Spy เนียนยากขึ้น หรือสุ่มแจกจากที่เหลือ)
         playerIds.forEach((id) => {
             if (id !== spyId) {
-                const normalHeroes = rovLanes[selectedLane]; // ใช้ฮีโร่ทั้งเลนสุ่มให้คนทั่วไป
+                const normalHeroes = rovLanes[selectedLane];
                 rolesData[id] = normalHeroes[Math.floor(Math.random() * normalHeroes.length)];
             }
         });
@@ -187,7 +183,14 @@ function listenGameState() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) return;
+        if (!data) {
+            // ถ้าห้องถูกลบไปแล้ว ให้รีเซ็ตหน้าจอผู้เล่นกลับหน้าแรกอัตโนมัติ
+            roomSelection.style.display = 'block';
+            lobbyArea.style.display = 'none';
+            gameArea.style.display = 'none';
+            voteArea.style.display = 'none';
+            return;
+        }
 
         if (data.status === 'playing') {
             lobbyArea.style.display = 'none';
@@ -201,7 +204,7 @@ function listenGameState() {
             heroGrid.innerHTML = '';
             const currentLane = data.lane;
             if (currentLane && rovLanes[currentLane]) {
-                document.querySelector('.section-title').textContent = `ฮีโร่ในเลนปัจจุบัน (${currentLane}):`;
+                document.querySelector('.section-title').textContent = `🛡️ ฮีโร่ในเลนปัจจุบัน (${currentLane}):`;
                 rovLanes[currentLane].forEach(hero => {
                     const div = document.createElement('div');
                     div.className = 'hero-item';
@@ -314,16 +317,16 @@ function renderVotingScreen(data) {
             voteResult.style.display = 'block';
             if (data.spyId && players[data.spyId]) {
                 if (mostVotedId === data.spyId) {
-                    voteResult.innerHTML = `🎉 <span style="color:#22c55e;">ทายถูก!</span> ผู้เล่นจับ Spy ได้สำเร็จ (${players[data.spyId].name} คือ Spy!)`;
+                    voteResult.innerHTML = `🎉 <span style="color:#22c55e; font-weight:700;">ทายถูก!</span> ผู้เล่นจับ Spy ได้สำเร็จ (${players[data.spyId].name} คือ Spy!)`;
                 } else {
-                    voteResult.innerHTML = `❌ <span style="color:#ef4444;">ทายผิด!</span> คนที่ถูกโหวตไม่ใช่ Spy (Spy ที่แท้จริงคือ ${players[data.spyId].name})`;
+                    voteResult.innerHTML = `❌ <span style="color:#ef4444; font-weight:700;">ทายผิด!</span> คนที่ถูกโหวตไม่ใช่ Spy (Spy ที่แท้จริงคือ ${players[data.spyId].name})`;
                 }
             }
         }
     }
 }
 
+// พอกดปุ่มปิดห้อง จะลบข้อมูลห้องทิ้งจาก Firebase ทันที
 backToLobbyBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).remove();
-    window.location.reload();
 });
