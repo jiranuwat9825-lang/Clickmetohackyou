@@ -27,21 +27,23 @@ const categoriesData = {
 };
 
 const roomSelection = document.getElementById('roomSelection');
+const createRoomModal = document.getElementById('createRoomModal');
 const lobbyArea = document.getElementById('lobbyArea');
 const gameArea = document.getElementById('gameArea');
 const voteArea = document.getElementById('voteArea');
 
 const nameInput = document.getElementById('nameInput');
-const roomInput = document.getElementById('roomInput');
+const showCreateModalBtn = document.getElementById('showCreateModalBtn');
+const backToHomeBtn = document.getElementById('backToHomeBtn');
+const newRoomInput = document.getElementById('newRoomInput');
 const categorySelect = document.getElementById('categorySelect');
 const totalRoundsSelect = document.getElementById('totalRoundsSelect');
+const confirmCreateBtn = document.getElementById('confirmCreateBtn');
+const activeRoomsList = document.getElementById('activeRoomsList');
+
 const hostSettingsBox = document.getElementById('hostSettingsBox');
 const lobbyCategorySelect = document.getElementById('lobbyCategorySelect');
 const lobbyRoundsSelect = document.getElementById('lobbyRoundsSelect');
-
-const createRoomBtn = document.getElementById('createRoomBtn');
-const joinRoomBtn = document.getElementById('joinRoomBtn');
-const activeRoomsList = document.getElementById('activeRoomsList');
 
 const roomTitle = document.getElementById('roomTitle');
 const roomCategoryBadge = document.getElementById('roomCategoryBadge');
@@ -79,6 +81,24 @@ if (!myId) {
 let isHost = false;
 let selectedVoteTarget = null;
 let selectedHeroGuess = "";
+
+// เปิดหน้าต่างตั้งค่าสร้างห้อง
+showCreateModalBtn.addEventListener('click', () => {
+    myName = nameInput.value.trim();
+    if (!myName) {
+        alert('กรุณากรอกชื่อเล่นของคุณก่อน!');
+        nameInput.focus();
+        return;
+    }
+    roomSelection.style.display = 'none';
+    createRoomModal.style.display = 'flex';
+});
+
+// กลับหน้าหลัก
+backToHomeBtn.addEventListener('click', () => {
+    createRoomModal.style.display = 'none';
+    roomSelection.style.display = 'flex';
+});
 
 // โหลดรายชื่อห้องเพื่อกด Join
 db.ref('rooms').on('value', (snapshot) => {
@@ -125,8 +145,13 @@ db.ref('rooms').on('value', (snapshot) => {
 
         if (canJoin) {
             btn.addEventListener('click', () => {
-                roomInput.value = rId;
-                joinRoomBtn.click();
+                myName = nameInput.value.trim();
+                if (!myName) {
+                    alert('กรุณากรอกชื่อเล่นของคุณก่อน!');
+                    nameInput.focus();
+                    return;
+                }
+                joinExistingRoom(rId);
             });
         }
 
@@ -135,15 +160,14 @@ db.ref('rooms').on('value', (snapshot) => {
     });
 });
 
-// 1. สร้างห้องใหม่ พร้อมบันทึกจำนวนรอบ
-createRoomBtn.addEventListener('click', () => {
-    myName = nameInput.value.trim();
-    roomId = roomInput.value.trim();
+// 1. ยืนยันสร้างห้องใหม่จาก Modal
+confirmCreateBtn.addEventListener('click', () => {
+    roomId = newRoomInput.value.trim();
     const selectedCategory = categorySelect.value;
     const selectedRounds = parseInt(totalRoundsSelect.value);
 
-    if (!myName || !roomId) {
-        alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
+    if (!roomId) {
+        alert('กรุณากรอกชื่อห้อง');
         return;
     }
 
@@ -152,11 +176,11 @@ createRoomBtn.addEventListener('click', () => {
         const roomData = snapshot.val();
 
         if (roomData) {
-            alert('❌ ชื่อห้องนี้มีอยู่แล้ว กรุณาใช้ชื่อห้องอื่น หรือกดปุ่ม "เข้าร่วมห้อง"');
+            alert('❌ ชื่อห้องนี้มีอยู่แล้ว กรุณาใช้ชื่อห้องอื่น');
             return;
         }
 
-        roomSelection.style.display = 'none';
+        createRoomModal.style.display = 'none';
         lobbyArea.style.display = 'block';
         roomTitle.textContent = `ห้อง: ${roomId}`;
 
@@ -176,22 +200,16 @@ createRoomBtn.addEventListener('click', () => {
     });
 });
 
-// 2. เข้าร่วมห้อง
-joinRoomBtn.addEventListener('click', () => {
-    myName = nameInput.value.trim();
-    roomId = roomInput.value.trim();
-
-    if (!myName || !roomId) {
-        alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
-        return;
-    }
+// 2. เข้าร่วมห้องที่มีอยู่
+function joinExistingRoom(targetRoomId) {
+    roomId = targetRoomId;
 
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
         const roomData = snapshot.val();
 
         if (!roomData) {
-            alert('❌ ไม่พบห้องนี้ กรุณาตรวจสอบชื่อห้องหรือสร้างห้องใหม่');
+            alert('❌ ไม่พบห้องนี้');
             return;
         }
 
@@ -211,9 +229,8 @@ joinRoomBtn.addEventListener('click', () => {
         checkHostAndListen();
         listenGameState();
     });
-});
+}
 
-// อัปเดตค่าหมวดหมู่หรือจำนวนรอบเมื่อ Host เปลี่ยนในหน้า Lobby
 lobbyCategorySelect.addEventListener('change', (e) => {
     if (!isHost || !roomId) return;
     db.ref(`rooms/${roomId}/category`).set(e.target.value);
@@ -285,7 +302,7 @@ function checkHostAndListen() {
     });
 }
 
-// กดเริ่มเกม (สุ่มลำดับผู้เล่น และตั้งค่าเทิร์นแรก)
+// กดเริ่มเกม
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -301,7 +318,6 @@ startBtn.addEventListener('click', () => {
             return;
         }
 
-        // สุ่มลำดับผู้เล่น
         let shuffledPlayerIds = [...playerIds];
         for (let i = shuffledPlayerIds.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -384,7 +400,6 @@ function listenGameState() {
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
 
-            // จัดการระบบเทิร์นพูด
             const turnOrder = data.turnOrder || [];
             const currentTurnIndex = data.currentTurnIndex || 0;
             const currentRound = data.currentRound || 1;
@@ -431,7 +446,6 @@ function listenGameState() {
     });
 }
 
-// ปุ่มจบเทิร์น (เปลี่ยนตาพูด หรือขึ้นรอบใหม่ หรือเข้าหน้าโหวตเมื่อครบทุกรอบ)
 endTurnBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -448,7 +462,6 @@ endTurnBtn.addEventListener('click', () => {
             currentRound += 1;
         }
 
-        // ถ้าเล่นครบจำนวนรอบที่ตั้งไว้ ให้ตัดเข้าสู่หน้าโหวตทันที
         if (currentRound > totalRounds) {
             roomRef.update({ status: 'voting' });
         } else {
@@ -464,7 +477,6 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต (บล็อกห้ามโหวตชื่อตัวเอง)
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -492,7 +504,7 @@ function renderVotingScreen(data) {
 
     activeCandidates.forEach(targetId => {
         if (!players[targetId]) return;
-        if (targetId === myId) return; // ห้ามโหวตตัวเอง
+        if (targetId === myId) return;
 
         const btn = document.createElement('button');
         btn.className = 'vote-btn';
@@ -678,7 +690,6 @@ function renderVotingScreen(data) {
     }
 }
 
-// ปุ่มเริ่มรอบถัดไปสำหรับหัวหน้าห้อง
 nextRoundBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
