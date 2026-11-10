@@ -18,7 +18,7 @@
         <div class="header-badge">🎮 PARTY GAME</div>
         <h1>Spyfall Party Edition</h1>
         
-        <!-- หน้าใส่ชื่อและห้อง พร้อมแยกปุ่มสร้างห้อง (เลือกหมวดหมู่ได้) และปุ่มเข้าร่วม -->
+        <!-- หน้าใส่ชื่อและห้อง (นำหมวดหมู่ออก เหลือแค่ปุ่มสร้าง/เข้าร่วม) -->
         <div id="roomSelection" class="box">
             <div class="input-group">
                 <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
@@ -27,16 +27,7 @@
                 <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)" autocomplete="off">
             </div>
             
-            <!-- เลือกหมวดหมู่เฉพาะตอนสร้างห้องใหม่ -->
-            <div class="input-group" style="background: rgba(15, 23, 42, 0.4); padding: 8px; border-radius: 0.75rem; border: 1px dashed rgba(56, 189, 248, 0.3);">
-                <label style="font-size: 0.75rem; color: #38bdf8; display: block; margin-bottom: 4px; text-align: left;">✨ สำหรับผู้สร้างห้องใหม่เท่านั้น:</label>
-                <select id="categorySelect" class="category-select">
-                    <option value="rov">🛡️ หมวดหมู่: ROV (Arena of Valor)</option>
-                    <!-- เพิ่มหมวดหมู่อื่นๆ ในอนาคตตรงนี้ได้ -->
-                </select>
-                <button id="createRoomBtn" class="btn primary-glow" style="margin-top: 8px;">🔨 สร้างห้องใหม่</button>
-            </div>
-
+            <button id="createRoomBtn" class="btn primary-glow">🔨 สร้างห้องใหม่</button>
             <button id="joinRoomBtn" class="btn secondary-btn" style="margin-top: 4px;">🚪 เข้าร่วมห้องที่มีอยู่</button>
 
             <!-- ส่วนแสดงรายชื่อห้องที่เปิดอยู่ -->
@@ -48,14 +39,27 @@
             </div>
         </div>
         
-        <!-- หน้าล็อบบี้รอเพื่อน -->
+        <!-- หน้าล็อบบี้รอเพื่อน (เพิ่มที่เลือกหมวดหมู่ และปุ่มปิดห้องสำหรับ Host) -->
         <div id="lobbyArea" class="box" style="display: none;">
             <h2 id="roomTitle" class="room-title">ชื่อห้อง</h2>
+            
+            <!-- เลือกหมวดหมู่ในหน้าล็อบบี้ -->
+            <div class="input-group" id="hostCategoryBox" style="margin-bottom: 5px; display: none;">
+                <label style="font-size: 0.7rem; color: #38bdf8; display: block; margin-bottom: 2px; text-align: left;">⚙️ เลือกหมวดหมู่เกม (สำหรับหัวหน้าห้อง):</label>
+                <select id="categorySelect" class="category-select">
+                    <option value="rov">🛡️ หมวดหมู่: ROV (Arena of Valor)</option>
+                </select>
+            </div>
+
             <p id="roomCategoryBadge" class="category-badge-view">หมวดหมู่: ROV</p>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
+            
             <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม</button>
             <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
+
+            <!-- ปุ่มปิดห้องสำหรับหัวหน้าห้อง -->
+            <button id="closeRoomBtn" class="btn danger" style="display: none; margin-top: 6px;">🗑️ ปิดห้อง (ลบห้อง)</button>
         </div>
 
         <!-- หน้าจอเล่นเกม -->
