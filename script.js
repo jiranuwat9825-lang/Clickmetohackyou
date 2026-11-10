@@ -1,75 +1,148 @@
-const board = document.getElementById('board');
-const cells = document.querySelectorAll('.cell');
+// --- นำค่า Config ของคุณมาใส่ตรงนี้ ---
+const firebaseConfig = {
+    apiKey: "ใส่_apiKey_ของคุณตรงนี้",
+    authDomain: "ใส่_authDomain_ของคุณตรงนี้",
+    databaseURL: "ใส่_databaseURL_ของคุณตรงนี้",
+    projectId: "ใส่_projectId_ของคุณตรงนี้",
+    storageBucket: "ใส่_storageBucket_ของคุณตรงนี้",
+    messagingSenderId: "ใส่_messagingSenderId_ของคุณตรงนี้",
+    appId: "ใส่_appId_ของคุณตรงนี้"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const roomSelection = document.getElementById('roomSelection');
+const gameArea = document.getElementById('gameArea');
+const roomInput = document.getElementById('roomInput');
+const joinBtn = document.getElementById('joinBtn');
 const statusText = document.getElementById('status');
+const roleInfo = document.getElementById('roleInfo');
 const restartBtn = document.getElementById('restartBtn');
+const cells = document.querySelectorAll('.cell');
 
-let currentPlayer = 'X';
-let gameState = ['', '', '', '', '', '', '', '', ''];
-let isGameActive = true;
+let roomId = '';
+let myRole = ''; // 'X' หรือ 'O'
 
-const winningConditions = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // แนวนอน
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // แนวตั้ง
-    [0, 4, 8], [2, 4, 6]            // แนวทแยง
-];
-
-function handleCellClick(e) {
-    const clickedCell = e.target;
-    const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
-
-    if (gameState[clickedCellIndex] !== '' || !isGameActive) {
+joinBtn.addEventListener('click', () => {
+    roomId = roomInput.value.trim();
+    if (!roomId) {
+        alert('กรุณากรอกชื่อห้องก่อนครับ');
         return;
     }
 
-    gameState[clickedCellIndex] = currentPlayer;
-    clickedCell.textContent = currentPlayer;
-    clickedCell.classList.add(currentPlayer.toLowerCase());
+    roomSelection.style.display = 'none';
+    gameArea.style.display = 'block';
 
-    checkResultValidation();
-}
-
-function checkResultValidation() {
-    let roundWon = false;
-
-    for (let i = 0; i < winningConditions.length; i++) {
-        const [a, b, c] = winningConditions[i];
-        if (gameState[a] === '' || gameState[b] === '' || gameState[c] === '') {
-            continue;
+    const roomRef = db.ref('rooms/' + roomId);
+    roomRef.once('value', (snapshot) => {
+        const roomData = snapshot.val();
+        if (!roomData || !roomData.playerX) {
+            // ถ้ายังไม่มีคนสร้างห้อง ให้เราเป็น X
+            myRole = 'X';
+            roomRef.set({
+                board: ['', '', '', '', '', '', '', '', ''],
+                turn: 'X',
+                playerX: true,
+                playerO: false,
+                winner: null
+            });
+        } else if (!roomData.playerO) {
+            // ถ้ามี X แล้ว ให้เราเป็น O
+            myRole = 'O';
+            roomRef.update({ playerO: true });
+        } else {
+            // ห้องเต็ม
+            myRole = 'Spectator (ผู้ชม)';
+            alert('ห้องนี้มีผู้เล่นครบ 2 คนแล้ว คุณจะเข้ามาเป็นผู้ชม');
         }
-        if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
-            roundWon = true;
-            break;
+
+        roleInfo.textContent = `คุณคือผู้เล่น: ${myRole}`;
+        listenGameData();
+    });
+});
+
+function listenGameData() {
+    const roomRef = db.ref('rooms/' + roomId);
+    roomRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // อัปเดตตารางหน้าจอ
+        data.board.forEach((val, index) => {
+            cells[index].textContent = val;
+            cells[index].className = 'cell';
+            if (val === 'X') cells[index].classList.add('x');
+            if (val === 'O') cells[index].classList.add('o');
+        });
+
+        // ตรวจสอบสถานะเกม
+        if (data.winner) {
+            if (data.winner === 'Draw') {
+                statusText.textContent = `เสมอ กัน! 🤝`;
+            } else {
+                statusText.textContent = `ผู้เล่น ${data.winner} ชนะแล้ว! 🎉`;
+            }
+        } else {
+            if (data.turn === myRole) {
+                statusText.textContent = `ตาของคุณ! (${myRole})`;
+            } else {
+                statusText.textContent = `รอตาของฝ่ายตรงข้าม (${data.turn})`;
+            }
         }
-    }
-
-    if (roundWon) {
-        statusText.textContent = `ผู้เล่น ${currentPlayer} ชนะแล้ว! 🎉`;
-        isGameActive = false;
-        return;
-    }
-
-    let roundDraw = !gameState.includes('');
-    if (roundDraw) {
-        statusText.textContent = `เสมอV! 🤝`;
-        isGameActive = false;
-        return;
-    }
-
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    statusText.textContent = `ตาของ 👤 ผู้เล่น: ${currentPlayer}`;
-}
-
-function restartGame() {
-    currentPlayer = 'X';
-    gameState = ['', '', '', '', '', '', '', '', ''];
-    isGameActive = true;
-    statusText.textContent = `ตาของ 👤 ผู้เล่น: ${currentPlayer}`;
-    cells.forEach(cell => {
-        cell.textContent = '';
-        cell.classList.remove('x', 'o');
     });
 }
 
-cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-restartBtn.addEventListener('click', restartGame);
-statusText.textContent = `ตาของ 👤 ผู้เล่น: ${currentPlayer}`;
+// กดเลือกช่องเล่นเกม
+cells.forEach((cell, index) => {
+    cell.addEventListener('click', () => {
+        if (myRole !== 'X' && myRole !== 'O') return; // ผู้ชมกดไม่ได้
+
+        const roomRef = db.ref('rooms/' + roomId);
+        roomRef.once('value', (snapshot) => {
+            const data = snapshot.val();
+
+            // เช็คว่าเป็นตาเราไหม และช่องว่างเปล่าไหม และเกมยังไม่จบ
+            if (data.turn === myRole && data.board[index] === '' && !data.winner) {
+                let newBoard = data.board;
+                newBoard[index] = myRole;
+
+                let nextTurn = myRole === 'X' ? 'O' : 'X';
+                let winner = checkWinner(newBoard);
+
+                roomRef.update({
+                    board: newBoard,
+                    turn: nextTurn,
+                    winner: winner
+                });
+            }
+        });
+    });
+});
+
+function checkWinner(b) {
+    const wins = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+    ];
+    for (let i = 0; i < wins.length; i++) {
+        const [x, y, z] = wins[i];
+        if (b[x] && b[x] === b[y] && b[x] === b[z]) {
+            return b[x];
+        }
+    }
+    if (!b.includes('')) return 'Draw';
+    return null;
+}
+
+// ปุ่มรีเซ็ตเกม
+restartBtn.addEventListener('click', () => {
+    if (myRole !== 'X' && myRole !== 'O') return;
+    const roomRef = db.ref('rooms/' + roomId);
+    roomRef.update({
+        board: ['', '', '', '', '', '', '', '', ''],
+        turn: 'X',
+        winner: null
+    });
+});
