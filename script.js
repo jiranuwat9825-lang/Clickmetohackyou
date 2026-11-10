@@ -76,6 +76,7 @@ const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 
 // ตัวแปรโหมด ฉันคือใคร (Search)
 const whoAmITimer = document.getElementById('whoAmITimer');
+const whoAmIRoundIndicator = document.getElementById('whoAmIRoundIndicator');
 const othersRolesGrid = document.getElementById('othersRolesGrid');
 const myGuessSearch = document.getElementById('myGuessSearch');
 const searchResultsList = document.getElementById('searchResultsList');
@@ -83,8 +84,6 @@ const selectedGuessText = document.getElementById('selectedGuessText');
 const submitMyGuessBtn = document.getElementById('submitMyGuessBtn');
 const guessControlsDiv = document.getElementById('guessControlsDiv');
 const guessStatusText = document.getElementById('guessStatusText');
-const whoAmIHostControls = document.getElementById('whoAmIHostControls');
-const whoAmISkipBtn = document.getElementById('whoAmISkipBtn');
 
 const voteAreaTitle = document.getElementById('voteAreaTitle');
 const voteList = document.getElementById('voteList');
@@ -107,13 +106,11 @@ if (!myId) {
     localStorage.setItem('rov_spy_myid', myId);
 }
 
-// โหลดชื่อที่เคยบันทึกไว้ใน Browser
 const savedName = localStorage.getItem('rov_spy_myname');
 if (savedName) {
     nameInput.value = savedName;
 }
 
-// ตรวจสอบระบบจำห้อง (Auto-Reconnect)
 const savedRoomId = localStorage.getItem('rov_spy_roomid');
 if (savedRoomId) {
     roomId = savedRoomId;
@@ -159,7 +156,7 @@ function getAllCategoryItems(key) {
 
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
-        roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
+        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการเล่น:';
         settingValueInput.value = '3';
     } else {
         roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
@@ -238,7 +235,7 @@ db.ref('rooms').on('value', (snapshot) => {
             });
         }
 
-        card.appendChild(btn);
+        card.append(info = card.querySelector('.room-item-info'), btn);
         activeRoomsList.appendChild(card);
     });
 });
@@ -270,7 +267,9 @@ confirmCreateBtn.addEventListener('click', () => {
             gameMode: gameMode,
             category: selectedCategory,
             settingValue: settingVal,
-            status: 'lobby'
+            status: 'lobby',
+            currentGlobalRound: 1,
+            emptySince: null
         });
 
         roomRef.child(`players/${myId}`).set({ name: myName });
@@ -299,6 +298,9 @@ function joinExistingRoom(targetRoomId) {
 
         roomRef.child(`players/${myId}`).set({ name: myName });
         roomRef.child(`players/${myId}`).onDisconnect().remove();
+
+        // ล้างสถานะห้องว่างเมื่อมีคนเข้าห้อง
+        roomRef.update({ emptySince: null });
 
         localStorage.setItem('rov_spy_roomid', roomId);
         checkHostAndListen();
@@ -333,25 +335,43 @@ function checkHostAndListen() {
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) { 
-            alert('ห้องถูกปิด'); 
+            alert('ห้องถูกปิดหรือถูกลบเนื่องจากไม่มีผู้เล่น'); 
             localStorage.removeItem('rov_spy_roomid');
             location.reload(); 
             return; 
         }
 
-        playerList.innerHTML = '';
+        // ระบบตรวจสอบห้องว่างอัตโนมัติ (ถ้าไม่มีผู้เล่นเหลือเลย ให้เริ่มนับเวลา 1 นาที)
         const players = data.players || {};
         const playerIds = Object.keys(players);
+        
+        if (playerIds.length === 0) {
+            if (!data.emptySince) {
+                roomRef.update({ emptySince: Date.now() });
+            } else if (Date.now() - data.emptySince > 60000) { // เกิน 1 นาที (60000 ms)
+                roomRef.remove();
+            }
+        } else if (data.emptySince) {
+            roomRef.update({ emptySince: null });
+        }
+
+        playerList.innerHTML = '';
         const hostId = data.hostId;
         const mode = data.gameMode || 'spyfall';
         const catKey = data.category || 'rov';
         const setVal = data.settingValue || 2;
         const catInfo = getCategoryData(catKey);
 
-        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
+        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'จำนวนรอบ: ' + setVal : 'รอบพูด: ' + setVal}`;
         lobbyGameModeSelect.value = mode;
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
+        
+        if(mode === 'whoami') {
+            document.querySelectorAll('label[for="lobbySettingValueInput"], .host-settings label').forEach(el => {
+                if(el.textContent.includes('รอบ') || el.textContent.includes('เวลา')) el.textContent = 'จำนวนรอบการเล่น:';
+            });
+        }
 
         if (hostId === myId) {
             isHost = true;
@@ -377,7 +397,7 @@ function checkHostAndListen() {
     });
 }
 
-// เริ่มเกม (สุ่มลำดับใหม่ทุกตา)
+// เริ่มเกม (สุ่มใหม่ทุกตา)
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -436,6 +456,8 @@ startBtn.addEventListener('click', () => {
             if (currentScores[id] === undefined) currentScores[id] = 0;
         });
 
+        let currentGlobalRound = data.currentGlobalRound || 1;
+
         const updateObj = {
             status: 'playing',
             roles: rolesData,
@@ -443,7 +465,8 @@ startBtn.addEventListener('click', () => {
             currentTurnIndex: 0,
             currentRound: 1,
             totalRounds: gameMode === 'spyfall' ? setVal : 1,
-            endTime: gameMode === 'whoami' ? Date.now() + setVal * 60 * 1000 : null,
+            maxGlobalRounds: gameMode === 'whoami' ? setVal : 1,
+            currentGlobalRound: currentGlobalRound,
             attempts: attemptsData,
             guessedCorrectly: {},
             currentGroup: selectedGroupKey,
@@ -451,7 +474,8 @@ startBtn.addEventListener('click', () => {
             guess: null,
             spyGuess: null,
             scoreUpdated: false,
-            scores: currentScores
+            scores: currentScores,
+            emptySince: null
         };
 
         if (gameMode === 'spyfall') {
@@ -469,8 +493,18 @@ function listenGameState() {
         const data = snapshot.val();
         if (!data) return;
 
-        const scores = data.scores || {};
+        // อัปเดตเช็คห้องว่างทุกครั้งที่ข้อมูลเปลี่ยน
         const players = data.players || {};
+        if (Object.keys(players).length === 0) {
+            if (!data.emptySince) {
+                roomRef.update({ emptySince: Date.now() });
+            } else if (Date.now() - data.emptySince > 60000) {
+                roomRef.remove();
+                return;
+            }
+        }
+
+        const scores = data.scores || {};
         const gameMode = data.gameMode || 'spyfall';
 
         scoreListBody.innerHTML = '';
@@ -542,7 +576,9 @@ function listenGameState() {
                 gameArea.style.display = 'none';
                 whoAmIArea.style.display = 'block';
 
-                startWhoAmITimer(data.endTime, roomId, data);
+                const gRound = data.currentGlobalRound || 1;
+                const maxGRounds = data.maxGlobalRounds || 3;
+                whoAmIRoundIndicator.textContent = `🔄 รอบที่ ${gRound} จาก ${maxGRounds} รอบ`;
 
                 othersRolesGrid.innerHTML = '';
                 const roles = data.roles || {};
@@ -551,7 +587,6 @@ function listenGameState() {
                 const turnOrder = data.turnOrder || [];
                 const currentTurnIndex = data.currentTurnIndex || 0;
 
-                // เรียงลำดับตัวละครของเพื่อนตาม turnOrder
                 turnOrder.forEach((pId) => {
                     if (pId !== myId && players[pId]) {
                         const div = document.createElement('div');
@@ -565,15 +600,15 @@ function listenGameState() {
                         let statusText = "";
 
                         if (isCurrentTurn && !isDone) {
-                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;"; // สีเหลืองเมื่อถึงเทิร์น
+                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;";
                         }
 
                         if (isDone) {
                             if (isCorrect) {
-                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;"; // เขียวและจางลง
+                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;";
                                 statusText = '<br><span style="color:#22c55e; font-size:0.7rem;">(ตอบถูก ✅)</span>';
                             } else {
-                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;"; // เทาและจางลง
+                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;";
                                 statusText = '<br><span style="color:#94a3b8; font-size:0.7rem;">(ตอบผิด ❌)</span>';
                             }
                         }
@@ -602,7 +637,6 @@ function listenGameState() {
             }
 
         } else if (data.status === 'voting') {
-            if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
             gameArea.style.display = 'none';
             whoAmIArea.style.display = 'none';
             lobbyArea.style.display = 'none';
@@ -610,36 +644,12 @@ function listenGameState() {
             renderVotingScreen(data);
 
         } else if (data.status === 'lobby') {
-            if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
             gameArea.style.display = 'none';
             whoAmIArea.style.display = 'none';
             voteArea.style.display = 'none';
             lobbyArea.style.display = 'block';
         }
     });
-}
-
-// ตัวจับเวลาโหมด ฉันคือใคร
-function startWhoAmITimer(endTime, rId, data) {
-    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-    whoAmITimerInterval = setInterval(() => {
-        const timeLeft = Math.floor((endTime - Date.now()) / 1000);
-        
-        let attempts = data.attempts || {};
-        let allUsed = Object.keys(data.players || {}).every(pId => (attempts[pId] ?? 1) <= 0 || data.guessedCorrectly?.[pId]);
-
-        if (timeLeft <= 0 || allUsed) {
-            clearInterval(whoAmITimerInterval);
-            whoAmITimer.textContent = "00:00";
-            if (isHost && data.status === 'playing') {
-                db.ref(`rooms/${rId}`).update({ status: 'voting' });
-            }
-        } else {
-            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            const s = (timeLeft % 60).toString().padStart(2, '0');
-            whoAmITimer.textContent = `${m}:${s}`;
-        }
-    }, 1000);
 }
 
 // ระบบ Search ค้นหาตัวละครโหมด ฉันคือใคร
@@ -693,7 +703,7 @@ submitMyGuessBtn.addEventListener('click', () => {
         let guessedCorrectly = data.guessedCorrectly || {};
         let correctOrder = data.correctOrder || [];
 
-        attempts[myId] = 0; // ใช้สิทธิ์หมดแล้ว
+        attempts[myId] = 0;
 
         if (guessVal.toLowerCase() === myRealRole.toLowerCase()) {
             alert('🎉 ยินดีด้วย! คุณทายถูก!');
@@ -765,7 +775,7 @@ function renderVotingScreen(data) {
     const gameMode = data.gameMode || 'spyfall';
 
     if (gameMode === 'whoami') {
-        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนโหมด ฉันคือใคร";
+        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนรอบนี้";
         voteInstruction.textContent = "เฉลยตัวละครและสรุปแต้มตามลำดับการตอบ:";
         voteResult.style.display = 'block';
         if (isHost) {
@@ -776,7 +786,7 @@ function renderVotingScreen(data) {
                 const totalCorrect = correctOrder.length;
 
                 correctOrder.forEach((pId, idx) => {
-                    const pts = totalCorrect - idx; // คนแรกได้คะแนนเยอะสุด ลดหลั่นลงมา คนสุดท้ายที่ถูกได้ 1 แต้ม
+                    const pts = totalCorrect - idx;
                     scores[pId] = (scores[pId] || 0) + pts;
                 });
 
@@ -803,13 +813,19 @@ function renderVotingScreen(data) {
             htmlStr += `<p style="font-size:0.85rem; margin:4px 0;"><b>${pName}:</b> ${role} ${isCorrect ? `✅ (ตอบถูกอันดับที่ ${correctOrder.indexOf(pId) + 1} ได้ +${ptsAwarded} แต้ม)` : '❌ (0 แต้ม)'}</p>`;
         });
         voteResult.innerHTML = htmlStr;
+        
+        const gRound = data.currentGlobalRound || 1;
+        const maxGRounds = data.maxGlobalRounds || 3;
+        if (gRound >= maxGRounds) {
+            nextRoundBtn.textContent = "🏁 จบเกมทั้งหมด (กลับหน้าแรก)";
+        } else {
+            nextRoundBtn.textContent = `🔄 เริ่มรอบถัดไป (${gRound + 1}/${maxGRounds})`;
+        }
         return;
     }
 
     voteAreaTitle.textContent = "🗳️ ช่วงเวลาโหวตหา Spy!";
     const votes = data.votes || {};
-    const guessData = data.guess || {};
-    const spyGuessData = data.spyGuess || {};
     const isAmISpy = (myId === data.spyId);
     
     const catKey = data.category || 'rov';
@@ -967,6 +983,42 @@ nextRoundBtn.addEventListener('click', () => {
     roomRef.once('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
+
+        const gameMode = data.gameMode || 'spyfall';
+        if (gameMode === 'whoami') {
+            const gRound = data.currentGlobalRound || 1;
+            const maxGRounds = data.maxGlobalRounds || 3;
+            if (gRound >= maxGRounds) {
+                db.ref(`rooms/${roomId}`).remove();
+                localStorage.removeItem('rov_spy_roomid');
+                location.reload();
+                return;
+            } else {
+                roomRef.update({
+                    status: 'lobby',
+                    currentGlobalRound: gRound + 1,
+                    roles: null,
+                    turnOrder: null,
+                    currentTurnIndex: 0,
+                    currentRound: 1,
+                    currentGroup: null,
+                    spyId: null,
+                    votes: null,
+                    guess: null,
+                    spyGuess: null,
+                    attempts: null,
+                    guessedCorrectly: null,
+                    correctOrder: null,
+                    tieCandidates: null,
+                    tieHandled: false,
+                    scoreUpdated: false
+                });
+                selectedVoteTarget = null;
+                selectedHeroGuess = "";
+                selectedSearchGuess = "";
+                return;
+            }
+        }
 
         roomRef.update({
             status: 'lobby',
