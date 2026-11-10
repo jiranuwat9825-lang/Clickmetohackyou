@@ -87,25 +87,19 @@ joinBtn.addEventListener('click', () => {
     listenGameState();
 });
 
-// ฟังก์ชันปุ่ม Test Game (เพิ่มบอท 4 ตัว)
+// ฟังก์ชันปุ่ม Test Game (เพิ่มบอทโดยไม่ให้ทับตำแหน่งหัวหน้าห้องของคุณ)
 testGameBtn.addEventListener('click', () => {
     if (!roomId) return;
-    const bots = [
-        { id: 'bot_1', name: '🤖 บอทโรมมิ่ง' },
-        { id: 'bot_2', name: '🤖 บอทแครี่' },
-        { id: 'bot_3', name: '🤖 บอทเลนกลาง' },
-        { id: 'bot_4', name: '🤖 บอทป่า' }
-    ];
+    const bots = {
+        'bot_1': { name: '🤖 บอทโรมมิ่ง' },
+        'bot_2': { name: '🤖 บอทแครี่' },
+        'bot_3': { name: '🤖 บอทเลนกลาง' },
+        'bot_4': { name: '🤖 บอทป่า' }
+    };
 
-    const roomRef = db.ref(`rooms/${roomId}/players`);
-    roomRef.once('value', (snapshot) => {
-        let updates = {};
-        updates[myId] = { name: myName };
-        bots.forEach(bot => {
-            updates[bot.id] = { name: bot.name };
-        });
-        roomRef.set(updates);
-    });
+    // ใช้ update เพื่อเพิ่มบอทเข้าไปโดยคงตัวตนของคุณ (myId) ไว้เป็นคนแรกสุด
+    db.ref(`rooms/${roomId}/players`).update(bots);
+    testGameBtn.style.display = 'none'; // ซ่อนปุ่มหลังกดแล้ว
 });
 
 function checkHostAndListen() {
@@ -118,12 +112,17 @@ function checkHostAndListen() {
         const players = data.players || {};
         const playerIds = Object.keys(players);
 
+        // เช็คว่าคุณคือคนแรกสุดในรายชื่อไหม (Host)
         if (playerIds.length > 0 && playerIds[0] === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
-            testGameBtn.style.display = 'block';
+            
+            // ถ้ายังไม่มีบอทในห้อง ให้แสดงปุ่ม Test Game
+            if (!players['bot_1']) {
+                testGameBtn.style.display = 'block';
+            }
         } else {
             isHost = false;
             startBtn.style.display = 'none';
@@ -205,7 +204,6 @@ function listenGameState() {
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
 
-            // แสดงกล่องข้อมูลบอทด้านซ้ายล่าง และเรนเดอร์ตัวละครบอท
             botDebugBox.style.display = 'block';
             botStatusList.innerHTML = '';
             const players = data.players || {};
