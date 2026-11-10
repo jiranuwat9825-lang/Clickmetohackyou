@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spyfall Online</title>
+    <title>Spyfall ROV Online</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🕵️‍♂️ Spyfall ออนไลน์</h1>
+        <h1>🎮 Spyfall ROV Edition</h1>
         
         <!-- หน้าใส่ชื่อและห้อง -->
         <div id="roomSelection" class="box">
             <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ">
-            <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)">
+            <input type="text" id="roomInput" placeholder="ใส่ชื่อห้อง (เช่น rov99)">
             <button id="joinBtn" class="btn">เข้าห้องเกม</button>
         </div>
         
@@ -22,22 +22,35 @@
             <h2 id="roomTitle">ชื่อห้อง</h2>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
-            <button id="startBtn" class="btn" style="display: none;">เริ่มเกม</button>
+            <button id="startBtn" class="btn" style="display: none;">เริ่มเกม ROV</button>
             <p id="waitText" class="status">รอหัวหน้าห้องกดเริ่มเกม...</p>
         </div>
 
         <!-- หน้าจอเล่นเกม -->
         <div id="gameArea" class="box" style="display: none;">
             <div class="role-card" id="roleCard">
-                <h2 id="roleTitle">กำลังโหลดบทบาท...</h2>
-                <p id="roleDesc">...</p>
+                <h2>ตัวละคร ROV ของคุณ</h2>
+                <p id="heroName" class="hero-highlight">กำลังโหลด...</p>
+                <p class="hint-text">จำตัวละครของคุณไว้ให้ดี แล้วเริ่มจับพิรุธเพื่อน!</p>
             </div>
-            <div class="timer-box" id="timerBox">เวลารอบนี้: <span id="timer">08:00</span></div>
             
-            <h3 class="section-title">สถานที่ที่เป็นไปได้ทั้งหมด:</h3>
-            <div class="location-grid" id="locationGrid"></div>
+            <div class="timer-box">เวลารอบนี้: <span id="timer">05:00</span></div>
+            
+            <div id="hostControls" style="display: none; margin-bottom: 15px;">
+                <button id="skipToVoteBtn" class="btn secondary">⏩ ข้ามไปหน้าโหวตทันที</button>
+            </div>
 
-            <button id="restartBtn" class="btn secondary" style="margin-top: 15px; display: none;">กลับหน้าล็อบบี้</button>
+            <h3 class="section-title">ฮีโร่ทั้งหมดในแพตช์นี้:</h3>
+            <div class="hero-grid" id="heroGrid"></div>
+        </div>
+
+        <!-- หน้าจอโหวต -->
+        <div id="voteArea" class="box" style="display: none;">
+            <h2>🗳️ ช่วงเวลาโหวตหา Spy!</h2>
+            <p class="status">ใครคือคนที่ได้ตัวละครไม่เหมือนเพื่อน? คลิกเลือกโหวตเลย!</p>
+            <div id="voteList" class="vote-list"></div>
+            <div id="voteResult" class="vote-result" style="display: none;"></div>
+            <button id="backToLobbyBtn" class="btn" style="display: none; margin-top: 15px;">กลับหน้าล็อบบี้</button>
         </div>
     </div>
 
