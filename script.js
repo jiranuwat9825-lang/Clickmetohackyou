@@ -34,7 +34,11 @@ const voteArea = document.getElementById('voteArea');
 const nameInput = document.getElementById('nameInput');
 const roomInput = document.getElementById('roomInput');
 const categorySelect = document.getElementById('categorySelect');
-const hostCategoryBox = document.getElementById('hostCategoryBox');
+const totalRoundsSelect = document.getElementById('totalRoundsSelect');
+const hostSettingsBox = document.getElementById('hostSettingsBox');
+const lobbyCategorySelect = document.getElementById('lobbyCategorySelect');
+const lobbyRoundsSelect = document.getElementById('lobbyRoundsSelect');
+
 const createRoomBtn = document.getElementById('createRoomBtn');
 const joinRoomBtn = document.getElementById('joinRoomBtn');
 const activeRoomsList = document.getElementById('activeRoomsList');
@@ -48,10 +52,11 @@ const closeRoomBtn = document.getElementById('closeRoomBtn');
 
 const heroName = document.getElementById('heroName');
 const heroGrid = document.getElementById('heroGrid');
-const turnOrderText = document.getElementById('turnOrderText');
+const roundIndicator = document.getElementById('roundIndicator');
+const currentSpeakerBox = document.getElementById('currentSpeakerBox');
+const endTurnBtn = document.getElementById('endTurnBtn');
 const hostControls = document.getElementById('hostControls');
 const skipToVoteBtn = document.getElementById('skipToVoteBtn');
-const timerDisplay = document.getElementById('timer');
 const voteList = document.getElementById('voteList');
 const voteResult = document.getElementById('voteResult');
 
@@ -72,7 +77,6 @@ if (!myId) {
 }
 
 let isHost = false;
-let timerInterval = null;
 let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
@@ -131,10 +135,12 @@ db.ref('rooms').on('value', (snapshot) => {
     });
 });
 
-// 1. สร้างห้องใหม่
+// 1. สร้างห้องใหม่ พร้อมบันทึกจำนวนรอบ
 createRoomBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
+    const selectedCategory = categorySelect.value;
+    const selectedRounds = parseInt(totalRoundsSelect.value);
 
     if (!myName || !roomId) {
         alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
@@ -156,7 +162,8 @@ createRoomBtn.addEventListener('click', () => {
 
         roomRef.set({
             hostId: myId,
-            category: 'rov',
+            category: selectedCategory,
+            totalRounds: selectedRounds,
             status: 'lobby'
         });
 
@@ -206,10 +213,15 @@ joinRoomBtn.addEventListener('click', () => {
     });
 });
 
-categorySelect.addEventListener('change', (e) => {
+// อัปเดตค่าหมวดหมู่หรือจำนวนรอบเมื่อ Host เปลี่ยนในหน้า Lobby
+lobbyCategorySelect.addEventListener('change', (e) => {
     if (!isHost || !roomId) return;
-    const newCat = e.target.value;
-    db.ref(`rooms/${roomId}/category`).set(newCat);
+    db.ref(`rooms/${roomId}/category`).set(e.target.value);
+});
+
+lobbyRoundsSelect.addEventListener('change', (e) => {
+    if (!isHost || !roomId) return;
+    db.ref(`rooms/${roomId}/totalRounds`).set(parseInt(e.target.value));
 });
 
 closeRoomBtn.addEventListener('click', () => {
@@ -235,10 +247,12 @@ function checkHostAndListen() {
         const playerIds = Object.keys(players);
         const hostId = data.hostId;
         const currentCatKey = data.category || 'rov';
+        const currentRounds = data.totalRounds || 2;
         const catInfo = categoriesData[currentCatKey] || categoriesData['rov'];
 
-        roomCategoryBadge.textContent = `หมวดหมู่: ${catInfo.name}`;
-        categorySelect.value = currentCatKey;
+        roomCategoryBadge.textContent = `หมวดหมู่: ${catInfo.name} | จำนวนรอบ: ${currentRounds}`;
+        lobbyCategorySelect.value = currentCatKey;
+        lobbyRoundsSelect.value = currentRounds;
 
         if (playerIds.length === 0) {
             roomRef.remove();
@@ -250,27 +264,28 @@ function checkHostAndListen() {
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
-            hostCategoryBox.style.display = 'block';
+            hostSettingsBox.style.display = 'block';
             closeRoomBtn.style.display = 'block';
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
             hostControls.style.display = 'none';
-            hostCategoryBox.style.display = 'none';
+            hostSettingsBox.style.display = 'none';
             closeRoomBtn.style.display = 'none';
         }
 
         playerIds.forEach((id) => {
             const li = document.createElement('li');
             const isThisHost = (id === hostId);
-            li.innerHTML = `👤 ${players[id].name} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
+            const isMe = (id === myId);
+            li.innerHTML = `👤 ${players[id].name} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
             playerList.appendChild(li);
         });
     });
 }
 
-// กดเริ่มเกม (สุ่มลำดับผู้เล่น)
+// กดเริ่มเกม (สุ่มลำดับผู้เล่น และตั้งค่าเทิร์นแรก)
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -279,13 +294,14 @@ startBtn.addEventListener('click', () => {
         const playerIds = Object.keys(players);
         const catKey = data.category || 'rov';
         const catData = categoriesData[catKey] || categoriesData['rov'];
+        const totalRounds = data.totalRounds || 2;
 
         if (playerIds.length < 3) {
             alert('ต้องมีผู้เล่นอย่างน้อย 3 คนถึงจะเริ่มเกมได้!');
             return;
         }
 
-        // สุ่มลำดับผู้เล่น (Shuffle Array)
+        // สุ่มลำดับผู้เล่น
         let shuffledPlayerIds = [...playerIds];
         for (let i = shuffledPlayerIds.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -300,20 +316,17 @@ startBtn.addEventListener('click', () => {
         const spyId = playerIds[spyIndex];
 
         let rolesData = {};
-
         const spyItemIdx = Math.floor(Math.random() * groupItems.length);
         const spyItem = groupItems.splice(spyItemIdx, 1)[0];
         rolesData[spyId] = spyItem;
 
         const normalItem = groupItems[Math.floor(Math.random() * groupItems.length)];
-
         playerIds.forEach((id) => {
             if (id !== spyId) {
                 rolesData[id] = normalItem;
             }
         });
 
-        const endTime = Date.now() + 300 * 1000;
         let currentScores = data.scores || {};
         playerIds.forEach(id => {
             if (currentScores[id] === undefined) {
@@ -325,9 +338,11 @@ startBtn.addEventListener('click', () => {
             status: 'playing',
             roles: rolesData,
             turnOrder: shuffledPlayerIds,
+            currentTurnIndex: 0,
+            currentRound: 1,
+            totalRounds: totalRounds,
             currentGroup: selectedGroupKey,
             spyId: spyId,
-            endTime: endTime,
             votes: null,
             guess: null,
             spyGuess: null,
@@ -351,10 +366,11 @@ function listenGameState() {
         Object.keys(players).forEach(id => {
             const pName = players[id].name;
             const pScore = scores[id] || 0;
+            const isMe = (id === myId);
             const isSpyTag = (id === data.spyId && data.status === 'voting' && data.scoreUpdated) ? ' [Spy]' : '';
             const row = document.createElement('div');
             row.className = 'score-row-item';
-            row.innerHTML = `<span>${pName}${isSpyTag}</span> <b>${pScore} แต้ม</b>`;
+            row.innerHTML = `<span>${pName} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''}${isSpyTag}</span> <b>${pScore} แต้ม</b>`;
             scoreListBody.appendChild(row);
         });
         scoreBoard.style.display = 'block';
@@ -368,10 +384,23 @@ function listenGameState() {
             const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
 
-            // แสดงลำดับการเล่นที่สุ่มมา
-            const tOrder = data.turnOrder || [];
-            let orderNames = tOrder.map(id => players[id] ? players[id].name : '').filter(Boolean);
-            turnOrderText.textContent = orderNames.join(' ➔ ');
+            // จัดการระบบเทิร์นพูด
+            const turnOrder = data.turnOrder || [];
+            const currentTurnIndex = data.currentTurnIndex || 0;
+            const currentRound = data.currentRound || 1;
+            const totalRounds = data.totalRounds || 2;
+            const currentSpeakerId = turnOrder[currentTurnIndex];
+            const currentSpeakerName = players[currentSpeakerId] ? players[currentSpeakerId].name : "ใครบางคน";
+
+            roundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
+
+            if (currentSpeakerId === myId) {
+                currentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว! (เมื่อพูดจบ กดปุ่มด้านล่าง)`;
+                endTurnBtn.style.display = 'block';
+            } else {
+                currentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${currentSpeakerName}</b> พูด...`;
+                endTurnBtn.style.display = 'none';
+            }
 
             heroGrid.innerHTML = '';
             const catKey = data.category || 'rov';
@@ -388,17 +417,13 @@ function listenGameState() {
                 });
             }
 
-            startTimer(data.endTime);
-
         } else if (data.status === 'voting') {
-            if (timerInterval) clearInterval(timerInterval);
             gameArea.style.display = 'none';
             lobbyArea.style.display = 'none';
             voteArea.style.display = 'block';
             renderVotingScreen(data);
 
         } else if (data.status === 'lobby') {
-            if (timerInterval) clearInterval(timerInterval);
             gameArea.style.display = 'none';
             voteArea.style.display = 'none';
             lobbyArea.style.display = 'block';
@@ -406,24 +431,34 @@ function listenGameState() {
     });
 }
 
-function startTimer(endTime) {
-    if (timerInterval) clearInterval(timerInterval);
+// ปุ่มจบเทิร์น (เปลี่ยนตาพูด หรือขึ้นรอบใหม่ หรือเข้าหน้าโหวตเมื่อครบทุกรอบ)
+endTurnBtn.addEventListener('click', () => {
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
 
-    timerInterval = setInterval(() => {
-        const timeLeft = Math.floor((endTime - Date.now()) / 1000);
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            timerDisplay.textContent = "00:00";
-            if (isHost) {
-                db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-            }
-        } else {
-            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            const seconds = (timeLeft % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${minutes}:${seconds}`;
+        const turnOrder = data.turnOrder || [];
+        let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
+        let currentRound = data.currentRound || 1;
+        const totalRounds = data.totalRounds || 2;
+
+        if (currentTurnIndex >= turnOrder.length) {
+            currentTurnIndex = 0;
+            currentRound += 1;
         }
-    }, 1000);
-}
+
+        // ถ้าเล่นครบจำนวนรอบที่ตั้งไว้ ให้ตัดเข้าสู่หน้าโหวตทันที
+        if (currentRound > totalRounds) {
+            roomRef.update({ status: 'voting' });
+        } else {
+            roomRef.update({
+                currentTurnIndex: currentTurnIndex,
+                currentRound: currentRound
+            });
+        }
+    });
+});
 
 skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
@@ -457,9 +492,7 @@ function renderVotingScreen(data) {
 
     activeCandidates.forEach(targetId => {
         if (!players[targetId]) return;
-        
-        // ห้ามแสดงปุ่มโหวตชื่อตัวเอง
-        if (targetId === myId) return;
+        if (targetId === myId) return; // ห้ามโหวตตัวเอง
 
         const btn = document.createElement('button');
         btn.className = 'vote-btn';
@@ -656,6 +689,8 @@ nextRoundBtn.addEventListener('click', () => {
             status: 'lobby',
             roles: null,
             turnOrder: null,
+            currentTurnIndex: 0,
+            currentRound: 1,
             currentGroup: null,
             spyId: null,
             votes: null,
