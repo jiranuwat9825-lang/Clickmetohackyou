@@ -78,7 +78,7 @@
                             <option value="rov">🛡️ ROV</option>
                             <option value="valorant">🎯 Valorant</option>
                         </select>
-                        <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center;">
+                        <input type="number" id="lobbySettingValueInput" value="3" min="1" max="99" class="category-select" style="flex: 1; text-align: center;">
                     </div>
                 </div>
             </div>
@@ -90,7 +90,6 @@
             <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม / เริ่มรอบใหม่</button>
             <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
 
-            <!-- เพิ่มระยะห่างปุ่มปิดห้องไม่ให้ติดกับปุ่มบน -->
             <button id="closeRoomBtn" class="btn danger" style="display: none; margin-top: 15px;">🗑️ ปิดห้อง (ลบห้อง)</button>
         </div>
 
@@ -129,7 +128,7 @@
             </div>
 
             <div class="timer-container">
-                <span id="whoAmIRoundIndicator" class="timer-label" style="color: #fbbf24; font-weight: 700;">🔄 รอบที่ 1/1</span>
+                <span class="timer-label">⏱️ เวลาที่เหลือ</span>
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
@@ -145,6 +144,10 @@
                     <p id="selectedGuessText" class="selected-guess-label">ยังไม่ได้เลือกตัวละคร</p>
                     <button id="submitMyGuessBtn" class="btn primary-glow">🔒 ยืนยันคำตอบ</button>
                 </div>
+            </div>
+
+            <div id="whoAmIHostControls" style="display: none; margin-top: 10px;">
+                <button id="whoAmISkipBtn" class="btn warning">⏩ จบเกมทันที (หมดเวลา)</button>
             </div>
         </div>
 
