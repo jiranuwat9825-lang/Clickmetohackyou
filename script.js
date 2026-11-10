@@ -34,6 +34,7 @@ const voteArea = document.getElementById('voteArea');
 const nameInput = document.getElementById('nameInput');
 const roomInput = document.getElementById('roomInput');
 const categorySelect = document.getElementById('categorySelect');
+const hostCategoryBox = document.getElementById('hostCategoryBox');
 const createRoomBtn = document.getElementById('createRoomBtn');
 const joinRoomBtn = document.getElementById('joinRoomBtn');
 const activeRoomsList = document.getElementById('activeRoomsList');
@@ -43,6 +44,8 @@ const roomCategoryBadge = document.getElementById('roomCategoryBadge');
 const playerList = document.getElementById('playerList');
 const startBtn = document.getElementById('startBtn');
 const waitText = document.getElementById('waitText');
+const closeRoomBtn = document.getElementById('closeRoomBtn');
+
 const heroName = document.getElementById('heroName');
 const heroGrid = document.getElementById('heroGrid');
 const hostControls = document.getElementById('hostControls');
@@ -72,7 +75,7 @@ let timerInterval = null;
 let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
-// โหลดรายชื่อห้องทั้งหมดเพื่อกด Tab Join
+// โหลดรายชื่อห้องเพื่อกด Join
 db.ref('rooms').on('value', (snapshot) => {
     const rooms = snapshot.val();
     activeRoomsList.innerHTML = '';
@@ -127,11 +130,10 @@ db.ref('rooms').on('value', (snapshot) => {
     });
 });
 
-// 1. ปุ่มสร้างห้องใหม่ (เลือกหมวดหมู่ได้)
+// 1. สร้างห้องใหม่
 createRoomBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
-    const selectedCategory = categorySelect.value;
 
     if (!myName || !roomId) {
         alert('กรุณากรอกชื่อและชื่อห้องให้ครบถ้วน');
@@ -143,7 +145,7 @@ createRoomBtn.addEventListener('click', () => {
         const roomData = snapshot.val();
 
         if (roomData) {
-            alert('❌ ชื่อห้องนี้มีอยู่แล้ว กรุณาใช้ชื่อห้องอื่น หรือกดปุ่ม "เข้าร่วมห้อง" ด้านล่าง');
+            alert('❌ ชื่อห้องนี้มีอยู่แล้ว กรุณาใช้ชื่อห้องอื่น หรือกดปุ่ม "เข้าร่วมห้อง"');
             return;
         }
 
@@ -151,10 +153,9 @@ createRoomBtn.addEventListener('click', () => {
         lobbyArea.style.display = 'block';
         roomTitle.textContent = `ห้อง: ${roomId}`;
 
-        // ตั้งค่าผู้สร้างเป็น Host และบันทึกหมวดหมู่
         roomRef.set({
             hostId: myId,
-            category: selectedCategory,
+            category: 'rov',
             status: 'lobby'
         });
 
@@ -167,7 +168,7 @@ createRoomBtn.addEventListener('click', () => {
     });
 });
 
-// 2. ปุ่มเข้าร่วมห้องที่มีอยู่ (ใช้หมวดหมู่ตามที่ห้องนั้นตั้งไว้)
+// 2. เข้าร่วมห้อง
 joinRoomBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
     roomId = roomInput.value.trim();
@@ -182,12 +183,12 @@ joinRoomBtn.addEventListener('click', () => {
         const roomData = snapshot.val();
 
         if (!roomData) {
-            alert('❌ ไม่พบห้องนี้ กรุณาตรวจสอบชื่อห้องหรือกดสร้างห้องใหม่');
+            alert('❌ ไม่พบห้องนี้ กรุณาตรวจสอบชื่อห้องหรือสร้างห้องใหม่');
             return;
         }
 
         if (roomData.status && roomData.status !== 'lobby' && roomData.status !== '') {
-            alert('❌ ห้องนี้กำลังอยู่ในระหว่างการเล่นเกม ไม่สามารถเข้าร่วมได้ ต้องรอจนกว่าจะจบรอบ!');
+            alert('❌ ห้องนี้กำลังอยู่ในระหว่างการเล่นเกม ไม่สามารถเข้าร่วมได้!');
             return;
         }
 
@@ -204,11 +205,31 @@ joinRoomBtn.addEventListener('click', () => {
     });
 });
 
+// เปลี่ยนหมวดหมู่จาก Dropdown ในหน้า Lobby (เฉพาะ Host)
+categorySelect.addEventListener('change', (e) => {
+    if (!isHost || !roomId) return;
+    const newCat = e.target.value;
+    db.ref(`rooms/${roomId}/category`).set(newCat);
+});
+
+// ปุ่มปิดห้อง (สำหรับ Host)
+closeRoomBtn.addEventListener('click', () => {
+    if (!roomId) return;
+    if (confirm('คุณต้องการปิดห้องและลบห้องนี้ใช่หรือไม่?')) {
+        db.ref(`rooms/${roomId}`).remove();
+        location.reload();
+    }
+});
+
 function checkHostAndListen() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) return;
+        if (!data) {
+            alert('ห้องถูกปิดหรือถูกลบแล้ว');
+            location.reload();
+            return;
+        }
 
         playerList.innerHTML = '';
         const players = data.players || {};
@@ -218,6 +239,7 @@ function checkHostAndListen() {
         const catInfo = categoriesData[currentCatKey] || categoriesData['rov'];
 
         roomCategoryBadge.textContent = `หมวดหมู่: ${catInfo.name}`;
+        categorySelect.value = currentCatKey;
 
         if (playerIds.length === 0) {
             roomRef.remove();
@@ -229,11 +251,15 @@ function checkHostAndListen() {
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
+            hostCategoryBox.style.display = 'block'; // แสดงช่องเลือกหมวดหมู่ให้ Host
+            closeRoomBtn.style.display = 'block';   // แสดงปุ่มปิดห้องให้ Host
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
             hostControls.style.display = 'none';
+            hostCategoryBox.style.display = 'none';  // ซ่อนช่องเลือกหมวดหมู่สำหรับผู้เล่นทั่วไป
+            closeRoomBtn.style.display = 'none';    // ซ่อนปุ่มปิดห้องสำหรับผู้เล่นทั่วไป
         }
 
         playerIds.forEach((id) => {
@@ -310,14 +336,7 @@ function listenGameState() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) {
-            roomSelection.style.display = 'block';
-            lobbyArea.style.display = 'none';
-            gameArea.style.display = 'none';
-            voteArea.style.display = 'none';
-            scoreBoard.style.display = 'none';
-            return;
-        }
+        if (!data) return;
 
         const scores = data.scores || {};
         const players = data.players || {};
@@ -636,4 +655,5 @@ nextRoundBtn.addEventListener('click', () => {
 
 backToLobbyBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).remove();
+    location.reload();
 });
