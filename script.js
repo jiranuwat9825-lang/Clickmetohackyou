@@ -27,7 +27,7 @@ const categoriesData = {
     "valorant": {
         name: "Valorant",
         groups: {
-            "Duelist": ["Iso", "Jett", "Neon", "Phoenix", "Raze", "Reyna", "Waylay", "Yoru"],
+            "Duelist": ["Hush", "Iso", "Jett", "Neon", "Phoenix", "Raze", "Reyna", "Waylay", "Yoru"],
             "Controller": ["Astra", "Brimstone", "Clove", "Harbor", "Miks", "Omen", "Viper"],
             "Initiator": ["Breach", "Fade", "Gekko", "KAY/O", "Skye", "Sova", "Tejo"],
             "Sentinel": ["Chamber", "Cypher", "Deadlock", "Killjoy", "Sage", "Veto", "Vyse"]
@@ -74,10 +74,12 @@ const fullTurnOrderContainer = document.getElementById('fullTurnOrderContainer')
 const hostControls = document.getElementById('hostControls');
 const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 
-// ตัวแปรโหมด ฉันคือใคร
+// ตัวแปรโหมด ฉันคือใคร (Search)
 const whoAmITimer = document.getElementById('whoAmITimer');
 const othersRolesGrid = document.getElementById('othersRolesGrid');
-const myGuessSelect = document.getElementById('myGuessSelect');
+const myGuessSearch = document.getElementById('myGuessSearch');
+const searchResultsList = document.getElementById('searchResultsList');
+const selectedGuessText = document.getElementById('selectedGuessText');
 const submitMyGuessBtn = document.getElementById('submitMyGuessBtn');
 const guessControlsDiv = document.getElementById('guessControlsDiv');
 const guessStatusText = document.getElementById('guessStatusText');
@@ -98,11 +100,49 @@ const voteInstruction = document.getElementById('voteInstruction');
 let myName = '';
 let roomId = '';
 let whoAmITimerInterval = null;
+let selectedSearchGuess = "";
 
 let myId = localStorage.getItem('rov_spy_myid');
 if (!myId) {
     myId = 'user_' + Math.random().toString(36).substring(2, 9);
     localStorage.setItem('rov_spy_myid', myId);
+}
+
+// โหลดชื่อที่เคยบันทึกไว้ใน Browser
+const savedName = localStorage.getItem('rov_spy_myname');
+if (savedName) {
+    nameInput.value = savedName;
+}
+
+// ตรวจสอบระบบจำห้อง (Auto-Reconnect)
+const savedRoomId = localStorage.getItem('rov_spy_roomid');
+if (savedRoomId) {
+    roomId = savedRoomId;
+    myName = savedName || "ผู้เล่น";
+    
+    db.ref(`rooms/${roomId}`).once('value', (snapshot) => {
+        const roomData = snapshot.val();
+        if (roomData) {
+            roomSelection.style.display = 'none';
+            if (roomData.status === 'playing') {
+                if (roomData.gameMode === 'whoami') whoAmIArea.style.display = 'block';
+                else gameArea.style.display = 'block';
+            } else if (roomData.status === 'voting') {
+                voteArea.style.display = 'block';
+            } else {
+                lobbyArea.style.display = 'block';
+                roomTitle.textContent = `ห้อง: ${roomId}`;
+            }
+            
+            db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName });
+            db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
+
+            checkHostAndListen();
+            listenGameState();
+        } else {
+            localStorage.removeItem('rov_spy_roomid');
+        }
+    });
 }
 
 let isHost = false;
@@ -135,6 +175,7 @@ showCreateModalBtn.addEventListener('click', () => {
         nameInput.focus();
         return;
     }
+    localStorage.setItem('rov_spy_myname', myName);
     roomSelection.style.display = 'none';
     createRoomModal.style.display = 'flex';
 });
@@ -193,6 +234,7 @@ db.ref('rooms').on('value', (snapshot) => {
                     nameInput.focus();
                     return;
                 }
+                localStorage.setItem('rov_spy_myname', myName);
                 joinExistingRoom(rId);
             });
         }
@@ -235,6 +277,7 @@ confirmCreateBtn.addEventListener('click', () => {
         roomRef.child(`players/${myId}`).set({ name: myName });
         roomRef.child(`players/${myId}`).onDisconnect().remove();
 
+        localStorage.setItem('rov_spy_roomid', roomId);
         checkHostAndListen();
         listenGameState();
     });
@@ -258,6 +301,7 @@ function joinExistingRoom(targetRoomId) {
         roomRef.child(`players/${myId}`).set({ name: myName });
         roomRef.child(`players/${myId}`).onDisconnect().remove();
 
+        localStorage.setItem('rov_spy_roomid', roomId);
         checkHostAndListen();
         listenGameState();
     });
@@ -280,6 +324,7 @@ closeRoomBtn.addEventListener('click', () => {
     if (!roomId) return;
     if (confirm('คุณต้องการปิดห้องใช่หรือไม่?')) {
         db.ref(`rooms/${roomId}`).remove();
+        localStorage.removeItem('rov_spy_roomid');
         location.reload();
     }
 });
@@ -288,7 +333,12 @@ function checkHostAndListen() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) { alert('ห้องถูกปิด'); location.reload(); return; }
+        if (!data) { 
+            alert('ห้องถูกปิด'); 
+            localStorage.removeItem('rov_spy_roomid');
+            location.reload(); 
+            return; 
+        }
 
         playerList.innerHTML = '';
         const players = data.players || {};
@@ -372,14 +422,13 @@ startBtn.addEventListener('click', () => {
                 if (id !== spyId) rolesData[id] = normalItem;
             });
         } else {
-            // โหมด ฉันคือใคร: สุ่มจากทุกตำแหน่งรวมกัน ไม่สนเลน
             selectedGroupKey = "ทั้งหมด";
             const allItems = getAllCategoryItems(catKey);
 
             playerIds.forEach((id) => {
                 const idx = Math.floor(Math.random() * allItems.length);
                 rolesData[id] = allItems[idx];
-                attemptsData[id] = 1; // สิทธิ์ตอบ 1 ครั้ง
+                attemptsData[id] = 1;
             });
         }
 
@@ -498,17 +547,23 @@ function listenGameState() {
 
                 othersRolesGrid.innerHTML = '';
                 const roles = data.roles || {};
+                const attempts = data.attempts || {};
+                const guessedCorrectly = data.guessedCorrectly || {};
+
                 Object.keys(players).forEach(pId => {
                     if (pId !== myId) {
                         const div = document.createElement('div');
                         div.className = 'hero-item';
-                        div.innerHTML = `<b>${players[pId].name}:</b><br><span style="color:#38bdf8;">${roles[pId]}</span>`;
+                        
+                        // ตรวจสอบว่าคนนี้ตอบเสร็จหรือยัง (ไม่ว่าจะถูกหรือผิด ให้ขึ้นเครื่องหมายติ๊กถูก ✅)
+                        const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
+                        const checkIcon = isDone ? ' ✅' : '';
+                        
+                        div.innerHTML = `<b>${players[pId].name}${checkIcon}:</b><br><span style="color:#38bdf8;">${roles[pId]}</span>`;
                         othersRolesGrid.appendChild(div);
                     }
                 });
 
-                const attempts = data.attempts || {};
-                const guessedCorrectly = data.guessedCorrectly || {};
                 const myAttempts = attempts[myId] ?? 1;
                 const isAlreadyCorrect = guessedCorrectly[myId];
 
@@ -520,23 +575,11 @@ function listenGameState() {
                     guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบไปแล้ว (0 ครั้ง)`;
                 } else {
                     guessControlsDiv.style.display = 'block';
-                    guessStatusText.textContent = `🎯 เลือกทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
+                    guessStatusText.textContent = `🎯 ค้นหาและทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
                 }
 
-                // เติมตัวเลือกคำตอบจากทุกตัวละครรวมกัน
-                const catKey = data.category || 'rov';
-                const allItems = getAllCategoryItems(catKey);
-                if (myGuessSelect.options.length <= 1) {
-                    myGuessSelect.innerHTML = `<option value="">-- เลือกตัวละครที่คุณคิดว่าเป็น --</option>`;
-                    allItems.forEach(item => {
-                        const opt = document.createElement('option');
-                        opt.value = item;
-                        opt.textContent = item;
-                        myGuessSelect.appendChild(opt);
-                    });
-                }
+                setupSearchDropdown(data.category);
 
-                // ลำดับการพูด (ผู้ที่ตอบถูกแล้วจะหายจากรายการ)
                 const turnOrder = data.turnOrder || [];
                 const correctIds = new Set(Object.keys(guessedCorrectly).filter(id => guessedCorrectly[id]));
                 whoAmITurnOrderContainer.innerHTML = '';
@@ -594,11 +637,44 @@ function startWhoAmITimer(endTime, rId, data) {
     }, 1000);
 }
 
-// กดส่งคำตอบในโหมด "ฉันคือใคร" (สิทธิ์ตอบ 1 ครั้ง)
+// ระบบ Search ค้นหาตัวละครโหมด ฉันคือใคร
+function setupSearchDropdown(catKey) {
+    const allItems = getAllCategoryItems(catKey);
+    
+    myGuessSearch.oninput = (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        searchResultsList.innerHTML = '';
+        if (!keyword) {
+            searchResultsList.style.display = 'none';
+            return;
+        }
+
+        const filtered = allItems.filter(item => item.toLowerCase().includes(keyword));
+        if (filtered.length === 0) {
+            searchResultsList.style.display = 'none';
+            return;
+        }
+
+        filtered.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item;
+            div.onclick = () => {
+                selectedSearchGuess = item;
+                myGuessSearch.value = item;
+                selectedGuessText.textContent = `✔️ เลือก: ${item}`;
+                searchResultsList.style.display = 'none';
+            };
+            searchResultsList.appendChild(div);
+        });
+        searchResultsList.style.display = 'block';
+    };
+}
+
+// กดส่งคำตอบ Search ในโหมด "ฉันคือใคร"
 submitMyGuessBtn.addEventListener('click', () => {
-    const guessVal = myGuessSelect.value;
+    const guessVal = selectedSearchGuess || myGuessSearch.value.trim();
     if (!guessVal) {
-        alert('กรุณาเลือกตัวละครก่อนกดยืนยันคำตอบ');
+        alert('กรุณาพิมพ์หรือเลือกตัวละครก่อนกดยืนยันคำตอบ');
         return;
     }
 
@@ -879,10 +955,12 @@ nextRoundBtn.addEventListener('click', () => {
         });
         selectedVoteTarget = null;
         selectedHeroGuess = "";
+        selectedSearchGuess = "";
     });
 });
 
 backToLobbyBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).remove();
+    localStorage.removeItem('rov_spy_roomid');
     location.reload();
 });
