@@ -41,10 +41,6 @@ const timerDisplay = document.getElementById('timer');
 const voteList = document.getElementById('voteList');
 const voteResult = document.getElementById('voteResult');
 
-const testGameBtn = document.getElementById('testGameBtn');
-const botDebugBox = document.getElementById('botDebugBox');
-const botStatusList = document.getElementById('botStatusList');
-
 const scoreBoard = document.getElementById('scoreBoard');
 const scoreListBody = document.getElementById('scoreListBody');
 const hostPostVoteControls = document.getElementById('hostPostVoteControls');
@@ -64,7 +60,7 @@ if (!myId) {
 let isHost = false;
 let timerInterval = null;
 let selectedVoteTarget = null;
-let selectedHeroGuess = null;
+let selectedHeroGuess = "";
 
 joinBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
@@ -98,20 +94,6 @@ joinBtn.addEventListener('click', () => {
     });
 });
 
-testGameBtn.addEventListener('click', () => {
-    if (!roomId) return;
-    
-    const sortedPlayers = {};
-    sortedPlayers[myId] = { name: myName };
-    sortedPlayers['z_bot_1'] = { name: '🤖 บอทโรมมิ่ง' };
-    sortedPlayers['z_bot_2'] = { name: '🤖 บอทแครี่' };
-    sortedPlayers['z_bot_3'] = { name: '🤖 บอทเลนกลาง' };
-    sortedPlayers['z_bot_4'] = { name: '🤖 บอทป่า' };
-
-    db.ref(`rooms/${roomId}/players`).set(sortedPlayers);
-    testGameBtn.style.display = 'none';
-});
-
 function checkHostAndListen() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
@@ -133,16 +115,11 @@ function checkHostAndListen() {
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             hostControls.style.display = 'block';
-            
-            if (!players['z_bot_1']) {
-                testGameBtn.style.display = 'flex';
-            }
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
             hostControls.style.display = 'none';
-            testGameBtn.style.display = 'none';
         }
 
         playerIds.forEach((id) => {
@@ -261,19 +238,6 @@ function listenGameState() {
                 });
             }
 
-            botDebugBox.style.display = 'block';
-            botStatusList.innerHTML = '';
-
-            Object.keys(players).forEach(id => {
-                if (id !== myId && id.includes('bot')) {
-                    const li = document.createElement('li');
-                    const isBotSpy = (id === data.spyId);
-                    li.textContent = `${players[id].name} -> ตัวละคร: ${roles[id]} ${isBotSpy ? '🤫 [SPY]' : ''}`;
-                    if (isBotSpy) li.style.color = '#f43f5e';
-                    botStatusList.appendChild(li);
-                }
-            });
-
             startTimer(data.endTime);
 
         } else if (data.status === 'voting') {
@@ -288,7 +252,6 @@ function listenGameState() {
             gameArea.style.display = 'none';
             voteArea.style.display = 'none';
             lobbyArea.style.display = 'block';
-            botDebugBox.style.display = 'none';
         }
     });
 }
@@ -316,7 +279,7 @@ skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
 
-// หน้าจอโหวต (เปิดให้ Spy มีสิทธิ์โหวตและทายตัวละครคนอื่นได้)
+// หน้าจอโหวต
 function renderVotingScreen(data) {
     voteList.innerHTML = '';
     voteResult.style.display = 'none';
@@ -333,12 +296,11 @@ function renderVotingScreen(data) {
     const myVote = votes[myId];
 
     if (isAmISpy) {
-        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตและทายตัวละครแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุดและทายตัวละครของเขา:";
+        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุดและ (จะเลือกทายตัวละครหรือไม่ก็ได้):";
     } else {
-        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy และทายตัวละคร:";
+        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy:";
     }
 
-    // เปิดให้ทุกคน (รวมถึง Spy) สามารถกดโหวตและทายตัวละครได้
     activeCandidates.forEach(targetId => {
         if (!players[targetId]) return;
         const btn = document.createElement('button');
@@ -356,6 +318,7 @@ function renderVotingScreen(data) {
         if (!myVote) {
             btn.addEventListener('click', () => {
                 selectedVoteTarget = targetId;
+                selectedHeroGuess = "";
                 renderVotingScreen(data);
             });
         } else {
@@ -369,7 +332,7 @@ function renderVotingScreen(data) {
             
             const defaultOpt = document.createElement('option');
             defaultOpt.value = "";
-            defaultOpt.textContent = isAmISpy ? "-- ทายว่าผู้เล่นนี้ถือตัวละครอะไร --" : "-- เลือกตัวละครที่คิดว่า Spy เป็น --";
+            defaultOpt.textContent = "-- ไม่ทายตัวละคร (เอาแค่โหวต) --";
             selectHero.appendChild(defaultOpt);
 
             currentLaneHeroes.forEach(h => {
@@ -391,10 +354,6 @@ function renderVotingScreen(data) {
             confirmBtn.style.marginTop = '6px';
             confirmBtn.textContent = `🔒 ยืนยันโหวต ${players[targetId].name}`;
             confirmBtn.addEventListener('click', () => {
-                if (!selectedHeroGuess) {
-                    alert('กรุณาเลือกตัวละครที่ต้องการทายก่อนยืนยัน');
-                    return;
-                }
                 db.ref(`rooms/${roomId}/votes/${myId}`).set(targetId);
                 if (isAmISpy) {
                     db.ref(`rooms/${roomId}/spyGuess/${myId}`).set({ targetId: targetId, guessHero: selectedHeroGuess });
@@ -409,7 +368,6 @@ function renderVotingScreen(data) {
     const totalPlayersCount = Object.keys(players).length;
     const totalVotes = Object.keys(votes).length;
 
-    // ตัดสินผลเมื่อทุกคนโหวตครบ (หรือมีคะแนนโหวตสูงสุด)
     if (totalVotes >= Math.min(1, totalPlayersCount)) {
         voteResult.style.display = 'block';
         if (isHost) hostPostVoteControls.style.display = 'flex';
@@ -450,44 +408,34 @@ function renderVotingScreen(data) {
         const spyName = players[spyId] ? players[spyId].name : "ไม่ทราบชื่อ";
         const realSpyHero = data.roles[spyId] || "-";
 
-        // ตรวจสอบการทายของ Spy (ถ้าทายถูกตัวละครคนอื่น ได้ +1 แต้มแยกต่างหาก)
-        let spyBonusText = "";
-        const sGuessObj = spyGuessData[spyId];
-        if (sGuessObj) {
-            const targetPlayerHero = data.roles[sGuessObj.targetId] || "";
-            if (sGuessObj.guessHero.toLowerCase() === targetPlayerHero.toLowerCase()) {
-                spyBonusText = `<br><span style="color:#fbbf24;">🤫 Spy ทายตัวละครคนอื่นถูก! (${players[sGuessObj.targetId]?.name} คือ ${targetPlayerHero}) รับโบนัส +1 แต้ม!</span>`;
-            }
-        }
-
-        const firstVoterId = Object.keys(votes).find(id => id !== spyId) || Object.keys(votes)[0];
-        const playerGuess = guessData[firstVoterId] || "";
-        let isHeroGuessedCorrectly = (playerGuess.toLowerCase() === realSpyHero.toLowerCase());
-
         if (isTargetSpy) {
             voteResult.innerHTML = `
                 <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
                 <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นจับ Spy สำเร็จ!</p>
-                <p style="font-size:0.75rem; color:#cbd5e1;">🎯 ทายตัวละคร: "${playerGuess}" ${isHeroGuessedCorrectly ? '<b style="color:#22c55e;">(ถูกต้อง! รับโบนัส 2 แต้มคนเดียว)</b>' : '<b style="color:#ef4444;">(ผิด ตัวจริงคือ ' + realSpyHero + ')</b>'}</p>
-                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})${spyBonusText}</p>
+                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นจับ Spy สำเร็จ! (ทุกคนในฝั่งผู้เล่นได้ +1 แต้ม)</p>
+                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName})</p>
             `;
 
             if (isHost && !data.scoreUpdated) {
                 let updatedScores = data.scores || {};
-                Object.keys(votes).forEach(voterId => {
-                    if (voterId !== spyId) {
-                        if (updatedScores[voterId] === undefined) updatedScores[voterId] = 0;
-                        let pGuess = guessData[voterId] || "";
-                        if (pGuess.toLowerCase() === realSpyHero.toLowerCase()) {
-                            updatedScores[voterId] += 2;
-                        } else {
-                            updatedScores[voterId] += 1;
-                        }
+                
+                Object.keys(players).forEach(pId => {
+                    if (pId !== spyId) {
+                        if (updatedScores[pId] === undefined) updatedScores[pId] = 0;
+                        updatedScores[pId] += 1;
                     }
                 });
-                // ให้โบนัส Spy +1 ถ้ายทายตัวละครคนอื่นถูก
-                if (sGuessObj) {
+
+                Object.keys(guessData).forEach(voterId => {
+                    let pGuess = guessData[voterId] || "";
+                    if (pGuess !== "" && pGuess.toLowerCase() === realSpyHero.toLowerCase()) {
+                        if (updatedScores[voterId] === undefined) updatedScores[voterId] = 0;
+                        updatedScores[voterId] += 1;
+                    }
+                });
+
+                const sGuessObj = spyGuessData[spyId];
+                if (sGuessObj && sGuessObj.guessHero !== "") {
                     const targetPlayerHero = data.roles[sGuessObj.targetId] || "";
                     if (sGuessObj.guessHero.toLowerCase() === targetPlayerHero.toLowerCase()) {
                         if (updatedScores[spyId] === undefined) updatedScores[spyId] = 0;
@@ -505,22 +453,30 @@ function renderVotingScreen(data) {
             voteResult.innerHTML = `
                 <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
                 <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#ef4444; font-weight:700; font-size: 1rem;">❌ ทายผิด! ฝั่ง Spy ชนะ (+2 คะแนน)!</p>
-                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName} - ตัวละคร ${realSpyHero})${spyBonusText}</p>
+                <p style="color:#ef4444; font-weight:700; font-size: 1rem;">❌ ทายผิด! ฝั่ง Spy ชนะ (+2 แต้มหลัก)!</p>
+                <p style="font-size:0.75rem; color:#94a3b8;">(Spy ที่แท้จริงคือ ${spyName} - ตัวละคร ${realSpyHero})</p>
             `;
 
             if (isHost && !data.scoreUpdated) {
                 let updatedScores = data.scores || {};
                 if (updatedScores[spyId] === undefined) updatedScores[spyId] = 0;
-                updatedScores[spyId] += 2; // Spy ชนะได้ 2 แต้มหลัก
+                updatedScores[spyId] += 2;
 
-                // ให้โบนัส Spy เพิ่มอีก +1 ถ้ายทายตัวละครคนอื่นถูก
-                if (sGuessObj) {
+                const sGuessObj = spyGuessData[spyId];
+                if (sGuessObj && sGuessObj.guessHero !== "") {
                     const targetPlayerHero = data.roles[sGuessObj.targetId] || "";
                     if (sGuessObj.guessHero.toLowerCase() === targetPlayerHero.toLowerCase()) {
                         updatedScores[spyId] += 1;
                     }
                 }
+
+                Object.keys(guessData).forEach(voterId => {
+                    let pGuess = guessData[voterId] || "";
+                    if (pGuess !== "" && pGuess.toLowerCase() === realSpyHero.toLowerCase()) {
+                        if (updatedScores[voterId] === undefined) updatedScores[voterId] = 0;
+                        updatedScores[voterId] += 1;
+                    }
+                });
 
                 db.ref(`rooms/${roomId}`).update({
                     scores: updatedScores,
@@ -551,7 +507,7 @@ nextRoundBtn.addEventListener('click', () => {
             scoreUpdated: false
         });
         selectedVoteTarget = null;
-        selectedHeroGuess = null;
+        selectedHeroGuess = "";
     });
 });
 
