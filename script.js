@@ -13,7 +13,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ฐานข้อมูลฮีโร่ ROV แยกตามเลน เพื่อให้เงื่อนไขการสุ่มตรงกัน
+// ฐานข้อมูลฮีโร่ ROV แยกตามเลน
 const rovLanes = {
     "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica"],
     "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Thorne", "Valhein"],
@@ -45,11 +45,18 @@ const backToLobbyBtn = document.getElementById('backToLobbyBtn');
 
 let myName = '';
 let roomId = '';
-let myId = 'user_' + Math.random().toString(36).substring(2, 9);
+
+// ใช้ LocalStorage เพื่อจำ ID เดิมของผู้เล่น ไม่ให้เปลี่ยนมั่วเวลารีเฟรช
+let myId = localStorage.getItem('rov_spy_myid');
+if (!myId) {
+    myId = 'user_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('rov_spy_myid', myId);
+}
+
 let isHost = false;
 let timerInterval = null;
 
-// แสดงรายชื่อฮีโร่รวมทั้งหมดให้ดูเป็นไอเดีย
+// แสดงรายชื่อฮีโร่รวมทั้งหมด
 const allHeroes = Object.values(rovLanes).flat();
 allHeroes.forEach(hero => {
     const div = document.createElement('div');
@@ -89,7 +96,8 @@ function checkHostAndListen() {
         const players = data.players || {};
         const playerIds = Object.keys(players);
 
-        if (playerIds[0] === myId) {
+        // เช็คว่าเราคือคนแรกที่เข้าห้องไหม (เป็น Host)
+        if (playerIds.length > 0 && playerIds[0] === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
@@ -101,15 +109,15 @@ function checkHostAndListen() {
             hostControls.style.display = 'none';
         }
 
-        playerIds.forEach(id => {
+        playerIds.forEach((id, index) => {
             const li = document.createElement('li');
-            li.textContent = `👤 ${players[id].name} ${id === playerIds[0] ? '(หัวหน้าห้อง)' : ''}`;
+            li.textContent = `👤 ${players[id].name} ${index === 0 ? '(หัวหน้าห้อง)' : ''}`;
             playerList.appendChild(li);
         });
     });
 }
 
-// กดเริ่มเกม (สุ่มเลน และสุ่มฮีโร่ตามเงื่อนไข)
+// กดเริ่มเกม (สุ่มเลน และสุ่มฮีโร่)
 startBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -127,12 +135,12 @@ startBtn.addEventListener('click', () => {
         const selectedLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
         const laneHeroes = [...rovLanes[selectedLane]];
 
-        // สุ่มตัวละครหลักสำหรับคนปกติ 2 ตัวที่ไม่ซ้ำกัน
+        // สุ่มตัวละครหลักสำหรับคนปกติ
         const normalHeroIndex1 = Math.floor(Math.random() * laneHeroes.length);
-        const normalHero1 = laneHeroes.splice(normalHero1Index1, 1)[0];
+        const normalHero1 = laneHeroes.splice(normalHeroindex = normalHeroIndex1, 1)[0];
         const normalHero2 = laneHeroes.length > 0 ? laneHeroes.splice(Math.floor(Math.random() * laneHeroes.length), 1)[0] : normalHero1;
 
-        // สุ่มตัวละครปลอมสำหรับ Spy (เลือกจากเลนอื่น เพื่อให้รู้ว่าหลุดเลน)
+        // สุ่มตัวละครปลอมสำหรับ Spy (จากเลนอื่น)
         const otherLanes = laneKeys.filter(l => l !== selectedLane);
         const randomOtherLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
         const spyHeroes = rovLanes[randomOtherLane];
@@ -144,15 +152,13 @@ startBtn.addEventListener('click', () => {
         let rolesData = {};
         playerIds.forEach((id, index) => {
             if (index === spyIndex) {
-                rolesData[id] = spyHero; // คนนี้ได้ตัวปลอม (Spy)
+                rolesData[id] = spyHero; // ตัวปลอม
             } else {
-                // สลับแจกตัวละครหลักให้คนทั่วไป
                 rolesData[id] = index % 2 === 0 ? normalHero1 : normalHero2;
             }
         });
 
-        // ตั้งเวลาหมดใน 5 นาที (300 วินาที)
-        const endTime = Date.now() + 300 * 1000;
+        const endTime = Date.now() + 300 * 1000; // 5 นาที
 
         roomRef.update({
             status: 'playing',
@@ -176,11 +182,11 @@ function listenGameState() {
             voteArea.style.display = 'none';
             gameArea.style.display = 'block';
 
-            // แสดงตัวละครของตัวเอง (ไม่บอกว่าเป็นใครหรือ Spy เพื่อความเนียน)
-            const myHero = data.roles[myId] || "ไม่พบข้อมูล";
+            // ดึงฮีโร่ของตัวเองจาก Firebase มาแสดงผล
+            const roles = data.roles || {};
+            const myHero = roles[myId] || "กำลังซิงค์ข้อมูล...";
             heroName.textContent = myHero;
 
-            // ระบบนับถอยหลัง 5 นาที
             startTimer(data.endTime);
 
         } else if (data.status === 'voting') {
@@ -208,7 +214,6 @@ function startTimer(endTime) {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             timerDisplay.textContent = "00:00";
-            // ถ้าหมดเวลา หัวหน้าห้องสั่งเปลี่ยนเป็นหน้าโหวตอัตโนมัติ
             if (isHost) {
                 db.ref(`rooms/${roomId}`).update({ status: 'voting' });
             }
@@ -220,7 +225,6 @@ function startTimer(endTime) {
     }, 1000);
 }
 
-// ปุ่มข้ามไปหน้าโหวต (สำหรับ Host)
 skipToVoteBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
 });
@@ -234,12 +238,10 @@ function renderVotingScreen(data) {
     const players = data.players || {};
     const votes = data.votes || {};
 
-    // ตรวจสอบว่าโหวตครบหรือยัง / แสดงปุ่มให้กดโหวต
     Object.keys(players).forEach(targetId => {
         const btn = document.createElement('button');
         btn.className = 'vote-btn';
         
-        // นับจำนวนคนโหวตเป้าหมายนี้
         let voteCount = 0;
         Object.values(votes).forEach(v => {
             if (v === targetId) voteCount++;
@@ -248,19 +250,16 @@ function renderVotingScreen(data) {
         btn.textContent = `👤 ${players[targetId].name} (ถูกโหวต: ${voteCount} คะแนน)`;
         
         btn.addEventListener('click', () => {
-            // บันทึกการโหวตลง Firebase
             db.ref(`rooms/${roomId}/votes/${myId}`).set(targetId);
         });
 
         voteList.appendChild(btn);
     });
 
-    // เช็คผลโหวตถ้ายอดโหวตสรุปแล้ว
     const totalVotes = Object.keys(votes).length;
     const totalPlayers = Object.keys(players).length;
 
     if (totalVotes > 0) {
-        // หาว่าใครได้โหวตสูงสุด
         let voteCounts = {};
         Object.values(votes).forEach(targetId => {
             voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
@@ -277,16 +276,17 @@ function renderVotingScreen(data) {
 
         if (totalVotes >= Math.ceil(totalPlayers / 2)) {
             voteResult.style.display = 'block';
-            if (mostVotedId === data.spyId) {
-                voteResult.innerHTML = `🎉 <span style="color:#22c55e;">ทายถูก!</span> ผู้เล่นจับ Spy ได้สำเร็จ (${players[data.spyId].name} คือ Spy!)`;
-            } else {
-                voteResult.innerHTML = `❌ <span style="color:#ef4444;">ทายผิด!</span> คนที่ถูกโหวตไม่ใช่ Spy (Spy ที่แท้จริงคือ ${players[data.spyId].name})`;
+            if (data.spyId && players[data.spyId]) {
+                if (mostVotedId === data.spyId) {
+                    voteResult.innerHTML = `🎉 <span style="color:#22c55e;">ทายถูก!</span> ผู้เล่นจับ Spy ได้สำเร็จ (${players[data.spyId].name} คือ Spy!)`;
+                } else {
+                    voteResult.innerHTML = `❌ <span style="color:#ef4444;">ทายผิด!</span> คนที่ถูกโหวตไม่ใช่ Spy (Spy ที่แท้จริงคือ ${players[data.spyId].name})`;
+                }
             }
         }
     }
 }
 
-// ปุ่มกลับหน้าล็อบบี้ (สำหรับ Host)
 backToLobbyBtn.addEventListener('click', () => {
     db.ref(`rooms/${roomId}`).update({
         status: 'lobby',
