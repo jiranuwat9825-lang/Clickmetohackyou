@@ -220,7 +220,6 @@ db.ref('rooms').on('value', (snapshot) => {
         const btnContainer = document.createElement('div');
         btnContainer.style.cssText = "display: flex; gap: 4px; align-items: center;";
 
-        // ถ้ามีผู้เล่น 0 คน ให้แสดงปุ่มลบห้อง (🗑️)
         if (pCount === 0) {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'join-room-tab-btn';
@@ -425,8 +424,10 @@ startBtn.addEventListener('click', () => {
         const catData = getCategoryData(catKey);
         const setVal = data.settingValue || 2;
 
-        if (playerIds.length < (gameMode === 'whoami' ? 2 : 3)) {
-            alert(`โหมดนี้ต้องมีผู้เล่นอย่างน้อย ${gameMode === 'whoami' ? 2 : 3} คนขึ้นไป!`);
+        // กำหนดขั้นต่ำ: ฉันคือใครเล่นได้ 2 คนขึ้นไป, Spyfall ต้อง 3 คนขึ้นไป
+        const minPlayers = gameMode === 'whoami' ? 2 : 3;
+        if (playerIds.length < minPlayers) {
+            alert(`โหมดนี้ต้องมีผู้เล่นอย่างน้อย ${minPlayers} คนขึ้นไป!`);
             return;
         }
 
