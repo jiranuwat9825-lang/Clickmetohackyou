@@ -1,21 +1,16 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// --- ตั้งค่า Firebase (รวม databaseURL ที่จำเป็นแล้ว) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyC3IuOtFTc2OOJclUMpVe1GEv13nCjlEM8",
-  authDomain: "xo-game-e5fdd.firebaseapp.com",
-  projectId: "xo-game-e5fdd",
-  storageBucket: "xo-game-e5fdd.firebasestorage.app",
-  messagingSenderId: "890496938682",
-  appId: "1:890496938682:web:c99edd29e9639415ac4883",
-  measurementId: "G-4RHMNWP5ZJ"
+    apiKey: "AIzaSyC3IuOtFTc200JcUmpVe1GEv13nCj1EM8",
+    authDomain: "xo-game-e5fdd.firebaseapp.com",
+    databaseURL: "https://xo-game-e5fdd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "xo-game-e5fdd",
+    storageBucket: "xo-game-e5fdd.firebasestorage.app",
+    messagingSenderId: "890496938682",
+    appId: "1:890496938682:web:c99edd29e639415ac4883",
+    measurementId: "G-4RHMNWP5ZJ"
 };
 
+// เริ่มต้นใช้งาน Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -45,7 +40,6 @@ joinBtn.addEventListener('click', () => {
     roomRef.once('value', (snapshot) => {
         const roomData = snapshot.val();
         if (!roomData || !roomData.playerX) {
-            // ถ้ายังไม่มีคนสร้างห้อง ให้เราเป็น X
             myRole = 'X';
             roomRef.set({
                 board: ['', '', '', '', '', '', '', '', ''],
@@ -55,11 +49,9 @@ joinBtn.addEventListener('click', () => {
                 winner: null
             });
         } else if (!roomData.playerO) {
-            // ถ้ามี X แล้ว ให้เราเป็น O
             myRole = 'O';
             roomRef.update({ playerO: true });
         } else {
-            // ห้องเต็ม
             myRole = 'Spectator (ผู้ชม)';
             alert('ห้องนี้มีผู้เล่นครบ 2 คนแล้ว คุณจะเข้ามาเป็นผู้ชม');
         }
@@ -75,7 +67,6 @@ function listenGameData() {
         const data = snapshot.val();
         if (!data) return;
 
-        // อัปเดตตารางหน้าจอ
         data.board.forEach((val, index) => {
             cells[index].textContent = val;
             cells[index].className = 'cell';
@@ -83,7 +74,6 @@ function listenGameData() {
             if (val === 'O') cells[index].classList.add('o');
         });
 
-        // ตรวจสอบสถานะเกม
         if (data.winner) {
             if (data.winner === 'Draw') {
                 statusText.textContent = `เสมอ กัน! 🤝`;
@@ -100,16 +90,14 @@ function listenGameData() {
     });
 }
 
-// กดเลือกช่องเล่นเกม
 cells.forEach((cell, index) => {
     cell.addEventListener('click', () => {
-        if (myRole !== 'X' && myRole !== 'O') return; // ผู้ชมกดไม่ได้
+        if (myRole !== 'X' && myRole !== 'O') return;
 
         const roomRef = db.ref('rooms/' + roomId);
         roomRef.once('value', (snapshot) => {
             const data = snapshot.val();
 
-            // เช็คว่าเป็นตาเราไหม และช่องว่างเปล่าไหม และเกมยังไม่จบ
             if (data.turn === myRole && data.board[index] === '' && !data.winner) {
                 let newBoard = data.board;
                 newBoard[index] = myRole;
@@ -143,7 +131,6 @@ function checkWinner(b) {
     return null;
 }
 
-// ปุ่มรีเซ็ตเกม
 restartBtn.addEventListener('click', () => {
     if (myRole !== 'X' && myRole !== 'O') return;
     const roomRef = db.ref('rooms/' + roomId);
