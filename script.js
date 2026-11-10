@@ -513,7 +513,6 @@ function listenGameState() {
                     const div = document.createElement('div');
                     div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
                     div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
-                    fullTrustOrderContainer?.appendChild(div); // safe check
                     fullTurnOrderContainer.appendChild(div);
                 });
 
@@ -563,14 +562,11 @@ function listenGameState() {
                         const isCorrect = guessedCorrectly[pId];
                         const isCurrentTurn = (turnOrder[currentTurnIndex] === pId);
 
-                        // ตั้งค่าสีและสถานะตามเงื่อนไขใหม่
-                        let borderColor = "rgba(56, 189, 248, 0.1)";
                         let bgStyle = "background: rgba(30, 41, 59, 0.9);";
                         let statusText = "";
 
                         if (isCurrentTurn && !isDone) {
-                            borderColor = "#fbbf24"; // สีเหลืองเมื่อถึงเทิร์น
-                            bgStyle = "background: rgba(251, 191, 36, 0.2); border: 2px solid #fbbf24;";
+                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;"; // สีเหลืองเมื่อถึงเทิร์น
                         }
 
                         if (isDone) {
@@ -604,12 +600,6 @@ function listenGameState() {
                 }
 
                 setupSearchDropdown(data.category);
-
-                // ซ่อนกล่องรายชื่อด้านล่าง เนื่องจากย้ายลำดับและสถานะไปไว้ในกรอบรวมด้านบนแล้ว
-                whoAmITurnOrderContainer.innerHTML = '';
-                if (whoAmITurnOrderContainer.parentElement) {
-                    whoAmITurnOrderContainer.parentElement.style.display = 'none';
-                }
             }
 
         } else if (data.status === 'voting') {
