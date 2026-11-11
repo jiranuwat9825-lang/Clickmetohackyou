@@ -338,20 +338,40 @@ function joinExistingRoom(targetRoomId) {
     });
 }
 
+// ระบบอัปเดตตั้งค่าจากหัวหน้าห้อง (ใช้ตรวจสอบสิทธิ์แบบปลอดภัย)
 lobbyGameModeSelect.addEventListener('change', (e) => {
-    if (!isHost || !roomId) return;
-    const mode = e.target.value;
-    db.ref(`rooms/${roomId}/gameMode`).set(mode);
-    const defaultVal = mode === 'whoami' ? 3 : 2;
-    db.ref(`rooms/${roomId}/settingValue`).set(defaultVal);
+    if (!roomId) return;
+    db.ref(`rooms/${roomId}`).once('value', (snap) => {
+        const room = snap.val();
+        if (room && room.hostId === myId) {
+            const mode = e.target.value;
+            const defaultVal = mode === 'whoami' ? 3 : 2;
+            db.ref(`rooms/${roomId}`).update({
+                gameMode: mode,
+                settingValue: defaultVal
+            });
+        }
+    });
 });
+
 lobbyCategorySelect.addEventListener('change', (e) => {
-    if (!isHost || !roomId) return;
-    db.ref(`rooms/${roomId}/category`).set(e.target.value);
+    if (!roomId) return;
+    db.ref(`rooms/${roomId}`).once('value', (snap) => {
+        const room = snap.val();
+        if (room && room.hostId === myId) {
+            db.ref(`rooms/${roomId}/category`).set(e.target.value);
+        }
+    });
 });
+
 lobbySettingValueInput.addEventListener('change', (e) => {
-    if (!isHost || !roomId) return;
-    db.ref(`rooms/${roomId}/settingValue`).set(parseInt(e.target.value) || 2);
+    if (!roomId) return;
+    db.ref(`rooms/${roomId}`).once('value', (snap) => {
+        const room = snap.val();
+        if (room && room.hostId === myId) {
+            db.ref(`rooms/${roomId}/settingValue`).set(parseInt(e.target.value) || 2);
+        }
+    });
 });
 
 closeRoomBtn.addEventListener('click', () => {
@@ -396,9 +416,11 @@ function checkHostAndListen() {
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
-        lobbyGameModeSelect.value = mode;
-        lobbyCategorySelect.value = catKey;
-        lobbySettingValueInput.value = setVal;
+        
+        // ป้องกันไม่ให้รีเซ็ตทับขณะผู้ใช้กำลังกดเลือกในช่องนั้นๆ
+        if (document.activeElement !== lobbyGameModeSelect) lobbyGameModeSelect.value = mode;
+        if (document.activeElement !== lobbyCategorySelect) lobbyCategorySelect.value = catKey;
+        if (document.activeElement !== lobbySettingValueInput) lobbySettingValueInput.value = setVal;
         
         if (lobbySettingValueInput.previousElementSibling) {
             lobbySettingValueInput.previousElementSibling.textContent = mode === 'whoami' ? '⏱️ เวลาจำกัด (นาที):' : '🔄 จำนวนรอบการพูด:';
