@@ -112,29 +112,6 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// ฟังก์ชันเติมตัวเลือกหมวดหมู่ให้อัตโนมัติ ป้องกันกล่องว่าง
-function updateCategoryDropdowns() {
-    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
-        if (!selectEl) return;
-        const currentVal = selectEl.value;
-        selectEl.innerHTML = '';
-        Object.keys(categoriesData).forEach(key => {
-            const cat = categoriesData[key];
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = cat.name;
-            selectEl.appendChild(opt);
-        });
-        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
-            selectEl.value = currentVal;
-        } else {
-            selectEl.selectedIndex = 0;
-        }
-    });
-}
-
-updateCategoryDropdowns();
-
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
@@ -437,7 +414,6 @@ function checkHostAndListen() {
         if (!categoriesData[catKey]) catKey = 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         
-        updateCategoryDropdowns();
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
