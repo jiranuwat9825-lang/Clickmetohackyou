@@ -37,7 +37,7 @@ const defaultCategoriesData = {
     }
 };
 
-let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
+let allCategoriesData = {};
 
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
@@ -127,11 +127,17 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดและผสานข้อมูลหมวดหมู่เริ่มต้นเข้ากับ Firebase แบบ Realtime อัตโนมัติ
+// ล้างฐานข้อมูลหมวดหมู่เก่าทิ้ง แล้วเซ็ตค่าเริ่มต้น (ROV, Valorant) ใหม่ทั้งหมดทันทีเพื่อให้ทุกหมวดจัดการได้ผ่าน Firebase
+db.ref('customCategories').once('value', (snapshot) => {
+    if (!snapshot.exists() || !snapshot.val().rov) {
+        db.ref('customCategories').set(defaultCategoriesData);
+    }
+});
+
+// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase
 db.ref('customCategories').on('value', (snapshot) => {
-    const custom = snapshot.val() || {};
-    // บังคับผสานค่าเริ่มต้น (rov, valorant) เข้าไปเสมอ เพื่อป้องกันการหาย
-    allCategoriesData = { ...defaultCategoriesData, ...custom };
+    const custom = snapshot.val() || defaultCategoriesData;
+    allCategoriesData = custom;
     updateCategoryDropdowns();
     updateManageCatDropdown();
 });
@@ -187,8 +193,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        // อนุญาตให้แก้ไขและลบได้ทุกหมวดหมู่
-        deleteCategoryBtn.style.display = 'block';
+        deleteCategoryBtn.style.display = 'block'; // ทุกหมวดสามารถกดลบได้
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
@@ -220,7 +225,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (รองรับการอัปเดตหมวดเดิม หรือสร้างหมวดใหม่)
+// ปุ่มบันทึกหมวดหมู่ (ทำงานกับ Firebase 100%)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
