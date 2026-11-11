@@ -37,7 +37,7 @@ const defaultCategoriesData = {
     }
 };
 
-let allCategoriesData = {};
+let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
 
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
@@ -127,17 +127,10 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// ตรวจสอบและซิงค์หมวดหมู่เริ่มต้นเข้า Firebase ทันทีเมื่อเปิดเว็บ
-db.ref('customCategories').once('value', (snapshot) => {
-    if (!snapshot.exists()) {
-        db.ref('customCategories').set(defaultCategoriesData);
-    }
-});
-
-// โหลดข้อมูลหมวดหมู่ทั้งหมดแบบ Realtime จาก Firebase
+// โหลดข้อมูลหมวดหมู่จาก Firebase และรวมเข้ากับค่าเริ่มต้นเสมอ
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
-    allCategoriesData = custom;
+    allCategoriesData = { ...defaultCategoriesData, ...custom };
     updateCategoryDropdowns();
     updateManageCatDropdown();
 });
@@ -193,7 +186,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = 'block'; // อนุญาตให้ลบได้ทุกหมวดหมู่
+        deleteCategoryBtn.style.display = 'block'; // อนุญาตให้กดลบได้ทุกหมวดหมู่
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
@@ -225,7 +218,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (อัปเดตหรือสร้างใหม่ตรงตาม Key ที่เลือกทันที)
+// ปุ่มบันทึกหมวดหมู่ (รองรับการอัปเดตหมวดเดิมหรือสร้างใหม่ได้อย่างสมบูรณ์)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
