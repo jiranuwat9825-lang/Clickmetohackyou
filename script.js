@@ -112,6 +112,29 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
+// ฟังก์ชันเติมตัวเลือกหมวดหมู่ให้อัตโนมัติ ป้องกันกล่องว่าง
+function updateCategoryDropdowns() {
+    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
+        if (!selectEl) return;
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = '';
+        Object.keys(categoriesData).forEach(key => {
+            const cat = categoriesData[key];
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = cat.name;
+            selectEl.appendChild(opt);
+        });
+        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
+            selectEl.value = currentVal;
+        } else {
+            selectEl.selectedIndex = 0;
+        }
+    });
+}
+
+updateCategoryDropdowns();
+
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
@@ -338,7 +361,7 @@ function joinExistingRoom(targetRoomId) {
     });
 }
 
-// ระบบอัปเดตตั้งค่าจากหัวหน้าห้อง (ใช้ตรวจสอบสิทธิ์แบบปลอดภัย)
+// ควบคุมการเปลี่ยนค่าในล็อบบี้เฉพาะหัวหน้าห้อง
 lobbyGameModeSelect.addEventListener('change', (e) => {
     if (!roomId) return;
     db.ref(`rooms/${roomId}`).once('value', (snap) => {
@@ -410,14 +433,16 @@ function checkHostAndListen() {
         playerList.innerHTML = '';
         const hostId = data.hostId;
         const mode = data.gameMode || 'spyfall';
-        const catKey = data.category || 'rov';
+        let catKey = data.category || 'rov';
+        if (!categoriesData[catKey]) catKey = 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         
+        updateCategoryDropdowns();
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
         
-        // ป้องกันไม่ให้รีเซ็ตทับขณะผู้ใช้กำลังกดเลือกในช่องนั้นๆ
+        // อัปเดตค่าเฉพาะเมื่อไม่ได้กำลังกดเลือกอยู่ ป้องกันการเด้งทับ
         if (document.activeElement !== lobbyGameModeSelect) lobbyGameModeSelect.value = mode;
         if (document.activeElement !== lobbyCategorySelect) lobbyCategorySelect.value = catKey;
         if (document.activeElement !== lobbySettingValueInput) lobbySettingValueInput.value = setVal;
