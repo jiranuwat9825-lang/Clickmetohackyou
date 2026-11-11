@@ -24,8 +24,8 @@
                 <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
             </div>
             
-            <button id="showCreateModalBtn" class="btn primary-glow">🔨 สร้างห้องใหม่</button>
-            <button id="openCategoryManagerBtn" class="btn secondary-btn" style="background: rgba(147, 51, 234, 0.3); border-color: #a855f7;">⚙️ จัดการ/เพิ่มหมวดหมู่เกม</button>
+            <button type="button" id="showCreateModalBtn" class="btn primary-glow">🔨 สร้างห้องใหม่</button>
+            <button type="button" id="openCategoryManagerBtn" class="btn secondary-btn" style="background: rgba(147, 51, 234, 0.3); border-color: #a855f7;">⚙️ จัดการ/เพิ่มหมวดหมู่เกม</button>
 
             <div class="active-rooms-container">
                 <h3 class="section-title">🏠 ห้องที่เปิดอยู่ (คลิกเพื่อเข้าร่วม):</h3>
@@ -64,7 +64,7 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label class="form-label" style="margin: 0;">🛡️ ตำแหน่ง / เลน / กลุ่มย่อย:</label>
-                <button id="addGroupBtn" class="join-room-tab-btn" style="background: #0284c7; padding: 3px 10px;">+ เพิ่มเลน</button>
+                <button type="button" id="addGroupBtn" class="join-room-tab-btn" style="background: #0284c7; padding: 3px 10px;">+ เพิ่มเลน</button>
             </div>
 
             <div id="groupsEditorContainer" class="groups-editor-scroll">
@@ -72,10 +72,10 @@
             </div>
 
             <div style="display: flex; gap: 6px; margin-top: 8px;">
-                <button id="saveCategoryBtn" class="btn primary-glow" style="flex: 2;">💾 บันทึกหมวดหมู่</button>
-                <button id="deleteCategoryBtn" class="btn danger" style="flex: 1; margin-top: 0; display: none;">🗑️ ลบหมวด</button>
+                <button type="button" id="saveCategoryBtn" class="btn primary-glow" style="flex: 2;">💾 บันทึกหมวดหมู่</button>
+                <button type="button" id="deleteCategoryBtn" class="btn danger" style="flex: 1; margin-top: 0; display: none;">🗑️ ลบหมวด</button>
             </div>
-            <button id="closeCategoryManagerBtn" class="btn secondary-btn" style="margin-top: 6px;">🔙 กลับหน้าหลัก</button>
+            <button type="button" id="closeCategoryManagerBtn" class="btn secondary-btn" style="margin-top: 6px;">🔙 กลับหน้าหลัก</button>
         </div>
 
         <!-- หน้าต่างตั้งค่าสร้างห้องใหม่ -->
@@ -99,8 +99,8 @@
                 <label class="form-label" id="roundOrTimeLabel">🔄 จำนวนรอบการพูด:</label>
                 <input type="number" id="settingValueInput" value="2" min="1" max="99" class="category-select" style="text-align: center;">
             </div>
-            <button id="confirmCreateBtn" class="btn primary-glow">🚀 ยืนยันสร้างห้อง</button>
-            <button id="backToHomeBtn" class="btn secondary-btn">🔙 กลับ</button>
+            <button type="button" id="confirmCreateBtn" class="btn primary-glow">🚀 ยืนยันสร้างห้อง</button>
+            <button type="button" id="backToHomeBtn" class="btn secondary-btn">🔙 กลับ</button>
         </div>
         
         <!-- หน้าล็อบบี้รอเพื่อน -->
@@ -125,10 +125,10 @@
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
             <ul id="playerList" class="player-list"></ul>
             
-            <button id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม / เริ่มรอบใหม่</button>
+            <button type="button" id="startBtn" class="btn primary-glow" style="display: none;">🚀 เริ่มเกม / เริ่มรอบใหม่</button>
             <p id="waitText" class="status-pulse">⏳ รอหัวหน้าห้องกดเริ่มเกม...</p>
 
-            <button id="closeRoomBtn" class="btn danger" style="display: none; margin-top: 15px;">🗑️ ปิดห้อง (ลบห้อง)</button>
+            <button type="button" id="closeRoomBtn" class="btn danger" style="display: none; margin-top: 15px;">🗑️ ปิดห้อง (ลบห้อง)</button>
         </div>
 
         <!-- หน้าจอเล่นเกม (โหมด Spyfall) -->
@@ -142,7 +142,7 @@
             <div class="turn-box-container">
                 <div id="roundIndicator" class="round-indicator-text">🔄 กำลังโหลดรอบ...</div>
                 <div id="currentSpeakerBox" class="speaker-text">กำลังรอเริ่มเทิร์น...</div>
-                <button id="endTurnBtn" class="btn primary-glow" style="display: none; margin: 0 auto; width: 80%;">✅ จบเทิร์น (พูดจบแล้ว)</button>
+                <button type="button" id="endTurnBtn" class="btn primary-glow" style="display: none; margin: 0 auto; width: 80%;">✅ จบเทิร์น (พูดจบแล้ว)</button>
             </div>
 
             <div class="turn-order-list-box">
@@ -151,7 +151,7 @@
             </div>
             
             <div id="hostControls" style="display: none;">
-                <button id="skipToVoteBtn" class="btn warning">⏩ ข้ามไปหน้าโหวตทันที</button>
+                <button type="button" id="skipToVoteBtn" class="btn warning">⏩ ข้ามไปหน้าโหวตทันที</button>
             </div>
 
             <h3 class="section-title">🛡️ รายชื่อทั้งหมดในหมวดนี้:</h3>
@@ -180,12 +180,12 @@
                     <input type="text" id="myGuessSearch" class="category-select" placeholder="🔍 พิมพ์ค้นหาชื่อตัวละคร..." autocomplete="off">
                     <div id="searchResultsList" class="search-results-dropdown" style="display:none;"></div>
                     <p id="selectedGuessText" class="selected-guess-label">ยังไม่ได้เลือกตัวละคร</p>
-                    <button id="submitMyGuessBtn" class="btn primary-glow">🔒 ยืนยันคำตอบ</button>
+                    <button type="button" id="submitMyGuessBtn" class="btn primary-glow">🔒 ยืนยันคำตอบ</button>
                 </div>
             </div>
 
             <div id="whoAmIHostControls" style="display: none; margin-top: 10px;">
-                <button id="whoAmISkipBtn" class="btn warning">⏩ จบเกมทันที (หมดเวลา)</button>
+                <button type="button" id="whoAmISkipBtn" class="btn warning">⏩ จบเกมทันที (หมดเวลา)</button>
             </div>
         </div>
 
@@ -197,8 +197,8 @@
             <div id="voteResult" class="vote-result" style="display: none;"></div>
             
             <div id="hostPostVoteControls" style="display: none; gap: 8px; flex-direction: column;">
-                <button id="nextRoundBtn" class="btn primary-glow">🔄 เริ่มรอบถัดไป</button>
-                <button id="backToLobbyBtn" class="btn danger">🏠 ปิดห้องและกลับหน้าแรก</button>
+                <button type="button" id="nextRoundBtn" class="btn primary-glow">🔄 เริ่มรอบถัดไป</button>
+                <button type="button" id="backToLobbyBtn" class="btn danger">🏠 ปิดห้องและกลับหน้าแรก</button>
             </div>
         </div>
     </div>
