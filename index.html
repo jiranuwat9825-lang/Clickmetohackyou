@@ -44,7 +44,8 @@
                 <label class="form-label">🎮 เลือกโหมดเกม:</label>
                 <select id="gameModeSelect" class="category-select">
                     <option value="spyfall">🕵️ Spyfall (จับสปาย)</option>
-                    <option value="whoami">❓ ฉันคือใคร (Guess Who)</option>
+                    <option value="whoami_time">❓ ฉันคือใคร (แบบจับเวลา)</option>
+                    <option value="whoami_rounds">❓ ฉันคือใคร (แบบผลัดกันเล่นเป็นรอบ)</option>
                 </select>
             </div>
             <div class="input-group" style="text-align: left;">
@@ -103,20 +104,28 @@
             <div class="hero-grid" id="heroGrid"></div>
         </div>
 
-        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร - นับเวลา + แสดงลำดับการถาม) -->
+        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร - รองรับทั้งแบบเวลาและแบบรอบ) -->
         <div id="whoAmIArea" class="box" style="display: none;">
             <div class="role-card whoami-role-card">
                 <span class="card-tag">❓ ตัวละครของคุณคือใคร?</span>
                 <p class="hint-text" style="margin-top: 4px;">คุณมองไม่เห็นตัวเอง แต่เห็นตัวละครของเพื่อนทุกคน</p>
             </div>
 
-            <div class="timer-container">
+            <!-- Timer (แสดงเฉพาะโหมดจับเวลา) -->
+            <div id="whoAmITimerContainer" class="timer-container">
                 <span class="timer-label">⏱️ เวลาที่เหลือ</span>
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
+            <!-- Turn box (แสดงเฉพาะโหมดผลัดกันเล่นเป็นรอบ) -->
+            <div id="whoAmITurnBoxContainer" class="turn-box-container" style="display: none;">
+                <div id="whoAmIRoundIndicator" class="round-indicator-text">🔄 กำลังโหลดรอบ...</div>
+                <div id="whoAmICurrentSpeakerBox" class="speaker-text">กำลังรอเริ่มเทิร์น...</div>
+                <button type="button" id="whoAmIEndTurnBtn" class="btn primary-glow" style="display: none; margin: 0 auto; width: 80%;">✅ จบเทิร์น (พูดจบแล้ว)</button>
+            </div>
+
             <div class="turn-order-list-box">
-                <span class="order-title">📋 ลำดับการถาม (สำหรับอ้างอิง):</span>
+                <span class="order-title">📋 ลำดับการถาม:</span>
                 <div id="whoAmIFullTurnOrderContainer" class="order-list-scroll"></div>
             </div>
 
@@ -135,7 +144,7 @@
             </div>
 
             <div id="whoAmIHostControls" style="display: none; margin-top: 10px;">
-                <button type="button" id="whoAmISkipBtn" class="btn warning">⏩ จบเกมทันที (หมดเวลา)</button>
+                <button type="button" id="whoAmISkipBtn" class="btn warning">⏩ จบเกมทันที</button>
             </div>
         </div>
 
