@@ -220,7 +220,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (เพิ่มระบบแจ้งเตือนเพื่อตรวจสอบการทำงาน)
+// ปุ่มบันทึกหมวดหมู่ (ดึงข้อมูลจากคลาส .group-row โดยตรง)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
