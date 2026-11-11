@@ -62,7 +62,7 @@
             <button type="button" id="backToHomeBtn" class="btn secondary-btn">🔙 กลับ</button>
         </div>
         
-        <!-- หน้าล็อบบี้รอเพื่อน (แบบแสดงผลนิ่งๆ ไม่มีช่องให้แก้) -->
+        <!-- หน้าล็อบบี้รอเพื่อน -->
         <div id="lobbyArea" class="box" style="display: none;">
             <h2 id="roomTitle" class="room-title">ชื่อห้อง</h2>
 
@@ -103,7 +103,7 @@
             <div class="hero-grid" id="heroGrid"></div>
         </div>
 
-        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร - Who am I?) -->
+        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร - นับเวลาถอยหลัง + แสดงลำดับการถาม) -->
         <div id="whoAmIArea" class="box" style="display: none;">
             <div class="role-card whoami-role-card">
                 <span class="card-tag">❓ ตัวละครของคุณคือใคร?</span>
@@ -115,7 +115,12 @@
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
-            <div class="section-title">👥 ตัวละครของเพื่อนๆ ทุกคน (แสดงลำดับและสถานะ):</div>
+            <div class="turn-order-list-box">
+                <span class="order-title">📋 ลำดับการถาม (สำหรับอ้างอิง):</span>
+                <div id="whoAmIFullTurnOrderContainer" class="order-list-scroll"></div>
+            </div>
+
+            <div class="section-title">👥 ตัวละครของเพื่อนๆ ทุกคน:</div>
             <div id="othersRolesGrid" class="hero-grid whoami-grid"></div>
 
             <div class="guess-my-card">
