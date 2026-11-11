@@ -183,7 +183,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = 'block';
+        deleteCategoryBtn.style.display = defaultCategoriesData[val] ? 'none' : 'block';
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
@@ -201,7 +201,7 @@ function addGroupRow(groupName = "", itemsText = "") {
             <input type="text" class="group-name-input category-select" placeholder="ชื่อเลน/กลุ่ม (เช่น ป่า, แครี่)" value="${groupName}" style="flex: 2; text-align: left; padding: 5px 8px;">
             <button type="button" class="remove-group-btn join-room-tab-btn" style="background: #ef4444; flex: 0.5;">ลบ</button>
         </div>
-        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 50px; text-align: left; padding: 6px; font-size: 0.8rem;">${itemsText}</textarea>
+        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 55px; text-align: left; padding: 6px; font-size: 0.8rem;">${itemsText}</textarea>
     `;
 
     row.querySelector('.remove-group-btn').onclick = () => {
@@ -235,8 +235,12 @@ saveCategoryBtn.addEventListener('click', () => {
     let isValid = true;
 
     groupRows.forEach(row => {
-        const gName = row.querySelector('.group-name-input').value.trim();
-        const rawItems = row.querySelector('.group-items-textarea').value.trim();
+        const nameInputEl = row.querySelector('.group-name-input');
+        const itemsTextEl = row.querySelector('.group-items-textarea');
+        if (!nameInputEl || !itemsTextEl) return;
+
+        const gName = nameInputEl.value.trim();
+        const rawItems = itemsTextEl.value.trim();
         if (!gName || !rawItems) {
             isValid = false;
             return;
@@ -250,7 +254,11 @@ saveCategoryBtn.addEventListener('click', () => {
         return;
     }
 
-    const catKey = (selectedKey === 'new') ? ('cat_' + Date.now()) : selectedKey;
+    let catKey = selectedKey;
+    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
+        // ถ้าเป็นหมวดใหม่ หรือแก้ไขหมวดหลักของระบบ ให้สร้างคีย์ใหม่เป็น custom category ป้องกันข้อมูลทับซ้อนระบบหลัก
+        catKey = 'cat_' + Date.now();
+    }
 
     const catData = {
         name: catName,
