@@ -146,18 +146,17 @@ input, .category-select {
     padding: 0.7rem 1rem;
     border-radius: 0.75rem;
     border: 1px solid rgba(71, 85, 105, 0.8);
-    background: #0f172a !important;
-    color: #ffffff !important;
+    background: #0f172a;
+    color: #ffffff;
     font-size: 0.9rem;
     text-align: center;
     outline: none;
     transition: all 0.2s;
 }
 
-/* บังคับสีตัวเลือกข้างในกล่องให้มองเห็นชัดเจน */
 .category-select option {
-    background: #0f172a !important;
-    color: #ffffff !important;
+    background: #0f172a;
+    color: #ffffff;
     padding: 10px;
 }
 
