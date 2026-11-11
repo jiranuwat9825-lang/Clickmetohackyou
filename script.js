@@ -13,15 +13,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// เคลียร์ปุ่มและหน้าต่างจัดการหมวดหมู่เก่าทิ้งอัตโนมัติ (ป้องกันปุ่มค้างจาก HTML เก่า)
-window.addEventListener('DOMContentLoaded', () => {
-    ['openCategoryManagerBtn', 'categoryManagerModal'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    });
-    updateCategoryDropdowns();
-});
-
 const categoriesData = {
     "rov": {
         name: "ROV",
@@ -120,29 +111,6 @@ const savedName = localStorage.getItem('rov_spy_myname');
 if (savedName) {
     nameInput.value = savedName;
 }
-
-// ฟังก์ชันเติมตัวเลือกหมวดหมู่ ป้องกันค่าว่าง
-function updateCategoryDropdowns() {
-    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
-        if (!selectEl) return;
-        const currentVal = selectEl.value;
-        selectEl.innerHTML = '';
-        Object.keys(categoriesData).forEach(key => {
-            const cat = categoriesData[key];
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = cat.name;
-            selectEl.appendChild(opt);
-        });
-        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
-            selectEl.value = currentVal;
-        } else {
-            selectEl.selectedIndex = 0;
-        }
-    });
-}
-
-updateCategoryDropdowns();
 
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
@@ -422,17 +390,9 @@ function checkHostAndListen() {
         playerList.innerHTML = '';
         const hostId = data.hostId;
         const mode = data.gameMode || 'spyfall';
-        
-        let catKey = data.category || 'rov';
-        if (!categoriesData[catKey]) {
-            catKey = 'rov';
-            db.ref(`rooms/${roomId}/category`).set('rov');
-        }
-
+        const catKey = data.category || 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         
-        updateCategoryDropdowns();
-
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
@@ -1097,7 +1057,7 @@ nextRoundBtn.addEventListener('click', () => {
             tieHandled: false,
             scoreUpdated: false
         });
-        selectedVoteTest = null;
+        selectedVoteTarget = null;
         selectedHeroGuess = "";
         selectedSearchGuess = "";
     });
