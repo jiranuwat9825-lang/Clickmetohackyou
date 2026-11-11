@@ -26,6 +26,7 @@ body {
     width: 100%;
     max-width: 480px;
     position: relative;
+    z-index: 1;
 }
 
 .groups-editor-scroll {
@@ -37,6 +38,8 @@ body {
     text-align: left;
     padding-right: 4px;
     margin-top: 4px;
+    position: relative;
+    z-index: 5;
 }
 
 .scoreboard-modern {
@@ -120,6 +123,7 @@ h1 {
     flex-direction: column;
     gap: 10px;
     position: relative;
+    z-index: 2;
 }
 
 .room-title {
@@ -254,6 +258,8 @@ input:focus, .category-select:focus {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
+    z-index: 5;
 }
 
 .join-room-tab-btn:hover {
@@ -501,6 +507,8 @@ input:focus, .category-select:focus {
     border-radius: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
+    z-index: 5;
 }
 
 .primary-glow {
