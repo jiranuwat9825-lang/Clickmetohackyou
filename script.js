@@ -15,7 +15,7 @@ const db = firebase.database();
 
 const defaultCategoriesData = {
     "rov": {
-        name: "ROV (Arena of Valor)",
+        name: "ROV",
         mode: "both",
         groups: {
             "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica", "Erin", "Stuart"],
@@ -127,7 +127,7 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase และผสานกับค่าเริ่มต้น
+// โหลดข้อมูลหมวดหมู่จาก Firebase และซิงค์รวมกับค่าเริ่มต้นเสมอ
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
     allCategoriesData = { ...defaultCategoriesData, ...custom };
@@ -136,21 +136,43 @@ db.ref('customCategories').on('value', (snapshot) => {
 });
 
 function updateCategoryDropdowns() {
-    const mode = gameModeSelect.value;
+    let mode = 'both';
+    if (lobbyArea.style.display !== 'none' && lobbyGameModeSelect) {
+        mode = lobbyGameModeSelect.value;
+    } else if (createRoomModal.style.display !== 'none' && gameModeSelect) {
+        mode = gameModeSelect.value;
+    }
+
     [categorySelect, lobbyCategorySelect].forEach(selectEl => {
         if (!selectEl) return;
         const currentVal = selectEl.value;
         selectEl.innerHTML = '';
+        
+        let addedCount = 0;
         Object.keys(allCategoriesData).forEach(key => {
             const cat = allCategoriesData[key];
-            if (cat && (cat.mode === 'both' || cat.mode === mode)) {
+            if (cat && (cat.mode === 'both' || mode === 'both' || cat.mode === mode)) {
                 const opt = document.createElement('option');
                 opt.value = key;
                 opt.textContent = cat.name;
                 selectEl.appendChild(opt);
+                addedCount++;
             }
         });
-        if (selectEl.querySelector(`option[value="${currentVal}"]`)) {
+
+        if (addedCount === 0) {
+            Object.keys(allCategoriesData).forEach(key => {
+                const cat = allCategoriesData[key];
+                if (cat) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = cat.name;
+                    selectEl.appendChild(opt);
+                }
+            });
+        }
+
+        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
             selectEl.value = currentVal;
         }
     });
@@ -203,10 +225,10 @@ function addGroupRow(groupName = "", itemsText = "") {
     
     row.innerHTML = `
         <div style="display: flex; gap: 4px;">
-            <input type="text" class="group-name-input category-select" placeholder="ชื่อเลน/กลุ่ม (เช่น ป่า, แครี่)" value="${groupName}" style="flex: 2; text-align: left; padding: 5px 8px;">
+            <input type="text" class="group-name-input category-select" placeholder="ชื่อเลน/กลุ่ม (เช่น ป่า, แครี่)" value="${groupName}" style="flex: 2; text-align: left; padding: 5px 8px; min-width: 0;">
             <button type="button" class="remove-group-btn join-room-tab-btn" style="background: #ef4444; flex: 0.5;">ลบ</button>
         </div>
-        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 55px; text-align: left; padding: 6px; font-size: 0.8rem;">${itemsText}</textarea>
+        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 55px; text-align: left; padding: 6px; font-size: 0.8rem; min-width: 0;">${itemsText}</textarea>
     `;
 
     row.querySelector('.remove-group-btn').onclick = () => {
@@ -588,6 +610,9 @@ function checkHostAndListen() {
         const mode = data.gameMode || 'spyfall';
         const catKey = data.category || 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
+        
+        updateCategoryDropdowns();
+
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo ? catInfo.name : 'ทั่วไป'} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
