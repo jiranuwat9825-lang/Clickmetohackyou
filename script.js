@@ -127,7 +127,7 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดหมวดหมู่ทั้งหมดจาก Firebase และรวมกับค่าเริ่มต้น
+// โหลดข้อมูลหมวดหมู่จาก Firebase
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
     allCategoriesData = { ...defaultCategoriesData, ...custom };
@@ -183,7 +183,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        // อนุญาตให้ลบได้ทุกหมวดหมู่ (หรือซ่อนปุ่มเฉพาะหมวดหลักถ้าต้องการ แต่เปิดให้จัดการได้อิสระ)
+        // เปิดให้ลบได้เฉพาะหมวดหมู่ custom (หมวดหลักเริ่มต้นซ่อนปุ่มลบไว้)
         deleteCategoryBtn.style.display = defaultCategoriesData[val] ? 'none' : 'block';
 
         const groups = cat.groups || {};
@@ -255,9 +255,10 @@ saveCategoryBtn.addEventListener('click', () => {
         return;
     }
 
-    // กำหนด Key สำหรับบันทึก: ถ้าเลือกหมวดเดิม ให้ใช้ Key เดิมอัปเดต ถ้าสร้างใหม่ให้สร้าง Key ใหม่
+    // หากเลือกหมวดหมู่เริ่มต้น (rov หรือ valorant) หรือสร้างใหม่ ให้สร้าง Key ใหม่ใน customCategories ทันที
+    // เพื่อให้ระบบบันทึกและแก้ไขข้อมูลที่ผู้ใช้ปรับแต่งได้อย่างอิสระโดยไม่ไปติดค่าล็อกเริ่มต้น
     let catKey = selectedKey;
-    if (selectedKey === 'new') {
+    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
         catKey = 'cat_' + Date.now();
     }
 
@@ -267,7 +268,6 @@ saveCategoryBtn.addEventListener('click', () => {
         groups: groupsObj
     };
 
-    // บันทึกลง Firebase ในหมวด customCategories เสมอ เพื่อให้สามารถแก้ไขทับหรือเพิ่มใหม่ได้อย่างอิสระ
     db.ref(`customCategories/${catKey}`).set(catData).then(() => {
         alert('✔️ บันทึกหมวดหมู่เรียบร้อยแล้ว!');
         categoryManagerModal.style.display = 'none';
