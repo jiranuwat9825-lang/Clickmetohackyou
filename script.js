@@ -51,10 +51,14 @@ const nameInput = document.getElementById('nameInput');
 const showCreateModalBtn = document.getElementById('showCreateModalBtn');
 const openCategoryManagerBtn = document.getElementById('openCategoryManagerBtn');
 const closeCategoryManagerBtn = document.getElementById('closeCategoryManagerBtn');
-const saveNewCategoryBtn = document.getElementById('saveNewCategoryBtn');
-const newCatNameInput = document.getElementById('newCatNameInput');
-const newCatGameMode = document.getElementById('newCatGameMode');
-const newCatItemsInput = document.getElementById('newCatItemsInput');
+
+const manageCatSelect = document.getElementById('manageCatSelect');
+const editCatNameInput = document.getElementById('editCatNameInput');
+const editCatGameMode = document.getElementById('editCatGameMode');
+const groupsEditorContainer = document.getElementById('groupsEditorContainer');
+const addGroupBtn = document.getElementById('addGroupBtn');
+const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+const deleteCategoryBtn = document.getElementById('deleteCategoryBtn');
 
 const backToHomeBtn = document.getElementById('backToHomeBtn');
 const newRoomInput = document.getElementById('newRoomInput');
@@ -123,11 +127,12 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดหมวดหมู่จาก Firebase
+// โหลดหมวดหมู่ทั้งหมดจาก Firebase
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
     allCategoriesData = { ...defaultCategoriesData, ...custom };
     updateCategoryDropdowns();
+    updateManageCatDropdown();
 });
 
 function updateCategoryDropdowns() {
@@ -151,6 +156,142 @@ function updateCategoryDropdowns() {
     });
 }
 
+function updateManageCatDropdown() {
+    const currentVal = manageCatSelect.value;
+    manageCatSelect.innerHTML = `<option value="new">➕ สร้างหมวดหมู่ใหม่...</option>`;
+    Object.keys(allCategoriesData).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = allCategoriesData[key].name;
+        manageCatSelect.appendChild(opt);
+    });
+    if (currentVal && manageCatSelect.querySelector(`option[value="${currentVal}"]`)) {
+        manageCatSelect.value = currentVal;
+    }
+}
+
+manageCatSelect.addEventListener('change', (e) => {
+    const val = e.target.value;
+    groupsEditorContainer.innerHTML = '';
+    if (val === 'new') {
+        editCatNameInput.value = '';
+        editCatGameMode.value = 'both';
+        deleteCategoryBtn.style.display = 'none';
+        addGroupRow("เลนที่ 1", "");
+    } else {
+        const cat = allCategoriesData[val];
+        if (!cat) return;
+        editCatNameInput.value = cat.name;
+        editCatGameMode.value = cat.mode || 'both';
+        deleteCategoryBtn.style.display = 'block';
+
+        const groups = cat.groups || {};
+        Object.keys(groups).forEach(gName => {
+            addGroupRow(gName, groups[gName].join(', '));
+        });
+    }
+});
+
+function addGroupRow(groupName = "", itemsText = "") {
+    const row = document.createElement('div');
+    row.style.cssText = "background: rgba(15, 23, 42, 0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2); display: flex; flex-direction: column; gap: 4px;";
+    
+    row.innerHTML = `
+        <div style="display: flex; gap: 4px;">
+            <input type="text" class="group-name-input category-select" placeholder="ชื่อเลน/กลุ่ม (เช่น ป่า, แครี่)" value="${groupName}" style="flex: 2; text-align: left; padding: 5px 8px;">
+            <button type="button" class="remove-group-btn join-room-tab-btn" style="background: #ef4444; flex: 0.5;">ลบ</button>
+        </div>
+        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 50px; text-align: left; padding: 6px; font-size: 0.8rem;">${itemsText}</textarea>
+    `;
+
+    row.querySelector('.remove-group-btn').onclick = () => {
+        row.remove();
+    };
+
+    groupsEditorContainer.appendChild(row);
+}
+
+addGroupBtn.addEventListener('click', () => {
+    addGroupRow("เลนใหม่", "");
+});
+
+saveCategoryBtn.addEventListener('click', () => {
+    const catName = editCatNameInput.value.trim();
+    const gMode = editCatGameMode.value;
+    const selectedKey = manageCatSelect.value;
+
+    if (!catName) {
+        alert('กรุณากรอกชื่อหมวดหมู่!');
+        return;
+    }
+
+    const groupRows = groupsEditorContainer.querySelectorAll('div');
+    if (groupRows.length === 0) {
+        alert('กรุณาเพิ่มเลนหรือกลุ่มย่อยอย่างน้อย 1 กลุ่ม!');
+        return;
+    }
+
+    let groupsObj = {};
+    let isValid = true;
+
+    groupRows.forEach(row => {
+        const gName = row.querySelector('.group-name-input').value.trim();
+        const rawItems = row.querySelector('.group-items-textarea').value.trim();
+        if (!gName || !rawItems) {
+            isValid = false;
+            return;
+        }
+        const itemsArr = rawItems.split(/[\n,]+/).map(i => i.trim()).filter(i => i.length > 0);
+        groupsObj[gName] = itemsArr;
+    });
+
+    if (!isValid) {
+        alert('กรุณากรอกชื่อเลนและรายชื่อตัวละครให้ครบถ้วนทุกกลุ่ม!');
+        return;
+    }
+
+    const catKey = (selectedKey === 'new') ? ('cat_' + Date.now()) : selectedKey;
+
+    const catData = {
+        name: catName,
+        mode: gMode,
+        groups: groupsObj
+    };
+
+    db.ref(`customCategories/${catKey}`).set(catData).then(() => {
+        alert('✔️ บันทึกหมวดหมู่เรียบร้อยแล้ว!');
+        categoryManagerModal.style.display = 'none';
+        roomSelection.style.display = 'flex';
+    });
+});
+
+deleteCategoryBtn.addEventListener('click', () => {
+    const selectedKey = manageCatSelect.value;
+    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
+        alert('ไม่สามารถลบหมวดหมู่เริ่มต้นของระบบได้!');
+        return;
+    }
+    if (confirm('คุณต้องการลบหมวดหมู่นี้ใช่หรือไม่?')) {
+        db.ref(`customCategories/${selectedKey}`).remove().then(() => {
+            alert('🗑️ ลบหมวดหมู่สำเร็จ');
+            manageCatSelect.value = 'new';
+            manageCatSelect.dispatchEvent(new Event('change'));
+        });
+    }
+});
+
+openCategoryManagerBtn.addEventListener('click', () => {
+    roomSelection.style.display = 'none';
+    categoryManagerModal.style.display = 'flex';
+    manageCatSelect.value = 'new';
+    manageCatSelect.dispatchEvent(new Event('change'));
+});
+
+closeCategoryManagerBtn.addEventListener('click', () => {
+    categoryManagerModal.style.display = 'none';
+    roomSelection.style.display = 'flex';
+});
+
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
@@ -160,50 +301,6 @@ gameModeSelect.addEventListener('change', (e) => {
         settingValueInput.value = '2';
     }
     updateCategoryDropdowns();
-});
-
-openCategoryManagerBtn.addEventListener('click', () => {
-    roomSelection.style.display = 'none';
-    categoryManagerModal.style.display = 'flex';
-});
-
-closeCategoryManagerBtn.addEventListener('click', () => {
-    categoryManagerModal.style.display = 'none';
-    roomSelection.style.display = 'flex';
-});
-
-saveNewCategoryBtn.addEventListener('click', () => {
-    const catName = newCatNameInput.value.trim();
-    const gMode = newCatGameMode.value;
-    const rawItems = newCatItemsInput.value.trim();
-
-    if (!catName) {
-        alert('กรุณากรอกชื่อหมวดหมู่!');
-        return;
-    }
-    if (!rawItems) {
-        alert('กรุณากรอกรายชื่อตัวละครหรือคำตอบอย่างน้อย 1 ตัว!');
-        return;
-    }
-
-    const itemsArray = rawItems.split(/[\n,]+/).map(i => i.trim()).filter(i => i.length > 0);
-    const catKey = 'cat_' + Date.now();
-
-    const newCatObj = {
-        name: catName,
-        mode: gMode,
-        groups: {
-            [catName]: itemsArray
-        }
-    };
-
-    db.ref(`customCategories/${catKey}`).set(newCatObj).then(() => {
-        alert('✔️ บันทึกหมวดหมู่ใหม่สำเร็จ!');
-        newCatNameInput.value = '';
-        newCatItemsInput.value = '';
-        categoryManagerModal.style.display = 'none';
-        roomSelection.style.display = 'flex';
-    });
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -262,8 +359,9 @@ function getCategoryData(key) {
 }
 
 function getAllCategoryItems(key) {
-    const groups = getCategoryData(key).groups;
-    return Object.values(groups).flat();
+    const cat = getCategoryData(key);
+    if (!cat || !cat.groups) return [];
+    return Object.values(cat.groups).flat();
 }
 
 showCreateModalBtn.addEventListener('click', () => {
