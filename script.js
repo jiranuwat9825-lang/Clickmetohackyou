@@ -254,9 +254,9 @@ saveCategoryBtn.addEventListener('click', () => {
         return;
     }
 
+    // กำหนด Key สำหรับบันทึก ถ้าเป็นหมวดใหม่หรือหมวดเริ่มต้น ให้สร้างเป็น Custom Key ใหม่
     let catKey = selectedKey;
     if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
-        // ถ้าเป็นหมวดใหม่ หรือแก้ไขหมวดหลักของระบบ ให้สร้างคีย์ใหม่เป็น custom category ป้องกันข้อมูลทับซ้อนระบบหลัก
         catKey = 'cat_' + Date.now();
     }
 
@@ -270,6 +270,8 @@ saveCategoryBtn.addEventListener('click', () => {
         alert('✔️ บันทึกหมวดหมู่เรียบร้อยแล้ว!');
         categoryManagerModal.style.display = 'none';
         roomSelection.style.display = 'flex';
+    }).catch((error) => {
+        alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
     });
 });
 
