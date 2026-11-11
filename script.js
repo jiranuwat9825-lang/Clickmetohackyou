@@ -54,11 +54,6 @@ const roundOrTimeLabel = document.getElementById('roundOrTimeLabel');
 const confirmCreateBtn = document.getElementById('confirmCreateBtn');
 const activeRoomsList = document.getElementById('activeRoomsList');
 
-const hostSettingsBox = document.getElementById('hostSettingsBox');
-const lobbyGameModeSelect = document.getElementById('lobbyGameModeSelect');
-const lobbyCategorySelect = document.getElementById('lobbyCategorySelect');
-const lobbySettingValueInput = document.getElementById('lobbySettingValueInput');
-
 const roomTitle = document.getElementById('roomTitle');
 const roomCategoryBadge = document.getElementById('roomCategoryBadge');
 const playerList = document.getElementById('playerList');
@@ -338,42 +333,6 @@ function joinExistingRoom(targetRoomId) {
     });
 }
 
-// ควบคุมการเปลี่ยนค่าในล็อบบี้เฉพาะหัวหน้าห้อง
-lobbyGameModeSelect.addEventListener('change', (e) => {
-    if (!roomId) return;
-    db.ref(`rooms/${roomId}`).once('value', (snap) => {
-        const room = snap.val();
-        if (room && room.hostId === myId) {
-            const mode = e.target.value;
-            const defaultVal = mode === 'whoami' ? 3 : 2;
-            db.ref(`rooms/${roomId}`).update({
-                gameMode: mode,
-                settingValue: defaultVal
-            });
-        }
-    });
-});
-
-lobbyCategorySelect.addEventListener('change', (e) => {
-    if (!roomId) return;
-    db.ref(`rooms/${roomId}`).once('value', (snap) => {
-        const room = snap.val();
-        if (room && room.hostId === myId) {
-            db.ref(`rooms/${roomId}/category`).set(e.target.value);
-        }
-    });
-});
-
-lobbySettingValueInput.addEventListener('change', (e) => {
-    if (!roomId) return;
-    db.ref(`rooms/${roomId}`).once('value', (snap) => {
-        const room = snap.val();
-        if (room && room.hostId === myId) {
-            db.ref(`rooms/${roomId}/settingValue`).set(parseInt(e.target.value) || 2);
-        }
-    });
-});
-
 closeRoomBtn.addEventListener('click', () => {
     if (!roomId) return;
     if (confirm('คุณต้องการปิดห้องใช่หรือไม่?')) {
@@ -417,27 +376,16 @@ function checkHostAndListen() {
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
-        
-        // อัปเดตค่าเฉพาะเมื่อไม่ได้กำลังกดเลือกอยู่ ป้องกันการเด้งทับ
-        if (document.activeElement !== lobbyGameModeSelect) lobbyGameModeSelect.value = mode;
-        if (document.activeElement !== lobbyCategorySelect) lobbyCategorySelect.value = catKey;
-        if (document.activeElement !== lobbySettingValueInput) lobbySettingValueInput.value = setVal;
-        
-        if (lobbySettingValueInput.previousElementSibling) {
-            lobbySettingValueInput.previousElementSibling.textContent = mode === 'whoami' ? '⏱️ เวลาจำกัด (นาที):' : '🔄 จำนวนรอบการพูด:';
-        }
 
         if (hostId === myId) {
             isHost = true;
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
-            hostSettingsBox.style.display = 'block';
             closeRoomBtn.style.display = 'block';
         } else {
             isHost = false;
             startBtn.style.display = 'none';
             waitText.style.display = 'block';
-            hostSettingsBox.style.display = 'none';
             closeRoomBtn.style.display = 'none';
         }
 
