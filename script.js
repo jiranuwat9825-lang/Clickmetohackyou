@@ -37,7 +37,7 @@ const defaultCategoriesData = {
     }
 };
 
-let allCategoriesData = {};
+let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
 
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
@@ -127,17 +127,10 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// ล้างฐานข้อมูลหมวดหมู่เก่าทิ้ง แล้วเซ็ตค่าเริ่มต้น (ROV, Valorant) ใหม่ทั้งหมดทันทีเพื่อให้ทุกหมวดจัดการได้ผ่าน Firebase
-db.ref('customCategories').once('value', (snapshot) => {
-    if (!snapshot.exists() || !snapshot.val().rov) {
-        db.ref('customCategories').set(defaultCategoriesData);
-    }
-});
-
-// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase
+// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase และรวมเข้ากับค่าเริ่มต้น
 db.ref('customCategories').on('value', (snapshot) => {
-    const custom = snapshot.val() || defaultCategoriesData;
-    allCategoriesData = custom;
+    const custom = snapshot.val() || {};
+    allCategoriesData = { ...defaultCategoriesData, ...custom };
     updateCategoryDropdowns();
     updateManageCatDropdown();
 });
@@ -204,6 +197,8 @@ manageCatSelect.addEventListener('change', (e) => {
 
 function addGroupRow(groupName = "", itemsText = "") {
     const row = document.createElement('div');
+    // เพิ่มคลาส group-row เพื่อให้ค้นหาแถวได้อย่างแม่นยำ
+    row.className = 'group-row';
     row.style.cssText = "background: rgba(15, 23, 42, 0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2); display: flex; flex-direction: column; gap: 4px;";
     
     row.innerHTML = `
@@ -225,7 +220,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (ทำงานกับ Firebase 100%)
+// ปุ่มบันทึกหมวดหมู่ (แก้ไขให้ดึงข้อมูลจาก .group-row โดยตรง ป้องกันปัญหาปุ่มกดไม่ไป)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
@@ -236,7 +231,7 @@ saveCategoryBtn.onclick = () => {
         return;
     }
 
-    const groupRows = groupsEditorContainer.querySelectorAll('div');
+    const groupRows = groupsEditorContainer.querySelectorAll('.group-row');
     if (groupRows.length === 0) {
         alert('กรุณาเพิ่มเลนหรือกลุ่มย่อยอย่างน้อย 1 กลุ่ม!');
         return;
