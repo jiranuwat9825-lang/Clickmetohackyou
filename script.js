@@ -391,10 +391,17 @@ function initRoomSync() {
         const catInfo = getCategoryData(catKey);
 
         let modeDisplayName = 'Spyfall';
-        if (mode === 'whoami_time') modeDisplayName = 'ฉันคือใคร (จับเวลา)';
-        if (mode === 'whoami_rounds') modeDisplayName = 'ฉันคือใคร (นับรอบ)';
+        let settingLabelText = `รอบ: ${setVal}`;
+        if (mode === 'whoami_time') {
+            modeDisplayName = 'ฉันคือใคร (เวลา)';
+            settingLabelText = `เวลา: ${setVal} นาที`;
+        }
+        if (mode === 'whoami_rounds') {
+            modeDisplayName = 'ฉันคือใคร (รอบ)';
+            settingLabelText = `รอบ: ${setVal}`;
+        }
 
-        roomCategoryBadge.textContent = `โหมด: ${modeDisplayName} | หมวด: ${catInfo.name} | ค่า: ${setVal}`;
+        roomCategoryBadge.textContent = `โหมด: ${modeDisplayName} | หมวด: ${catInfo.name} | ${settingLabelText}`;
 
         if (isHost) {
             startBtn.style.display = 'block';
@@ -479,7 +486,6 @@ function initRoomSync() {
                 hostControls.style.display = isHost ? 'block' : 'none';
 
             } else {
-                // โหมด Who Am I (ทั้ง time และ rounds ใช้หน้าจอ whoAmIArea ร่วมกัน)
                 gameArea.style.display = 'none';
                 whoAmIArea.style.display = 'block';
 
@@ -499,7 +505,6 @@ function initRoomSync() {
                     whoAmITurnBoxContainer.style.display = 'none';
                     startWhoAmITimer(data.endTime, roomId, data);
                 } else {
-                    // whoami_rounds
                     whoAmITimerContainer.style.display = 'none';
                     whoAmITurnBoxContainer.style.display = 'block';
                     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
@@ -727,7 +732,6 @@ endTurnBtn.addEventListener('click', () => {
     });
 });
 
-// ปุ่มจบเทิร์นสำหรับโหมด ฉันคือใคร (แบบรอบ)
 whoAmIEndTurnBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -748,7 +752,6 @@ whoAmIEndTurnBtn.addEventListener('click', () => {
             roomRef.update({ status: 'voting' });
         } else {
             if (currentRound > (data.currentRound || 1)) {
-                // ขึ้นรอบใหม่ สุ่มตัวละครใหม่ให้ทุกคน
                 const players = data.players || {};
                 const playerIds = Object.keys(players);
                 const catKey = data.category || 'rov';
