@@ -215,7 +215,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (เขียนใหม่ให้ทำงานได้แน่นอน 100%)
+// ปุ่มบันทึกหมวดหมู่
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
