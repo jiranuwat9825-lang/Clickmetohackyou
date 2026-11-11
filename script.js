@@ -13,7 +13,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const defaultCategoriesData = {
+const categoriesData = {
     "rov": {
         name: "ROV",
         mode: "both",
@@ -37,11 +37,8 @@ const defaultCategoriesData = {
     }
 };
 
-let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
-
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
-const categoryManagerModal = document.getElementById('categoryManagerModal');
 const lobbyArea = document.getElementById('lobbyArea');
 const gameArea = document.getElementById('gameArea');
 const whoAmIArea = document.getElementById('whoAmIArea');
@@ -49,16 +46,6 @@ const voteArea = document.getElementById('voteArea');
 
 const nameInput = document.getElementById('nameInput');
 const showCreateModalBtn = document.getElementById('showCreateModalBtn');
-const openCategoryManagerBtn = document.getElementById('openCategoryManagerBtn');
-const closeCategoryManagerBtn = document.getElementById('closeCategoryManagerBtn');
-
-const manageCatSelect = document.getElementById('manageCatSelect');
-const editCatNameInput = document.getElementById('editCatNameInput');
-const editCatGameMode = document.getElementById('editCatGameMode');
-const groupsEditorContainer = document.getElementById('groupsEditorContainer');
-const addGroupBtn = document.getElementById('addGroupBtn');
-const saveCategoryBtn = document.getElementById('saveCategoryBtn');
-const deleteCategoryBtn = document.getElementById('deleteCategoryBtn');
 
 const backToHomeBtn = document.getElementById('backToHomeBtn');
 const newRoomInput = document.getElementById('newRoomInput');
@@ -127,205 +114,25 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดข้อมูลหมวดหมู่จาก Firebase และซิงค์รวมกับค่าเริ่มต้นเสมอ
-db.ref('customCategories').on('value', (snapshot) => {
-    const custom = snapshot.val() || {};
-    allCategoriesData = { ...defaultCategoriesData, ...custom };
-    updateCategoryDropdowns();
-    updateManageCatDropdown();
-});
-
 function updateCategoryDropdowns() {
-    let mode = 'both';
-    if (lobbyArea.style.display !== 'none' && lobbyGameModeSelect) {
-        mode = lobbyGameModeSelect.value;
-    } else if (createRoomModal.style.display !== 'none' && gameModeSelect) {
-        mode = gameModeSelect.value;
-    }
-
     [categorySelect, lobbyCategorySelect].forEach(selectEl => {
         if (!selectEl) return;
         const currentVal = selectEl.value;
         selectEl.innerHTML = '';
-        
-        let addedCount = 0;
-        Object.keys(allCategoriesData).forEach(key => {
-            const cat = allCategoriesData[key];
-            if (cat && (cat.mode === 'both' || mode === 'both' || cat.mode === mode)) {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.textContent = cat.name;
-                selectEl.appendChild(opt);
-                addedCount++;
-            }
+        Object.keys(categoriesData).forEach(key => {
+            const cat = categoriesData[key];
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = cat.name;
+            selectEl.appendChild(opt);
         });
-
-        if (addedCount === 0) {
-            Object.keys(allCategoriesData).forEach(key => {
-                const cat = allCategoriesData[key];
-                if (cat) {
-                    const opt = document.createElement('option');
-                    opt.value = key;
-                    opt.textContent = cat.name;
-                    selectEl.appendChild(opt);
-                }
-            });
-        }
-
-        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
+        if (selectEl.querySelector(`option[value="${currentVal}"]`)) {
             selectEl.value = currentVal;
         }
     });
 }
 
-function updateManageCatDropdown() {
-    const currentVal = manageCatSelect.value;
-    manageCatSelect.innerHTML = `<option value="new">➕ สร้างหมวดหมู่ใหม่...</option>`;
-    Object.keys(allCategoriesData).forEach(key => {
-        const cat = allCategoriesData[key];
-        if (cat) {
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = cat.name;
-            manageCatSelect.appendChild(opt);
-        }
-    });
-    if (currentVal && manageCatSelect.querySelector(`option[value="${currentVal}"]`)) {
-        manageCatSelect.value = currentVal;
-    }
-}
-
-manageCatSelect.addEventListener('change', (e) => {
-    const val = e.target.value;
-    groupsEditorContainer.innerHTML = '';
-    if (val === 'new') {
-        editCatNameInput.value = '';
-        editCatGameMode.value = 'both';
-        deleteCategoryBtn.style.display = 'none';
-        addGroupRow("เลนที่ 1", "");
-    } else {
-        const cat = allCategoriesData[val];
-        if (!cat) return;
-        editCatNameInput.value = cat.name;
-        editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = 'block';
-
-        const groups = cat.groups || {};
-        Object.keys(groups).forEach(gName => {
-            const itemsArr = Array.isArray(groups[gName]) ? groups[gName] : [];
-            addGroupRow(gName, itemsArr.join(', '));
-        });
-    }
-});
-
-function addGroupRow(groupName = "", itemsText = "") {
-    const row = document.createElement('div');
-    row.className = 'group-row';
-    row.style.cssText = "background: rgba(15, 23, 42, 0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2); display: flex; flex-direction: column; gap: 4px;";
-    
-    row.innerHTML = `
-        <div style="display: flex; gap: 4px;">
-            <input type="text" class="group-name-input category-select" placeholder="ชื่อเลน/กลุ่ม (เช่น ป่า, แครี่)" value="${groupName}" style="flex: 2; text-align: left; padding: 5px 8px; min-width: 0;">
-            <button type="button" class="remove-group-btn join-room-tab-btn" style="background: #ef4444; flex: 0.5;">ลบ</button>
-        </div>
-        <textarea class="group-items-textarea category-select" placeholder="รายชื่อตัวละคร คั่นด้วยจุลภาค (,)" style="height: 55px; text-align: left; padding: 6px; font-size: 0.8rem; min-width: 0;">${itemsText}</textarea>
-    `;
-
-    row.querySelector('.remove-group-btn').onclick = () => {
-        row.remove();
-    };
-
-    groupsEditorContainer.appendChild(row);
-}
-
-addGroupBtn.onclick = () => {
-    addGroupRow("เลนใหม่", "");
-};
-
-// ปุ่มบันทึกหมวดหมู่ (ดึงข้อมูลจากคลาส .group-row โดยตรง)
-saveCategoryBtn.onclick = () => {
-    const catName = editCatNameInput.value.trim();
-    const gMode = editCatGameMode.value;
-    const selectedKey = manageCatSelect.value;
-
-    if (!catName) {
-        alert('กรุณากรอกชื่อหมวดหมู่!');
-        return;
-    }
-
-    const groupRows = groupsEditorContainer.querySelectorAll('.group-row');
-    if (groupRows.length === 0) {
-        alert('กรุณาเพิ่มเลนหรือกลุ่มย่อยอย่างน้อย 1 กลุ่ม!');
-        return;
-    }
-
-    let groupsObj = {};
-    let isValid = true;
-
-    groupRows.forEach(row => {
-        const nameInputEl = row.querySelector('.group-name-input');
-        const itemsTextEl = row.querySelector('.group-items-textarea');
-        if (!nameInputEl || !itemsTextEl) return;
-
-        const gName = nameInputEl.value.trim();
-        const rawItems = itemsTextEl.value.trim();
-        if (!gName || !rawItems) {
-            isValid = false;
-            return;
-        }
-        const itemsArr = rawItems.split(/[\n,]+/).map(i => i.trim()).filter(i => i.length > 0);
-        groupsObj[gName] = itemsArr;
-    });
-
-    if (!isValid) {
-        alert('กรุณากรอกชื่อเลนและรายชื่อตัวละครให้ครบถ้วนทุกกลุ่ม!');
-        return;
-    }
-
-    let catKey = selectedKey;
-    if (selectedKey === 'new') {
-        catKey = 'cat_' + Date.now();
-    }
-
-    const catData = {
-        name: catName,
-        mode: gMode,
-        groups: groupsObj
-    };
-
-    db.ref(`customCategories/${catKey}`).set(catData).then(() => {
-        alert('✔️ บันทึกหมวดหมู่เรียบร้อยแล้ว!');
-        categoryManagerModal.style.display = 'none';
-        roomSelection.style.display = 'flex';
-    }).catch((error) => {
-        alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
-    });
-};
-
-deleteCategoryBtn.onclick = () => {
-    const selectedKey = manageCatSelect.value;
-    if (selectedKey === 'new') return;
-    
-    if (confirm('คุณต้องการลบหมวดหมู่นี้ใช่หรือไม่?')) {
-        db.ref(`customCategories/${selectedKey}`).remove().then(() => {
-            alert('🗑️ ลบหมวดหมู่สำเร็จ');
-            manageCatSelect.value = 'new';
-            manageCatSelect.dispatchEvent(new Event('change'));
-        });
-    }
-};
-
-openCategoryManagerBtn.addEventListener('click', () => {
-    roomSelection.style.display = 'none';
-    categoryManagerModal.style.display = 'flex';
-    manageCatSelect.value = 'new';
-    manageCatSelect.dispatchEvent(new Event('change'));
-});
-
-closeCategoryManagerBtn.addEventListener('click', () => {
-    categoryManagerModal.style.display = 'none';
-    roomSelection.style.display = 'flex';
-});
+updateCategoryDropdowns();
 
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
@@ -335,7 +142,6 @@ gameModeSelect.addEventListener('change', (e) => {
         roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
         settingValueInput.value = '2';
     }
-    updateCategoryDropdowns();
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -390,7 +196,7 @@ let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
 function getCategoryData(key) {
-    return allCategoriesData[key] || Object.values(allCategoriesData)[0] || { name: "ทั่วไป", groups: {} };
+    return categoriesData[key] || categoriesData['rov'];
 }
 
 function getAllCategoryItems(key) {
@@ -409,7 +215,6 @@ showCreateModalBtn.addEventListener('click', () => {
     localStorage.setItem('rov_spy_myname', myName);
     roomSelection.style.display = 'none';
     createRoomModal.style.display = 'flex';
-    updateCategoryDropdowns();
 });
 
 backToHomeBtn.addEventListener('click', () => {
@@ -561,7 +366,6 @@ lobbyGameModeSelect.addEventListener('change', (e) => {
     db.ref(`rooms/${roomId}/gameMode`).set(mode);
     const defaultVal = mode === 'whoami' ? 3 : 2;
     db.ref(`rooms/${roomId}/settingValue`).set(defaultVal);
-    updateCategoryDropdowns();
 });
 lobbyCategorySelect.addEventListener('change', (e) => {
     if (!isHost || !roomId) return;
@@ -611,11 +415,9 @@ function checkHostAndListen() {
         const catKey = data.category || 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         
-        updateCategoryDropdowns();
-
         const catInfo = getCategoryData(catKey);
 
-        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo ? catInfo.name : 'ทั่วไป'} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
+        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo ? catInfo.name : 'ROV'} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
         lobbyGameModeSelect.value = mode;
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
