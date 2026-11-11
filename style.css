@@ -146,12 +146,14 @@ input, .category-select {
     padding: 0.7rem 1rem;
     border-radius: 0.75rem;
     border: 1px solid rgba(71, 85, 105, 0.8);
-    background: rgba(15, 23, 42, 0.9);
-    color: white;
+    background: #0f172a;
+    color: #ffffff;
     font-size: 0.9rem;
     text-align: center;
     outline: none;
     transition: all 0.2s;
+    appearance: auto;
+    -webkit-appearance: auto;
 }
 
 input:focus, .category-select:focus {
