@@ -25,6 +25,7 @@
             </div>
             
             <button id="showCreateModalBtn" class="btn primary-glow">🔨 สร้างห้องใหม่</button>
+            <button id="openCategoryManagerBtn" class="btn secondary-btn" style="background: rgba(147, 51, 234, 0.3); border-color: #a855f7;">⚙️ จัดการ/เพิ่มหมวดหมู่เกม</button>
 
             <div class="active-rooms-container">
                 <h3 class="section-title">🏠 ห้องที่เปิดอยู่ (คลิกเพื่อเข้าร่วม):</h3>
@@ -32,6 +33,29 @@
                     <p class="no-room-text">กำลังโหลดรายชื่อห้อง...</p>
                 </div>
             </div>
+        </div>
+
+        <!-- หน้าต่างจัดการ/เพิ่มหมวดหมู่ -->
+        <div id="categoryManagerModal" class="box" style="display: none;">
+            <h3 class="room-title">⚙️ เพิ่ม/จัดการหมวดหมู่เกม</h3>
+            <div class="input-group" style="text-align: left;">
+                <label class="form-label">📌 ชื่อหมวดหมู่ใหม่ (เช่น อนิเมะ, นักบอล):</label>
+                <input type="text" id="newCatNameInput" placeholder="ใส่ชื่อหมวดหมู่..." autocomplete="off">
+            </div>
+            <div class="input-group" style="text-align: left;">
+                <label class="form-label">🎮 ใช้สำหรับเกมโหมด:</label>
+                <select id="newCatGameMode" class="category-select">
+                    <option value="both">ใช้ได้ทั้ง 2 โหมด (Spyfall & ฉันคือใคร)</option>
+                    <option value="spyfall">🕵️ Spyfall เท่านั้น</option>
+                    <option value="whoami">❓ ฉันคือใคร เท่านั้น</option>
+                </select>
+            </div>
+            <div class="input-group" style="text-align: left;">
+                <label class="form-label">📝 รายชื่อตัวละคร/คำตอบ (คั่นด้วยจุลภาค , หรือขึ้นบรรทัดใหม่):</label>
+                <textarea id="newCatItemsInput" class="category-select" style="height: 80px; text-align: left; padding: 8px;" placeholder="เช่น ลูฟี่, โซโร, นารูโตะ, ซาสึเกะ"></textarea>
+            </div>
+            <button id="saveNewCategoryBtn" class="btn primary-glow">💾 บันทึกหมวดหมู่ใหม่</button>
+            <button id="closeCategoryManagerBtn" class="btn secondary-btn">🔙 กลับหน้าหลัก</button>
         </div>
 
         <!-- หน้าต่างตั้งค่าสร้างห้องใหม่ -->
@@ -50,8 +74,7 @@
             <div class="input-group" style="text-align: left;">
                 <label class="form-label">🛡️ หมวดหมู่เกม:</label>
                 <select id="categorySelect" class="category-select">
-                    <option value="rov">ROV (Arena of Valor)</option>
-                    <option value="valorant">Valorant</option>
+                    <!-- โหลดจาก script.js และ Firebase -->
                 </select>
             </div>
             <div class="input-group" style="text-align: left;">
@@ -75,8 +98,7 @@
                     </select>
                     <div style="display: flex; gap: 4px;">
                         <select id="lobbyCategorySelect" class="category-select" style="flex: 2;">
-                            <option value="rov">🛡️ ROV</option>
-                            <option value="valorant">🎯 Valorant</option>
+                            <!-- โหลดหมวดหมู่ -->
                         </select>
                         <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center;">
                     </div>
