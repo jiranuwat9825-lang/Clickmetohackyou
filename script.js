@@ -16,7 +16,6 @@ const db = firebase.database();
 const categoriesData = {
     "rov": {
         name: "ROV",
-        mode: "both",
         groups: {
             "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica", "Erin", "Stuart"],
             "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Bonnie", "Yue", "Dyadia", "Heino", "Evita", "Gildur", "Azzen'Ka", "Ishar"],
@@ -27,7 +26,6 @@ const categoriesData = {
     },
     "valorant": {
         name: "Valorant",
-        mode: "both",
         groups: {
             "Duelist": ["Hush", "Iso", "Jett", "Neon", "Phoenix", "Raze", "Reyna", "Waylay", "Yoru"],
             "Controller": ["Astra", "Brimstone", "Clove", "Harbor", "Miks", "Omen", "Viper"],
@@ -113,26 +111,6 @@ const savedName = localStorage.getItem('rov_spy_myname');
 if (savedName) {
     nameInput.value = savedName;
 }
-
-function updateCategoryDropdowns() {
-    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
-        if (!selectEl) return;
-        const currentVal = selectEl.value;
-        selectEl.innerHTML = '';
-        Object.keys(categoriesData).forEach(key => {
-            const cat = categoriesData[key];
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = cat.name;
-            selectEl.appendChild(opt);
-        });
-        if (selectEl.querySelector(`option[value="${currentVal}"]`)) {
-            selectEl.value = currentVal;
-        }
-    });
-}
-
-updateCategoryDropdowns();
 
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
