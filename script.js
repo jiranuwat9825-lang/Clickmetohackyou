@@ -13,6 +13,15 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// เคลียร์ปุ่มและหน้าต่างจัดการหมวดหมู่เก่าทิ้งอัตโนมัติ (ป้องกันปุ่มค้างจาก HTML เก่า)
+window.addEventListener('DOMContentLoaded', () => {
+    ['openCategoryManagerBtn', 'categoryManagerModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    });
+    updateCategoryDropdowns();
+});
+
 const categoriesData = {
     "rov": {
         name: "ROV",
@@ -414,7 +423,6 @@ function checkHostAndListen() {
         const hostId = data.hostId;
         const mode = data.gameMode || 'spyfall';
         
-        // ป้องกันค่าหมวดหมู่เก่าใน Firebase พัง ให้ fallback เป็น 'rov' เสมอถ้าไม่มี
         let catKey = data.category || 'rov';
         if (!categoriesData[catKey]) {
             catKey = 'rov';
@@ -1089,7 +1097,7 @@ nextRoundBtn.addEventListener('click', () => {
             tieHandled: false,
             scoreUpdated: false
         });
-        selectedVoteTarget = null;
+        selectedVoteTest = null;
         selectedHeroGuess = "";
         selectedSearchGuess = "";
     });
