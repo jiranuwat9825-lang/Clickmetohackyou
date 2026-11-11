@@ -37,7 +37,7 @@ const defaultCategoriesData = {
     }
 };
 
-let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
+let allCategoriesData = {};
 
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
@@ -127,10 +127,17 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดข้อมูลหมวดหมู่จาก Firebase
+// ตรวจสอบและซิงค์หมวดหมู่เริ่มต้นเข้า Firebase ทันทีเมื่อเปิดเว็บ
+db.ref('customCategories').once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+        db.ref('customCategories').set(defaultCategoriesData);
+    }
+});
+
+// โหลดข้อมูลหมวดหมู่ทั้งหมดแบบ Realtime จาก Firebase
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
-    allCategoriesData = { ...defaultCategoriesData, ...custom };
+    allCategoriesData = custom;
     updateCategoryDropdowns();
     updateManageCatDropdown();
 });
@@ -143,7 +150,7 @@ function updateCategoryDropdowns() {
         selectEl.innerHTML = '';
         Object.keys(allCategoriesData).forEach(key => {
             const cat = allCategoriesData[key];
-            if (cat.mode === 'both' || cat.mode === mode) {
+            if (cat && (cat.mode === 'both' || cat.mode === mode)) {
                 const opt = document.createElement('option');
                 opt.value = key;
                 opt.textContent = cat.name;
@@ -160,10 +167,13 @@ function updateManageCatDropdown() {
     const currentVal = manageCatSelect.value;
     manageCatSelect.innerHTML = `<option value="new">➕ สร้างหมวดหมู่ใหม่...</option>`;
     Object.keys(allCategoriesData).forEach(key => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = allCategoriesData[key].name;
-        manageCatSelect.appendChild(opt);
+        const cat = allCategoriesData[key];
+        if (cat) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = cat.name;
+            manageCatSelect.appendChild(opt);
+        }
     });
     if (currentVal && manageCatSelect.querySelector(`option[value="${currentVal}"]`)) {
         manageCatSelect.value = currentVal;
@@ -183,7 +193,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = defaultCategoriesData[val] ? 'none' : 'block';
+        deleteCategoryBtn.style.display = 'block'; // อนุญาตให้ลบได้ทุกหมวดหมู่
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
@@ -215,7 +225,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่
+// ปุ่มบันทึกหมวดหมู่ (อัปเดตหรือสร้างใหม่ตรงตาม Key ที่เลือกทันที)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
@@ -256,7 +266,7 @@ saveCategoryBtn.onclick = () => {
     }
 
     let catKey = selectedKey;
-    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
+    if (selectedKey === 'new') {
         catKey = 'cat_' + Date.now();
     }
 
@@ -277,10 +287,8 @@ saveCategoryBtn.onclick = () => {
 
 deleteCategoryBtn.onclick = () => {
     const selectedKey = manageCatSelect.value;
-    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
-        alert('ไม่สามารถลบหมวดหมู่เริ่มต้นของระบบได้!');
-        return;
-    }
+    if (selectedKey === 'new') return;
+    
     if (confirm('คุณต้องการลบหมวดหมู่นี้ใช่หรือไม่?')) {
         db.ref(`customCategories/${selectedKey}`).remove().then(() => {
             alert('🗑️ ลบหมวดหมู่สำเร็จ');
@@ -365,7 +373,7 @@ let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
 function getCategoryData(key) {
-    return allCategoriesData[key] || allCategoriesData['rov'];
+    return allCategoriesData[key] || Object.values(allCategoriesData)[0] || { name: "ทั่วไป", groups: {} };
 }
 
 function getAllCategoryItems(key) {
