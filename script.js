@@ -127,7 +127,7 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดหมวดหมู่ทั้งหมดจาก Firebase
+// โหลดหมวดหมู่ทั้งหมดจาก Firebase และรวมกับค่าเริ่มต้น
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
     allCategoriesData = { ...defaultCategoriesData, ...custom };
@@ -183,6 +183,7 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
+        // อนุญาตให้ลบได้ทุกหมวดหมู่ (หรือซ่อนปุ่มเฉพาะหมวดหลักถ้าต้องการ แต่เปิดให้จัดการได้อิสระ)
         deleteCategoryBtn.style.display = defaultCategoriesData[val] ? 'none' : 'block';
 
         const groups = cat.groups || {};
@@ -254,9 +255,9 @@ saveCategoryBtn.addEventListener('click', () => {
         return;
     }
 
-    // กำหนด Key สำหรับบันทึก ถ้าเป็นหมวดใหม่หรือหมวดเริ่มต้น ให้สร้างเป็น Custom Key ใหม่
+    // กำหนด Key สำหรับบันทึก: ถ้าเลือกหมวดเดิม ให้ใช้ Key เดิมอัปเดต ถ้าสร้างใหม่ให้สร้าง Key ใหม่
     let catKey = selectedKey;
-    if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
+    if (selectedKey === 'new') {
         catKey = 'cat_' + Date.now();
     }
 
@@ -266,6 +267,7 @@ saveCategoryBtn.addEventListener('click', () => {
         groups: groupsObj
     };
 
+    // บันทึกลง Firebase ในหมวด customCategories เสมอ เพื่อให้สามารถแก้ไขทับหรือเพิ่มใหม่ได้อย่างอิสระ
     db.ref(`customCategories/${catKey}`).set(catData).then(() => {
         alert('✔️ บันทึกหมวดหมู่เรียบร้อยแล้ว!');
         categoryManagerModal.style.display = 'none';
