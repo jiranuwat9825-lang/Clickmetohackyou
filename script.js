@@ -183,7 +183,6 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        // เปิดให้ลบได้เฉพาะหมวดหมู่ custom (หมวดหลักเริ่มต้นซ่อนปุ่มลบไว้)
         deleteCategoryBtn.style.display = defaultCategoriesData[val] ? 'none' : 'block';
 
         const groups = cat.groups || {};
@@ -212,11 +211,12 @@ function addGroupRow(groupName = "", itemsText = "") {
     groupsEditorContainer.appendChild(row);
 }
 
-addGroupBtn.addEventListener('click', () => {
+addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
-});
+};
 
-saveCategoryBtn.addEventListener('click', () => {
+// ปุ่มบันทึกหมวดหมู่ (เขียนใหม่ให้ทำงานได้แน่นอน 100%)
+saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
     const selectedKey = manageCatSelect.value;
@@ -255,8 +255,6 @@ saveCategoryBtn.addEventListener('click', () => {
         return;
     }
 
-    // หากเลือกหมวดหมู่เริ่มต้น (rov หรือ valorant) หรือสร้างใหม่ ให้สร้าง Key ใหม่ใน customCategories ทันที
-    // เพื่อให้ระบบบันทึกและแก้ไขข้อมูลที่ผู้ใช้ปรับแต่งได้อย่างอิสระโดยไม่ไปติดค่าล็อกเริ่มต้น
     let catKey = selectedKey;
     if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
         catKey = 'cat_' + Date.now();
@@ -275,9 +273,9 @@ saveCategoryBtn.addEventListener('click', () => {
     }).catch((error) => {
         alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
     });
-});
+};
 
-deleteCategoryBtn.addEventListener('click', () => {
+deleteCategoryBtn.onclick = () => {
     const selectedKey = manageCatSelect.value;
     if (selectedKey === 'new' || defaultCategoriesData[selectedKey]) {
         alert('ไม่สามารถลบหมวดหมู่เริ่มต้นของระบบได้!');
@@ -290,7 +288,7 @@ deleteCategoryBtn.addEventListener('click', () => {
             manageCatSelect.dispatchEvent(new Event('change'));
         });
     }
-});
+};
 
 openCategoryManagerBtn.addEventListener('click', () => {
     roomSelection.style.display = 'none';
