@@ -71,6 +71,8 @@ const hostControls = document.getElementById('hostControls');
 const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 
 const whoAmITimer = document.getElementById('whoAmITimer');
+const whoAmIFullTurnOrderContainer = document.getElementById('whoAmIFullTurnOrderContainer');
+
 const othersRolesGrid = document.getElementById('othersRolesGrid');
 const myGuessSearch = document.getElementById('myGuessSearch');
 const searchResultsList = document.getElementById('searchResultsList');
@@ -331,7 +333,6 @@ closeRoomBtn.addEventListener('click', () => {
     }
 });
 
-// ฟังก์ชันศูนย์กลางซิงค์ข้อมูลห้อง (รวมผู้เล่น สถานะ และเกมไว้ในที่เดียว)
 function initRoomSync() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
@@ -357,7 +358,6 @@ function initRoomSync() {
             roomRef.update({ emptySince: null });
         }
 
-        // 1. อัปเดตรายชื่อผู้เล่น
         playerList.innerHTML = '';
         const hostId = data.hostId;
         isHost = (hostId === myId);
@@ -372,7 +372,6 @@ function initRoomSync() {
             playerList.appendChild(li);
         });
 
-        // 2. ข้อมูลห้อง & สถานะปุ่ม Host
         const mode = data.gameMode || 'spyfall';
         let catKey = data.category || 'rov';
         if (!categoriesData[catKey]) catKey = 'rov';
@@ -392,7 +391,6 @@ function initRoomSync() {
             closeRoomBtn.style.display = 'none';
         }
 
-        // 3. ตารางคะแนน
         const scores = data.scores || {};
         scoreListBody.innerHTML = '';
         Object.keys(players).forEach(id => {
@@ -406,7 +404,6 @@ function initRoomSync() {
         });
         scoreBoard.style.display = 'block';
 
-        // 4. ควบคุมการแสดงผลหน้าจอ (Lobby / Playing / Voting)
         const status = data.status || 'lobby';
 
         if (status === 'lobby') {
@@ -471,12 +468,21 @@ function initRoomSync() {
 
                 startWhoAmITimer(data.endTime, roomId, data);
 
+                const turnOrder = data.turnOrder || [];
+                whoAmIFullTurnOrderContainer.innerHTML = '';
+                turnOrder.forEach((id, idx) => {
+                    const p = players[id];
+                    if (!p) return;
+                    const div = document.createElement('div');
+                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:rgba(15, 23, 42, 0.4); color:#cbd5e1;`;
+                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''}`;
+                    whoAmIFullTurnOrderContainer.appendChild(div);
+                });
+
                 othersRolesGrid.innerHTML = '';
                 const roles = data.roles || {};
                 const attempts = data.attempts || {};
                 const guessedCorrectly = data.guessedCorrectly || {};
-                const turnOrder = data.turnOrder || [];
-                const currentTurnIndex = data.currentTurnIndex || 0;
 
                 turnOrder.forEach((pId) => {
                     if (pId !== myId && players[pId]) {
@@ -485,14 +491,9 @@ function initRoomSync() {
 
                         const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
                         const isCorrect = guessedCorrectly[pId];
-                        const isCurrentTurn = (turnOrder[currentTurnIndex] === pId);
 
                         let bgStyle = "background: rgba(30, 41, 59, 0.9);";
                         let statusText = "";
-
-                        if (isCurrentTurn && !isDone) {
-                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;";
-                        }
 
                         if (isDone) {
                             if (isCorrect) {
@@ -593,10 +594,8 @@ startBtn.addEventListener('click', () => {
             });
         }
 
-        let currentScores = data.scores || {};
-        playerIds.forEach(id => {
-            if (currentScores[id] === undefined) currentScores[id] = 0;
-        });
+        let freshScores = {};
+        playerIds.forEach(id => { freshScores[id] = 0; });
 
         const updateObj = {
             status: 'playing',
@@ -604,7 +603,7 @@ startBtn.addEventListener('click', () => {
             turnOrder: shuffledPlayerIds,
             currentTurnIndex: 0,
             currentRound: 1,
-            totalRounds: gameMode === 'spyfall' ? setVal : 1,
+            totalRounds: setVal,
             endTime: gameMode === 'whoami' ? Date.now() + setVal * 60 * 1000 : null,
             attempts: attemptsData,
             guessedCorrectly: {},
@@ -612,8 +611,7 @@ startBtn.addEventListener('click', () => {
             votes: null,
             guess: null,
             spyGuess: null,
-            scoreUpdated: false,
-            scores: currentScores,
+            scores: freshScores,
             emptySince: null
         };
 
@@ -654,6 +652,43 @@ function startWhoAmITimer(endTime, rId, data) {
     tick();
     whoAmITimerInterval = setInterval(tick, 1000);
 }
+
+endTurnBtn.addEventListener('click', () => {
+    const roomRef = db.ref(`rooms/${roomId}`);
+    roomRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const turnOrder = data.turnOrder || [];
+        let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
+        let currentRound = data.currentRound || 1;
+        const totalRounds = data.totalRounds || 2;
+
+        if (currentTurnIndex >= turnOrder.length) {
+            currentTurnIndex = 0;
+            currentRound += 1;
+        }
+
+        if (currentRound > totalRounds) {
+            roomRef.update({ status: 'voting' });
+        } else {
+            roomRef.update({
+                currentTurnIndex: currentTurnIndex,
+                currentRound: currentRound
+            });
+        }
+    });
+});
+
+skipToVoteBtn.addEventListener('click', () => {
+    db.ref(`rooms/${roomId}`).update({ status: 'voting' });
+});
+
+whoAmISkipBtn.addEventListener('click', () => {
+    if (isHost) {
+        db.ref(`rooms/${roomId}`).update({ status: 'voting' });
+    }
+});
 
 function setupSearchDropdown(catKey) {
     const allItems = getAllCategoryItems(catKey);
@@ -702,6 +737,7 @@ submitMyGuessBtn.addEventListener('click', () => {
         const myRealRole = data.roles[myId];
         let attempts = data.attempts || {};
         let guessedCorrectly = data.guessedCorrectly || {};
+        let scores = data.scores || {};
         let correctOrder = data.correctOrder || [];
 
         attempts[myId] = 0;
@@ -713,14 +749,18 @@ submitMyGuessBtn.addEventListener('click', () => {
             if (!correctOrder.includes(myId)) {
                 correctOrder.push(myId);
             }
+            const totalPlayers = Object.keys(data.players || {}).length;
+            const pts = Math.max(1, totalPlayers - correctOrder.length + 1);
+            scores[myId] = (scores[myId] || 0) + pts;
         } else {
-            alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}" ได้ 0 คะแนน`);
+            alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}"`);
         }
 
         roomRef.update({
             attempts: attempts,
             guessedCorrectly: guessedCorrectly,
-            correctOrder: correctOrder
+            correctOrder: correctOrder,
+            scores: scores
         });
 
         setTimeout(() => {
@@ -732,48 +772,11 @@ submitMyGuessBtn.addEventListener('click', () => {
                 const allCorrect = allPlayers.every(pId => updatedData.guessedCorrectly?.[pId]);
 
                 if ((allAttemptsUsed || allCorrect) && isHost) {
-                    roomRef.update({ status: 'voting' });
+                    db.ref(`rooms/${roomId}`).update({ status: 'voting' });
                 }
             });
         }, 300);
     });
-});
-
-endTurnBtn.addEventListener('click', () => {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const turnOrder = data.turnOrder || [];
-        let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
-        let currentRound = data.currentRound || 1;
-        const totalRounds = data.totalRounds || 2;
-
-        if (currentTurnIndex >= turnOrder.length) {
-            currentTurnIndex = 0;
-            currentRound += 1;
-        }
-
-        if (currentRound > totalRounds) {
-            roomRef.update({ status: 'voting' });
-        } else {
-            roomRef.update({
-                currentTurnIndex: currentTurnIndex,
-                currentRound: currentRound
-            });
-        }
-    });
-});
-
-skipToVoteBtn.addEventListener('click', () => {
-    db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-});
-
-whoAmISkipBtn.addEventListener('click', () => {
-    if (isHost) {
-        db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-    }
 });
 
 function renderVotingScreen(data) {
@@ -785,42 +788,22 @@ function renderVotingScreen(data) {
     const gameMode = data.gameMode || 'spyfall';
 
     if (gameMode === 'whoami') {
-        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนโหมด ฉันคือใคร";
-        voteInstruction.textContent = "เฉลยตัวละครและสรุปแต้มตามลำดับการตอบ:";
+        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนรวม (ฉันคือใคร)";
+        voteInstruction.textContent = "คะแนนสะสมรวมจากการทายตัวละคร:";
         voteResult.style.display = 'block';
         if (isHost) {
             hostPostVoteControls.style.display = 'flex';
-            if (!data.scoreUpdated) {
-                let scores = data.scores || {};
-                const correctOrder = data.correctOrder || [];
-                const totalCorrect = correctOrder.length;
-
-                correctOrder.forEach((pId, idx) => {
-                    const pts = totalCorrect - idx;
-                    scores[pId] = (scores[pId] || 0) + pts;
-                });
-
-                db.ref(`rooms/${roomId}`).update({
-                    scores: scores,
-                    scoreUpdated: true
-                });
-            }
         }
         
-        let htmlStr = `<h3 style="color:#38bdf8; margin-bottom:8px;">👥 เฉลยตัวละครและคะแนนรอบนี้:</h3>`;
-        const correctOrder = data.correctOrder || [];
-        const totalCorrect = correctOrder.length;
+        let htmlStr = `<h3 style="color:#38bdf8; margin-bottom:10px;">🏆 อันดับคะแนนรวมทั้งหมด:</h3>`;
+        const scores = data.scores || {};
+        const sortedPlayers = Object.keys(players).sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
 
-        Object.keys(players).forEach(pId => {
+        sortedPlayers.forEach((pId, idx) => {
             const pName = players[pId].name;
-            const role = data.roles[pId];
-            const isCorrect = data.guessedCorrectly?.[pId];
-            let ptsAwarded = 0;
-            if (isCorrect) {
-                const rankIdx = correctOrder.indexOf(pId);
-                ptsAwarded = totalCorrect - rankIdx;
-            }
-            htmlStr += `<p style="font-size:0.85rem; margin:4px 0;"><b>${pName}:</b> ${role} ${isCorrect ? `✅ (ตอบถูกอันดับที่ ${correctOrder.indexOf(pId) + 1} ได้ +${ptsAwarded} แต้ม)` : '❌ (0 แต้ม)'}</p>`;
+            const pScore = scores[pId] || 0;
+            const isMe = (pId === myId);
+            htmlStr += `<p style="font-size:0.95rem; margin:6px 0; background:rgba(15,23,42,0.6); padding:6px 10px; border-radius:6px; display:flex; justify-content:space-between;"><span><b>อันดับ ${idx + 1}:</b> ${pName} ${isMe ? '(you)' : ''}</span> <b style="color:#38bdf8;">${pScore} แต้ม</b></p>`;
         });
         voteResult.innerHTML = htmlStr;
         return;
