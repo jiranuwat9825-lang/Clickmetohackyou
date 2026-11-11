@@ -127,9 +127,10 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดข้อมูลหมวดหมู่จาก Firebase และรวมเข้ากับค่าเริ่มต้นเสมอ
+// โหลดและผสานข้อมูลหมวดหมู่เริ่มต้นเข้ากับ Firebase แบบ Realtime อัตโนมัติ
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
+    // บังคับผสานค่าเริ่มต้น (rov, valorant) เข้าไปเสมอ เพื่อป้องกันการหาย
     allCategoriesData = { ...defaultCategoriesData, ...custom };
     updateCategoryDropdowns();
     updateManageCatDropdown();
@@ -186,7 +187,8 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = 'block'; // อนุญาตให้กดลบได้ทุกหมวดหมู่
+        // อนุญาตให้แก้ไขและลบได้ทุกหมวดหมู่
+        deleteCategoryBtn.style.display = 'block';
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
@@ -218,7 +220,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (รองรับการอัปเดตหมวดเดิมหรือสร้างใหม่ได้อย่างสมบูรณ์)
+// ปุ่มบันทึกหมวดหมู่ (รองรับการอัปเดตหมวดเดิม หรือสร้างหมวดใหม่)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
