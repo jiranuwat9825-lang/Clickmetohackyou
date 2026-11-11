@@ -124,8 +124,8 @@ gameModeSelect.addEventListener('change', (e) => {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
         settingValueInput.value = '3';
     } else if (val === 'whoami_rounds') {
-        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการเล่น:';
-        settingValueInput.value = '3';
+        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
+        settingValueInput.value = '2';
     } else {
         roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
         settingValueInput.value = '2';
@@ -397,7 +397,7 @@ function initRoomSync() {
             settingLabelText = `เวลา: ${setVal} นาที`;
         }
         if (mode === 'whoami_rounds') {
-            modeDisplayName = 'ฉันคือใคร (รอบ)';
+            modeDisplayName = 'ฉันคือใคร (นับรอบ)';
             settingLabelText = `รอบ: ${setVal}`;
         }
 
@@ -490,37 +490,50 @@ function initRoomSync() {
                 whoAmIArea.style.display = 'block';
 
                 const turnOrder = data.turnOrder || [];
-                whoAmIFullTurnOrderContainer.innerHTML = '';
-                turnOrder.forEach((id, idx) => {
-                    const p = players[id];
-                    if (!p) return;
-                    const div = document.createElement('div');
-                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:rgba(15, 23, 42, 0.4); color:#cbd5e1;`;
-                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''}`;
-                    whoAmIFullTurnOrderContainer.appendChild(div);
-                });
 
                 if (mode === 'whoami_time') {
                     whoAmITimerContainer.style.display = 'flex';
                     whoAmITurnBoxContainer.style.display = 'none';
                     startWhoAmITimer(data.endTime, roomId, data);
+
+                    whoAmIFullTurnOrderContainer.innerHTML = '';
+                    turnOrder.forEach((id, idx) => {
+                        const p = players[id];
+                        if (!p) return;
+                        const div = document.createElement('div');
+                        div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:rgba(15, 23, 42, 0.4); color:#cbd5e1;`;
+                        div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''}`;
+                        whoAmIFullTurnOrderContainer.appendChild(div);
+                    });
                 } else {
+                    // whoami_rounds (โหมดนับรอบการพูดแบบ Spyfall)
                     whoAmITimerContainer.style.display = 'none';
                     whoAmITurnBoxContainer.style.display = 'block';
                     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
 
                     const currentTurnIndex = data.currentTurnIndex || 0;
                     const currentRound = data.currentRound || 1;
-                    const totalRounds = data.totalRounds || 3;
+                    const totalRounds = data.totalRounds || 2;
                     const currentSpeakerId = turnOrder[currentTurnIndex];
 
                     whoAmIRoundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
 
+                    whoAmIFullTurnOrderContainer.innerHTML = '';
+                    turnOrder.forEach((id, idx) => {
+                        const p = players[id];
+                        if (!p) return;
+                        const isCurrent = (idx === currentTurnIndex);
+                        const div = document.createElement('div');
+                        div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
+                        div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
+                        whoAmIFullTurnOrderContainer.appendChild(div);
+                    });
+
                     if (currentSpeakerId === myId) {
-                        whoAmICurrentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว!`;
+                        whoAmICurrentSpeakerBox.innerHTML = `🗣️ ตาของคุณถามแล้ว!`;
                         whoAmIEndTurnBtn.style.display = 'block';
                     } else {
-                        whoAmICurrentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> พูด...`;
+                        whoAmICurrentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> ถาม...`;
                         whoAmIEndTurnBtn.style.display = 'none';
                     }
                 }
@@ -732,6 +745,7 @@ endTurnBtn.addEventListener('click', () => {
     });
 });
 
+// ปุ่มจบเทิร์นสำหรับโหมด ฉันคือใคร (แบบนับรอบการพูด เหมือน Spyfall)
 whoAmIEndTurnBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
@@ -741,7 +755,7 @@ whoAmIEndTurnBtn.addEventListener('click', () => {
         const turnOrder = data.turnOrder || [];
         let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
         let currentRound = data.currentRound || 1;
-        const totalRounds = data.totalRounds || 3;
+        const totalRounds = data.totalRounds || 2;
 
         if (currentTurnIndex >= turnOrder.length) {
             currentTurnIndex = 0;
@@ -751,34 +765,10 @@ whoAmIEndTurnBtn.addEventListener('click', () => {
         if (currentRound > totalRounds) {
             roomRef.update({ status: 'voting' });
         } else {
-            if (currentRound > (data.currentRound || 1)) {
-                const players = data.players || {};
-                const playerIds = Object.keys(players);
-                const catKey = data.category || 'rov';
-                const allItems = getAllCategoryItems(catKey);
-
-                let rolesData = {};
-                let attemptsData = {};
-                playerIds.forEach((id) => {
-                    const idx = Math.floor(Math.random() * allItems.length);
-                    rolesData[id] = allItems[idx];
-                    attemptsData[id] = 1;
-                });
-
-                roomRef.update({
-                    roles: rolesData,
-                    attempts: attemptsData,
-                    guessedCorrectly: {},
-                    correctOrder: [],
-                    currentTurnIndex: currentTurnIndex,
-                    currentRound: currentRound
-                });
-            } else {
-                roomRef.update({
-                    currentTurnIndex: currentTurnIndex,
-                    currentRound: currentRound
-                });
-            }
+            roomRef.update({
+                currentTurnIndex: currentTurnIndex,
+                currentRound: currentRound
+            });
         }
     });
 });
