@@ -115,7 +115,7 @@ if (savedName) {
 
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
-        roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
+        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการเล่น:';
         settingValueInput.value = '3';
     } else {
         roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
@@ -266,7 +266,7 @@ confirmCreateBtn.addEventListener('click', () => {
     roomId = newRoomInput.value.trim();
     const gameMode = gameModeSelect.value;
     const selectedCategory = categorySelect.value;
-    const settingVal = parseInt(settingValueInput.value) || (gameMode === 'whoami' ? 3 : 2);
+    const settingVal = parseInt(settingValueInput.value) || 2;
 
     if (!roomId) {
         alert('กรุณากรอกชื่อห้อง');
@@ -376,10 +376,10 @@ function initRoomSync() {
         const mode = data.gameMode || 'spyfall';
         let catKey = data.category || 'rov';
         if (!categoriesData[catKey]) catKey = 'rov';
-        const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
+        const setVal = data.settingValue || 2;
         const catInfo = getCategoryData(catKey);
 
-        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
+        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'รอบ: ' + setVal : 'รอบ: ' + setVal}`;
 
         if (isHost) {
             startBtn.style.display = 'block';
@@ -552,7 +552,7 @@ startBtn.addEventListener('click', () => {
         const gameMode = data.gameMode || 'spyfall';
         const catKey = data.category || 'rov';
         const catData = getCategoryData(catKey);
-        const setVal = data.settingValue || (gameMode === 'whoami' ? 3 : 2);
+        const setVal = data.settingValue || 2;
 
         const minPlayers = gameMode === 'whoami' ? 2 : 3;
         if (playerIds.length < minPlayers) {
@@ -628,7 +628,6 @@ startBtn.addEventListener('click', () => {
 
 function startWhoAmITimer(endTime, rId, data) {
     if (!endTime) return;
-    // ป้องกันไม่ให้ Timer รีเซ็ตตัวเองทุกครั้งที่ข้อมูลอัปเดต
     if (activeTimerEndTime === endTime) return;
     activeTimerEndTime = endTime;
 
@@ -754,7 +753,6 @@ submitMyGuessBtn.addEventListener('click', () => {
 
         let isCorrect = (guessVal.toLowerCase() === myRealRole.toLowerCase());
         
-        // ใช้ Targeted Update ป้องกันปัญหา Race Condition เวลาผู้เล่นกดพร้อมกัน
         const updates = {};
         updates[`attempts/${myId}`] = 0;
         updates[`guessedCorrectly/${myId}`] = isCorrect;
