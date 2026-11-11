@@ -13,9 +13,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const categoriesData = {
+const defaultCategoriesData = {
     "rov": {
         name: "ROV (Arena of Valor)",
+        mode: "both",
         groups: {
             "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica", "Erin", "Stuart"],
             "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Bonnie", "Yue", "Dyadia", "Heino", "Evita", "Gildur", "Azzen'Ka", "Ishar"],
@@ -26,6 +27,7 @@ const categoriesData = {
     },
     "valorant": {
         name: "Valorant",
+        mode: "both",
         groups: {
             "Duelist": ["Hush", "Iso", "Jett", "Neon", "Phoenix", "Raze", "Reyna", "Waylay", "Yoru"],
             "Controller": ["Astra", "Brimstone", "Clove", "Harbor", "Miks", "Omen", "Viper"],
@@ -35,8 +37,11 @@ const categoriesData = {
     }
 };
 
+let allCategoriesData = JSON.parse(JSON.stringify(defaultCategoriesData));
+
 const roomSelection = document.getElementById('roomSelection');
 const createRoomModal = document.getElementById('createRoomModal');
+const categoryManagerModal = document.getElementById('categoryManagerModal');
 const lobbyArea = document.getElementById('lobbyArea');
 const gameArea = document.getElementById('gameArea');
 const whoAmIArea = document.getElementById('whoAmIArea');
@@ -44,6 +49,13 @@ const voteArea = document.getElementById('voteArea');
 
 const nameInput = document.getElementById('nameInput');
 const showCreateModalBtn = document.getElementById('showCreateModalBtn');
+const openCategoryManagerBtn = document.getElementById('openCategoryManagerBtn');
+const closeCategoryManagerBtn = document.getElementById('closeCategoryManagerBtn');
+const saveNewCategoryBtn = document.getElementById('saveNewCategoryBtn');
+const newCatNameInput = document.getElementById('newCatNameInput');
+const newCatGameMode = document.getElementById('newCatGameMode');
+const newCatItemsInput = document.getElementById('newCatItemsInput');
+
 const backToHomeBtn = document.getElementById('backToHomeBtn');
 const newRoomInput = document.getElementById('newRoomInput');
 const gameModeSelect = document.getElementById('gameModeSelect');
@@ -74,7 +86,6 @@ const fullTurnOrderContainer = document.getElementById('fullTurnOrderContainer')
 const hostControls = document.getElementById('hostControls');
 const skipToVoteBtn = document.getElementById('skipToVoteBtn');
 
-// ตัวแปรโหมด ฉันคือใคร (Search)
 const whoAmITimer = document.getElementById('whoAmITimer');
 const othersRolesGrid = document.getElementById('othersRolesGrid');
 const myGuessSearch = document.getElementById('myGuessSearch');
@@ -112,7 +123,89 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// ระบบแก้ปัญหาพับหน้าจอแล้วหลุด (Visibility Change Reconnect)
+// โหลดหมวดหมู่จาก Firebase
+db.ref('customCategories').on('value', (snapshot) => {
+    const custom = snapshot.val() || {};
+    allCategoriesData = { ...defaultCategoriesData, ...custom };
+    updateCategoryDropdowns();
+});
+
+function updateCategoryDropdowns() {
+    const mode = gameModeSelect.value;
+    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
+        if (!selectEl) return;
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = '';
+        Object.keys(allCategoriesData).forEach(key => {
+            const cat = allCategoriesData[key];
+            if (cat.mode === 'both' || cat.mode === mode) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = cat.name;
+                selectEl.appendChild(opt);
+            }
+        });
+        if (selectEl.querySelector(`option[value="${currentVal}"]`)) {
+            selectEl.value = currentVal;
+        }
+    });
+}
+
+gameModeSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'whoami') {
+        roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
+        settingValueInput.value = '3';
+    } else {
+        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
+        settingValueInput.value = '2';
+    }
+    updateCategoryDropdowns();
+});
+
+openCategoryManagerBtn.addEventListener('click', () => {
+    roomSelection.style.display = 'none';
+    categoryManagerModal.style.display = 'flex';
+});
+
+closeCategoryManagerBtn.addEventListener('click', () => {
+    categoryManagerModal.style.display = 'none';
+    roomSelection.style.display = 'flex';
+});
+
+saveNewCategoryBtn.addEventListener('click', () => {
+    const catName = newCatNameInput.value.trim();
+    const gMode = newCatGameMode.value;
+    const rawItems = newCatItemsInput.value.trim();
+
+    if (!catName) {
+        alert('กรุณากรอกชื่อหมวดหมู่!');
+        return;
+    }
+    if (!rawItems) {
+        alert('กรุณากรอกรายชื่อตัวละครหรือคำตอบอย่างน้อย 1 ตัว!');
+        return;
+    }
+
+    const itemsArray = rawItems.split(/[\n,]+/).map(i => i.trim()).filter(i => i.length > 0);
+    const catKey = 'cat_' + Date.now();
+
+    const newCatObj = {
+        name: catName,
+        mode: gMode,
+        groups: {
+            [catName]: itemsArray
+        }
+    };
+
+    db.ref(`customCategories/${catKey}`).set(newCatObj).then(() => {
+        alert('✔️ บันทึกหมวดหมู่ใหม่สำเร็จ!');
+        newCatNameInput.value = '';
+        newCatItemsInput.value = '';
+        categoryManagerModal.style.display = 'none';
+        roomSelection.style.display = 'flex';
+    });
+});
+
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         db.goOnline();
@@ -165,23 +258,13 @@ let selectedVoteTarget = null;
 let selectedHeroGuess = "";
 
 function getCategoryData(key) {
-    return categoriesData[key] || categoriesData['rov'];
+    return allCategoriesData[key] || allCategoriesData['rov'];
 }
 
 function getAllCategoryItems(key) {
     const groups = getCategoryData(key).groups;
     return Object.values(groups).flat();
 }
-
-gameModeSelect.addEventListener('change', (e) => {
-    if (e.target.value === 'whoami') {
-        roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
-        settingValueInput.value = '3';
-    } else {
-        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
-        settingValueInput.value = '2';
-    }
-});
 
 showCreateModalBtn.addEventListener('click', () => {
     myName = nameInput.value.trim();
@@ -193,6 +276,7 @@ showCreateModalBtn.addEventListener('click', () => {
     localStorage.setItem('rov_spy_myname', myName);
     roomSelection.style.display = 'none';
     createRoomModal.style.display = 'flex';
+    updateCategoryDropdowns();
 });
 
 backToHomeBtn.addEventListener('click', () => {
@@ -229,7 +313,6 @@ db.ref('rooms').on('value', (snapshot) => {
             canJoin = false;
         }
 
-        // ระบบนับถอยหลังลบห้อง (กรณีไม่มีผู้เล่น 0 คน)
         if (pCount === 0) {
             if (!rData.emptySince) {
                 db.ref(`rooms/${rId}/emptySince`).set(Date.now());
@@ -345,6 +428,7 @@ lobbyGameModeSelect.addEventListener('change', (e) => {
     db.ref(`rooms/${roomId}/gameMode`).set(mode);
     const defaultVal = mode === 'whoami' ? 3 : 2;
     db.ref(`rooms/${roomId}/settingValue`).set(defaultVal);
+    updateCategoryDropdowns();
 });
 lobbyCategorySelect.addEventListener('change', (e) => {
     if (!isHost || !roomId) return;
@@ -395,7 +479,7 @@ function checkHostAndListen() {
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         const catInfo = getCategoryData(catKey);
 
-        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
+        roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo ? catInfo.name : 'ทั่วไป'} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
         lobbyGameModeSelect.value = mode;
         lobbyCategorySelect.value = catKey;
         lobbySettingValueInput.value = setVal;
@@ -473,7 +557,7 @@ startBtn.addEventListener('click', () => {
                 if (id !== spyId) rolesData[id] = normalItem;
             });
         } else {
-            selectedGroupKey = "ทั้งหมด";
+            selectedGroupKey = Object.keys(catData.groups)[0];
             const allItems = getAllCategoryItems(catKey);
 
             playerIds.forEach((id) => {
@@ -589,7 +673,7 @@ function listenGameState() {
                 const catKey = data.category || 'rov';
                 const catData = getCategoryData(catKey);
                 const currentGroup = data.currentGroup;
-                if (currentGroup && catData.groups[currentGroup]) {
+                if (catData && currentGroup && catData.groups[currentGroup]) {
                     document.querySelector('.section-title').textContent = `🛡️ รายชื่อในกลุ่มปัจจุบัน (${currentGroup}):`;
                     catData.groups[currentGroup].forEach(item => {
                         const div = document.createElement('div');
@@ -600,7 +684,6 @@ function listenGameState() {
                 }
 
             } else {
-                // โหมด ฉันคือใคร
                 gameArea.style.display = 'none';
                 whoAmIArea.style.display = 'block';
 
@@ -679,7 +762,6 @@ function listenGameState() {
     });
 }
 
-// ตัวจับเวลาโหมด ฉันคือใคร
 function startWhoAmITimer(endTime, rId, data) {
     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
     if (!endTime) return;
@@ -710,7 +792,6 @@ function startWhoAmITimer(endTime, rId, data) {
     whoAmITimerInterval = setInterval(tick, 1000);
 }
 
-// ระบบ Search ค้นหาตัวละครโหมด ฉันคือใคร
 function setupSearchDropdown(catKey) {
     const allItems = getAllCategoryItems(catKey);
     
@@ -743,7 +824,6 @@ function setupSearchDropdown(catKey) {
     };
 }
 
-// กดส่งคำตอบ Search ในโหมด "ฉันคือใคร"
 submitMyGuessBtn.addEventListener('click', () => {
     const guessVal = selectedSearchGuess || myGuessSearch.value.trim();
     if (!guessVal) {
@@ -890,7 +970,7 @@ function renderVotingScreen(data) {
     const catKey = data.category || 'rov';
     const catData = getCategoryData(catKey);
     const currentGroup = data.currentGroup;
-    const currentGroupItems = (currentGroup && catData.groups[currentGroup]) ? catData.groups[currentGroup] : [];
+    const currentGroupItems = (catData && currentGroup && catData.groups[currentGroup]) ? catData.groups[currentGroup] : [];
 
     const activeCandidates = data.tieCandidates || Object.keys(players);
     const myVote = votes[myId];
