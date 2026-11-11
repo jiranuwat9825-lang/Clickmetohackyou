@@ -95,6 +95,9 @@ let myName = '';
 let roomId = '';
 let whoAmITimerInterval = null;
 let selectedSearchGuess = "";
+let isHost = false;
+let selectedVoteTarget = null;
+let selectedHeroGuess = "";
 
 let myId = localStorage.getItem('rov_spy_myid');
 if (!myId) {
@@ -143,30 +146,18 @@ if (savedRoomId) {
         const roomData = snapshot.val();
         if (roomData) {
             roomSelection.style.display = 'none';
-            if (roomData.status === 'playing') {
-                if (roomData.gameMode === 'whoami') whoAmIArea.style.display = 'block';
-                else gameArea.style.display = 'block';
-            } else if (roomData.status === 'voting') {
-                voteArea.style.display = 'block';
-            } else {
-                lobbyArea.style.display = 'block';
-                roomTitle.textContent = `ห้อง: ${roomId}`;
-            }
+            lobbyArea.style.display = 'block';
+            roomTitle.textContent = `ห้อง: ${roomId}`;
             
             db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName });
             db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
 
-            checkHostAndListen();
-            listenGameState();
+            initRoomSync();
         } else {
             localStorage.removeItem('rov_spy_roomid');
         }
     });
 }
-
-let isHost = false;
-let selectedVoteTarget = null;
-let selectedHeroGuess = "";
 
 function getCategoryData(key) {
     return categoriesData[key] || categoriesData['rov'];
@@ -303,8 +294,7 @@ confirmCreateBtn.addEventListener('click', () => {
         roomRef.child(`players/${myId}`).onDisconnect().remove();
 
         localStorage.setItem('rov_spy_roomid', roomId);
-        checkHostAndListen();
-        listenGameState();
+        initRoomSync();
     });
 });
 
@@ -328,8 +318,7 @@ function joinExistingRoom(targetRoomId) {
         roomRef.update({ emptySince: null });
 
         localStorage.setItem('rov_spy_roomid', roomId);
-        checkHostAndListen();
-        listenGameState();
+        initRoomSync();
     });
 }
 
@@ -342,7 +331,8 @@ closeRoomBtn.addEventListener('click', () => {
     }
 });
 
-function checkHostAndListen() {
+// ฟังก์ชันศูนย์กลางซิงค์ข้อมูลห้อง (รวมผู้เล่น สถานะ และเกมไว้ในที่เดียว)
+function initRoomSync() {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val();
@@ -361,24 +351,37 @@ function checkHostAndListen() {
                 roomRef.update({ emptySince: Date.now() });
             } else if (Date.now() - data.emptySince > 60000) {
                 roomRef.remove();
+                return;
             }
         } else if (data.emptySince) {
             roomRef.update({ emptySince: null });
         }
 
+        // 1. อัปเดตรายชื่อผู้เล่น
         playerList.innerHTML = '';
         const hostId = data.hostId;
+        isHost = (hostId === myId);
+
+        playerIds.forEach((id) => {
+            const p = players[id];
+            if (!p) return;
+            const li = document.createElement('li');
+            const isMe = (id === myId);
+            const isThisHost = (id === hostId);
+            li.innerHTML = `👤 ${p.name} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
+            playerList.appendChild(li);
+        });
+
+        // 2. ข้อมูลห้อง & สถานะปุ่ม Host
         const mode = data.gameMode || 'spyfall';
         let catKey = data.category || 'rov';
         if (!categoriesData[catKey]) catKey = 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
-        
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo.name} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
 
-        if (hostId === myId) {
-            isHost = true;
+        if (isHost) {
             startBtn.style.display = 'block';
             waitText.style.display = 'none';
             closeRoomBtn.style.display = 'block';
@@ -389,13 +392,149 @@ function checkHostAndListen() {
             closeRoomBtn.style.display = 'none';
         }
 
-        playerIds.forEach((id) => {
-            const li = document.createElement('li');
+        // 3. ตารางคะแนน
+        const scores = data.scores || {};
+        scoreListBody.innerHTML = '';
+        Object.keys(players).forEach(id => {
+            const pName = players[id].name;
+            const pScore = scores[id] || 0;
             const isMe = (id === myId);
-            const isThisHost = (id === hostId);
-            li.innerHTML = `👤 ${players[id].name} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
-            playerList.appendChild(li);
+            const row = document.createElement('div');
+            row.className = 'score-row-item';
+            row.innerHTML = `<span>${pName} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''}</span> <b>${pScore} แต้ม</b>`;
+            scoreListBody.appendChild(row);
         });
+        scoreBoard.style.display = 'block';
+
+        // 4. ควบคุมการแสดงผลหน้าจอ (Lobby / Playing / Voting)
+        const status = data.status || 'lobby';
+
+        if (status === 'lobby') {
+            lobbyArea.style.display = 'block';
+            gameArea.style.display = 'none';
+            whoAmIArea.style.display = 'none';
+            voteArea.style.display = 'none';
+        } else if (status === 'playing') {
+            lobbyArea.style.display = 'none';
+            voteArea.style.display = 'none';
+
+            if (mode === 'spyfall') {
+                whoAmIArea.style.display = 'none';
+                gameArea.style.display = 'block';
+
+                const roles = data.roles || {};
+                heroName.textContent = roles[myId] || "...";
+
+                const turnOrder = data.turnOrder || [];
+                const currentTurnIndex = data.currentTurnIndex || 0;
+                const currentRound = data.currentRound || 1;
+                const totalRounds = data.totalRounds || 2;
+                const currentSpeakerId = turnOrder[currentTurnIndex];
+
+                roundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
+                
+                fullTurnOrderContainer.innerHTML = '';
+                turnOrder.forEach((id, idx) => {
+                    const p = players[id];
+                    if (!p) return;
+                    const isCurrent = (idx === currentTurnIndex);
+                    const div = document.createElement('div');
+                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
+                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
+                    fullTurnOrderContainer.appendChild(div);
+                });
+
+                if (currentSpeakerId === myId) {
+                    currentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว!`;
+                    endTurnBtn.style.display = 'block';
+                } else {
+                    currentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> พูด...`;
+                    endTurnBtn.style.display = 'none';
+                }
+
+                heroGrid.innerHTML = '';
+                const currentGroup = data.currentGroup;
+                if (catInfo && currentGroup && catInfo.groups[currentGroup]) {
+                    document.querySelector('.section-title').textContent = `🛡️ รายชื่อในกลุ่มปัจจุบัน (${currentGroup}):`;
+                    catInfo.groups[currentGroup].forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'hero-item';
+                        div.textContent = item;
+                        heroGrid.appendChild(div);
+                    });
+                }
+                hostControls.style.display = isHost ? 'block' : 'none';
+
+            } else {
+                gameArea.style.display = 'none';
+                whoAmIArea.style.display = 'block';
+
+                startWhoAmITimer(data.endTime, roomId, data);
+
+                othersRolesGrid.innerHTML = '';
+                const roles = data.roles || {};
+                const attempts = data.attempts || {};
+                const guessedCorrectly = data.guessedCorrectly || {};
+                const turnOrder = data.turnOrder || [];
+                const currentTurnIndex = data.currentTurnIndex || 0;
+
+                turnOrder.forEach((pId) => {
+                    if (pId !== myId && players[pId]) {
+                        const div = document.createElement('div');
+                        div.className = 'hero-item';
+
+                        const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
+                        const isCorrect = guessedCorrectly[pId];
+                        const isCurrentTurn = (turnOrder[currentTurnIndex] === pId);
+
+                        let bgStyle = "background: rgba(30, 41, 59, 0.9);";
+                        let statusText = "";
+
+                        if (isCurrentTurn && !isDone) {
+                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;";
+                        }
+
+                        if (isDone) {
+                            if (isCorrect) {
+                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;";
+                                statusText = '<br><span style="color:#22c55e; font-size:0.7rem;">(ตอบถูก ✅)</span>';
+                            } else {
+                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;";
+                                statusText = '<br><span style="color:#94a3b8; font-size:0.7rem;">(ตอบผิด ❌)</span>';
+                            }
+                        }
+
+                        div.style.cssText = bgStyle + " padding: 8px; border-radius: 6px; text-align: center;";
+                        div.innerHTML = `<b>${players[pId].name}</b><br><span style="color:#38bdf8;">${roles[pId]}</span>${statusText}`;
+                        othersRolesGrid.appendChild(div);
+                    }
+                });
+
+                const myAttempts = attempts[myId] ?? 1;
+                const isAlreadyCorrect = guessedCorrectly[myId];
+
+                if (isAlreadyCorrect) {
+                    guessControlsDiv.style.display = 'none';
+                    guessStatusText.textContent = `🎉 คุณทายถูกแล้ว! รอลุ้นเพื่อนคนอื่น`;
+                } else if (myAttempts <= 0) {
+                    guessControlsDiv.style.display = 'none';
+                    guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบไปแล้ว (0 ครั้ง)`;
+                } else {
+                    guessControlsDiv.style.display = 'block';
+                    guessStatusText.textContent = `🎯 ค้นหาและทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
+                }
+
+                setupSearchDropdown(data.category);
+                whoAmIHostControls.style.display = isHost ? 'block' : 'none';
+            }
+
+        } else if (status === 'voting') {
+            gameArea.style.display = 'none';
+            whoAmIArea.style.display = 'none';
+            lobbyArea.style.display = 'none';
+            voteArea.style.display = 'block';
+            renderVotingScreen(data);
+        }
     });
 }
 
@@ -485,169 +624,6 @@ startBtn.addEventListener('click', () => {
         roomRef.update(updateObj);
     });
 });
-
-// ฟังสถานะเกม
-function listenGameState() {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const players = data.players || {};
-        if (Object.keys(players).length === 0) {
-            if (!data.emptySince) {
-                roomRef.update({ emptySince: Date.now() });
-            } else if (Date.now() - data.emptySince > 60000) {
-                roomRef.remove();
-                return;
-            }
-        }
-
-        const scores = data.scores || {};
-        const gameMode = data.gameMode || 'spyfall';
-
-        scoreListBody.innerHTML = '';
-        Object.keys(players).forEach(id => {
-            const pName = players[id].name;
-            const pScore = scores[id] || 0;
-            const isMe = (id === myId);
-            const row = document.createElement('div');
-            row.className = 'score-row-item';
-            row.innerHTML = `<span>${pName} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''}</span> <b>${pScore} แต้ม</b>`;
-            scoreListBody.appendChild(row);
-        });
-        scoreBoard.style.display = 'block';
-
-        if (data.status === 'playing') {
-            lobbyArea.style.display = 'none';
-            voteArea.style.display = 'none';
-
-            if (gameMode === 'spyfall') {
-                whoAmIArea.style.display = 'none';
-                gameArea.style.display = 'block';
-
-                const roles = data.roles || {};
-                heroName.textContent = roles[myId] || "...";
-
-                const turnOrder = data.turnOrder || [];
-                const currentTurnIndex = data.currentTurnIndex || 0;
-                const currentRound = data.currentRound || 1;
-                const totalRounds = data.totalRounds || 2;
-                const currentSpeakerId = turnOrder[currentTurnIndex];
-
-                roundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
-                
-                fullTurnOrderContainer.innerHTML = '';
-                turnOrder.forEach((id, idx) => {
-                    const p = players[id];
-                    if (!p) return;
-                    const isCurrent = (idx === currentTurnIndex);
-                    const div = document.createElement('div');
-                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
-                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
-                    fullTurnOrderContainer.appendChild(div);
-                });
-
-                if (currentSpeakerId === myId) {
-                    currentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว!`;
-                    endTurnBtn.style.display = 'block';
-                } else {
-                    currentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> พูด...`;
-                    endTurnBtn.style.display = 'none';
-                }
-
-                heroGrid.innerHTML = '';
-                const catKey = data.category || 'rov';
-                const catData = getCategoryData(catKey);
-                const currentGroup = data.currentGroup;
-                if (catData && currentGroup && catData.groups[currentGroup]) {
-                    document.querySelector('.section-title').textContent = `🛡️ รายชื่อในกลุ่มปัจจุบัน (${currentGroup}):`;
-                    catData.groups[currentGroup].forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'hero-item';
-                        div.textContent = item;
-                        heroGrid.appendChild(div);
-                    });
-                }
-
-            } else {
-                gameArea.style.display = 'none';
-                whoAmIArea.style.display = 'block';
-
-                startWhoAmITimer(data.endTime, roomId, data);
-
-                othersRolesGrid.innerHTML = '';
-                const roles = data.roles || {};
-                const attempts = data.attempts || {};
-                const guessedCorrectly = data.guessedCorrectly || {};
-                const turnOrder = data.turnOrder || [];
-                const currentTurnIndex = data.currentTurnIndex || 0;
-
-                turnOrder.forEach((pId) => {
-                    if (pId !== myId && players[pId]) {
-                        const div = document.createElement('div');
-                        div.className = 'hero-item';
-
-                        const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
-                        const isCorrect = guessedCorrectly[pId];
-                        const isCurrentTurn = (turnOrder[currentTurnIndex] === pId);
-
-                        let bgStyle = "background: rgba(30, 41, 59, 0.9);";
-                        let statusText = "";
-
-                        if (isCurrentTurn && !isDone) {
-                            bgStyle = "background: rgba(251, 191, 36, 0.25); border: 2px solid #fbbf24;";
-                        }
-
-                        if (isDone) {
-                            if (isCorrect) {
-                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;";
-                                statusText = '<br><span style="color:#22c55e; font-size:0.7rem;">(ตอบถูก ✅)</span>';
-                            } else {
-                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;";
-                                statusText = '<br><span style="color:#94a3b8; font-size:0.7rem;">(ตอบผิด ❌)</span>';
-                            }
-                        }
-
-                        div.style.cssText = bgStyle + " padding: 8px; border-radius: 6px; text-align: center;";
-                        div.innerHTML = `<b>${players[pId].name}</b><br><span style="color:#38bdf8;">${roles[pId]}</span>${statusText}`;
-                        othersRolesGrid.appendChild(div);
-                    }
-                });
-
-                const myAttempts = attempts[myId] ?? 1;
-                const isAlreadyCorrect = guessedCorrectly[myId];
-
-                if (isAlreadyCorrect) {
-                    guessControlsDiv.style.display = 'none';
-                    guessStatusText.textContent = `🎉 คุณทายถูกแล้ว! รอลุ้นเพื่อนคนอื่น`;
-                } else if (myAttempts <= 0) {
-                    guessControlsDiv.style.display = 'none';
-                    guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบไปแล้ว (0 ครั้ง)`;
-                } else {
-                    guessControlsDiv.style.display = 'block';
-                    guessStatusText.textContent = `🎯 ค้นหาและทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
-                }
-
-                setupSearchDropdown(data.category);
-                whoAmIHostControls.style.display = isHost ? 'block' : 'none';
-            }
-
-        } else if (data.status === 'voting') {
-            gameArea.style.display = 'none';
-            whoAmIArea.style.display = 'none';
-            lobbyArea.style.display = 'none';
-            voteArea.style.display = 'block';
-            renderVotingScreen(data);
-
-        } else if (data.status === 'lobby') {
-            gameArea.style.display = 'none';
-            whoAmIArea.style.display = 'none';
-            voteArea.style.display = 'none';
-            lobbyArea.style.display = 'block';
-        }
-    });
-}
 
 function startWhoAmITimer(endTime, rId, data) {
     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
