@@ -112,6 +112,27 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
+// ฟังก์ชันเติมตัวเลือกหมวดหมู่ลงใน Dropdown อัตโนมัติ
+function updateCategoryDropdowns() {
+    [categorySelect, lobbyCategorySelect].forEach(selectEl => {
+        if (!selectEl) return;
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = '';
+        Object.keys(categoriesData).forEach(key => {
+            const cat = categoriesData[key];
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = cat.name;
+            selectEl.appendChild(opt);
+        });
+        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
+            selectEl.value = currentVal;
+        }
+    });
+}
+
+updateCategoryDropdowns();
+
 gameModeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'whoami') {
         roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
@@ -393,6 +414,8 @@ function checkHostAndListen() {
         const catKey = data.category || 'rov';
         const setVal = data.settingValue || (mode === 'whoami' ? 3 : 2);
         
+        updateCategoryDropdowns(); // เติมตัวเลือกใน dropdown ทันทีที่โหลดห้อง
+
         const catInfo = getCategoryData(catKey);
 
         roomCategoryBadge.textContent = `โหมด: ${mode === 'whoami' ? 'ฉันคือใคร' : 'Spyfall'} | หมวด: ${catInfo ? catInfo.name : 'ROV'} | ${mode === 'whoami' ? 'เวลา: ' + setVal + ' นาที' : 'รอบ: ' + setVal}`;
