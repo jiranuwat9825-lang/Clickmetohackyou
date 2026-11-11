@@ -96,6 +96,7 @@ const voteInstruction = document.getElementById('voteInstruction');
 let myName = '';
 let roomId = '';
 let whoAmITimerInterval = null;
+let activeTimerEndTime = null;
 let selectedSearchGuess = "";
 let isHost = false;
 let selectedVoteTarget = null;
@@ -530,6 +531,8 @@ function initRoomSync() {
             }
 
         } else if (status === 'voting') {
+            if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
+            activeTimerEndTime = null;
             gameArea.style.display = 'none';
             whoAmIArea.style.display = 'none';
             lobbyArea.style.display = 'none';
@@ -624,14 +627,18 @@ startBtn.addEventListener('click', () => {
 });
 
 function startWhoAmITimer(endTime, rId, data) {
-    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
     if (!endTime) return;
+    // ป้องกันไม่ให้ Timer รีเซ็ตตัวเองทุกครั้งที่ข้อมูลอัปเดต
+    if (activeTimerEndTime === endTime) return;
+    activeTimerEndTime = endTime;
+
+    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
 
     const tick = () => {
         const timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
         const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
         const s = (timeLeft % 60).toString().padStart(2, '0');
-        whoAmITimer.textContent = `${m}:${s}`;
+        if (whoAmITimer) whoAmITimer.textContent = `${m}:${s}`;
 
         const players = data.players || {};
         const pIds = Object.keys(players);
@@ -643,6 +650,7 @@ function startWhoAmITimer(endTime, rId, data) {
 
         if (timeLeft <= 0 || allAttemptsUsed || allCorrect) {
             clearInterval(whoAmITimerInterval);
+            activeTimerEndTime = null;
             if (isHost && data.status === 'playing') {
                 db.ref(`rooms/${rId}`).update({ status: 'voting' });
             }
@@ -686,6 +694,8 @@ skipToVoteBtn.addEventListener('click', () => {
 
 whoAmISkipBtn.addEventListener('click', () => {
     if (isHost) {
+        if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
+        activeTimerEndTime = null;
         db.ref(`rooms/${roomId}`).update({ status: 'voting' });
     }
 });
@@ -743,27 +753,27 @@ submitMyGuessBtn.addEventListener('click', () => {
         attempts[myId] = 0;
 
         let isCorrect = (guessVal.toLowerCase() === myRealRole.toLowerCase());
+        
+        // ใช้ Targeted Update ป้องกันปัญหา Race Condition เวลาผู้เล่นกดพร้อมกัน
+        const updates = {};
+        updates[`attempts/${myId}`] = 0;
+        updates[`guessedCorrectly/${myId}`] = isCorrect;
+
         if (isCorrect) {
             alert('🎉 ยินดีด้วย! คุณทายถูก!');
-            guessedCorrectly[myId] = true;
             if (!correctOrder.includes(myId)) {
                 correctOrder.push(myId);
+                updates[`correctOrder`] = correctOrder;
             }
             const totalPlayers = Object.keys(data.players || {}).length;
             const pts = Math.max(1, totalPlayers - correctOrder.length + 1);
             scores[myId] = (scores[myId] || 0) + pts;
+            updates[`scores/${myId}`] = scores[myId];
         } else {
             alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}"`);
         }
 
-        roomRef.update({
-            attempts: attempts,
-            guessedCorrectly: guessedCorrectly,
-            correctOrder: correctOrder,
-            scores: scores
-        });
-
-        setTimeout(() => {
+        roomRef.update(updates).then(() => {
             roomRef.once('value', (snap) => {
                 const updatedData = snap.val();
                 if (!updatedData || updatedData.status !== 'playing') return;
@@ -772,10 +782,12 @@ submitMyGuessBtn.addEventListener('click', () => {
                 const allCorrect = allPlayers.every(pId => updatedData.guessedCorrectly?.[pId]);
 
                 if ((allAttemptsUsed || allCorrect) && isHost) {
+                    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
+                    activeTimerEndTime = null;
                     db.ref(`rooms/${roomId}`).update({ status: 'voting' });
                 }
             });
-        }, 300);
+        });
     });
 });
 
