@@ -49,7 +49,10 @@
             </div>
             <div class="input-group" style="text-align: left;">
                 <label class="form-label">🛡️ หมวดหมู่เกม:</label>
-                <select id="categorySelect" class="category-select"></select>
+                <select id="categorySelect" class="category-select">
+                    <option value="rov">ROV</option>
+                    <option value="valorant">Valorant</option>
+                </select>
             </div>
             <div class="input-group" style="text-align: left;">
                 <label class="form-label" id="roundOrTimeLabel">🔄 จำนวนรอบการพูด:</label>
@@ -71,7 +74,10 @@
                         <option value="whoami">❓ ฉันคือใคร</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
-                        <select id="lobbyCategorySelect" class="category-select" style="flex: 2; min-width: 0;"></select>
+                        <select id="lobbyCategorySelect" class="category-select" style="flex: 2; min-width: 0;">
+                            <option value="rov">ROV</option>
+                            <option value="valorant">Valorant</option>
+                        </select>
                         <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center; min-width: 0;">
                     </div>
                 </div>
