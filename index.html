@@ -62,26 +62,9 @@
             <button type="button" id="backToHomeBtn" class="btn secondary-btn">🔙 กลับ</button>
         </div>
         
-        <!-- หน้าล็อบบี้รอเพื่อน -->
+        <!-- หน้าล็อบบี้รอเพื่อน (เอาช่องตั้งค่าออก เหลือแค่แสดงผล) -->
         <div id="lobbyArea" class="box" style="display: none;">
             <h2 id="roomTitle" class="room-title">ชื่อห้อง</h2>
-            
-            <div class="input-group" id="hostSettingsBox" style="display: none; text-align: left;">
-                <label class="form-label">⚙️ แก้ไขตั้งค่าห้อง (สำหรับหัวหน้าห้อง):</label>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <select id="lobbyGameModeSelect" class="category-select">
-                        <option value="spyfall">🕵️ Spyfall</option>
-                        <option value="whoami">❓ ฉันคือใคร</option>
-                    </select>
-                    <div style="display: flex; gap: 4px;">
-                        <select id="lobbyCategorySelect" class="category-select" style="flex: 2; min-width: 0;">
-                            <option value="rov">ROV</option>
-                            <option value="valorant">Valorant</option>
-                        </select>
-                        <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center; min-width: 0;">
-                    </div>
-                </div>
-            </div>
 
             <p id="roomCategoryBadge" class="category-badge-view">โหมด: Spyfall | หมวด: ROV</p>
             <p class="subtitle">รายชื่อผู้เล่นในห้อง:</p>
