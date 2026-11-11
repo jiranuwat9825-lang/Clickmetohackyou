@@ -127,7 +127,7 @@ if (savedName) {
     nameInput.value = savedName;
 }
 
-// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase และรวมเข้ากับค่าเริ่มต้น
+// โหลดข้อมูลหมวดหมู่แบบ Realtime จาก Firebase และผสานกับค่าเริ่มต้น
 db.ref('customCategories').on('value', (snapshot) => {
     const custom = snapshot.val() || {};
     allCategoriesData = { ...defaultCategoriesData, ...custom };
@@ -186,18 +186,18 @@ manageCatSelect.addEventListener('change', (e) => {
         if (!cat) return;
         editCatNameInput.value = cat.name;
         editCatGameMode.value = cat.mode || 'both';
-        deleteCategoryBtn.style.display = 'block'; // ทุกหมวดสามารถกดลบได้
+        deleteCategoryBtn.style.display = 'block';
 
         const groups = cat.groups || {};
         Object.keys(groups).forEach(gName => {
-            addGroupRow(gName, groups[gName].join(', '));
+            const itemsArr = Array.isArray(groups[gName]) ? groups[gName] : [];
+            addGroupRow(gName, itemsArr.join(', '));
         });
     }
 });
 
 function addGroupRow(groupName = "", itemsText = "") {
     const row = document.createElement('div');
-    // เพิ่มคลาส group-row เพื่อให้ค้นหาแถวได้อย่างแม่นยำ
     row.className = 'group-row';
     row.style.cssText = "background: rgba(15, 23, 42, 0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2); display: flex; flex-direction: column; gap: 4px;";
     
@@ -220,7 +220,7 @@ addGroupBtn.onclick = () => {
     addGroupRow("เลนใหม่", "");
 };
 
-// ปุ่มบันทึกหมวดหมู่ (แก้ไขให้ดึงข้อมูลจาก .group-row โดยตรง ป้องกันปัญหาปุ่มกดไม่ไป)
+// ปุ่มบันทึกหมวดหมู่ (เพิ่มระบบแจ้งเตือนเพื่อตรวจสอบการทำงาน)
 saveCategoryBtn.onclick = () => {
     const catName = editCatNameInput.value.trim();
     const gMode = editCatGameMode.value;
