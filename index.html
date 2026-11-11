@@ -35,26 +35,46 @@
             </div>
         </div>
 
-        <!-- หน้าต่างจัดการ/เพิ่มหมวดหมู่ -->
-        <div id="categoryManagerModal" class="box" style="display: none;">
-            <h3 class="room-title">⚙️ เพิ่ม/จัดการหมวดหมู่เกม</h3>
+        <!-- หน้าต่างจัดการ/เพิ่ม/แก้ไขหมวดหมู่ -->
+        <div id="categoryManagerModal" class="box" style="display: none; max-height: 85vh; overflow-y: auto;">
+            <h3 class="room-title">⚙️ จัดการหมวดหมู่เกม</h3>
+            
             <div class="input-group" style="text-align: left;">
-                <label class="form-label">📌 ชื่อหมวดหมู่ใหม่ (เช่น อนิเมะ, นักบอล):</label>
-                <input type="text" id="newCatNameInput" placeholder="ใส่ชื่อหมวดหมู่..." autocomplete="off">
+                <label class="form-label">📂 เลือกหมวดหมู่เพื่อแก้ไข หรือสร้างใหม่:</label>
+                <select id="manageCatSelect" class="category-select">
+                    <option value="new">➕ สร้างหมวดหมู่ใหม่...</option>
+                </select>
             </div>
+
+            <div class="input-group" style="text-align: left;">
+                <label class="form-label">📌 ชื่อหมวดหมู่:</label>
+                <input type="text" id="editCatNameInput" placeholder="เช่น อนิเมะ, ROV, ฯลฯ" autocomplete="off">
+            </div>
+
             <div class="input-group" style="text-align: left;">
                 <label class="form-label">🎮 ใช้สำหรับเกมโหมด:</label>
-                <select id="newCatGameMode" class="category-select">
+                <select id="editCatGameMode" class="category-select">
                     <option value="both">ใช้ได้ทั้ง 2 โหมด (Spyfall & ฉันคือใคร)</option>
                     <option value="spyfall">🕵️ Spyfall เท่านั้น</option>
                     <option value="whoami">❓ ฉันคือใคร เท่านั้น</option>
                 </select>
             </div>
-            <div class="input-group" style="text-align: left;">
-                <label class="form-label">📝 รายชื่อตัวละคร/คำตอบ (คั่นด้วยจุลภาค , หรือขึ้นบรรทัดใหม่):</label>
-                <textarea id="newCatItemsInput" class="category-select" style="height: 80px; text-align: left; padding: 8px;" placeholder="เช่น ลูฟี่, โซโร, นารูโตะ, ซาสึเกะ"></textarea>
+
+            <hr style="border: 0.5px solid rgba(56, 189, 248, 0.2); margin: 8px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" style="margin: 0;">🛡️ ตำแหน่ง / เลน / กลุ่มย่อย:</label>
+                <button id="addGroupBtn" class="join-room-tab-btn" style="background: #0284c7; padding: 2px 8px;">+ เพิ่มเลน</button>
             </div>
-            <button id="saveNewCategoryBtn" class="btn primary-glow">💾 บันทึกหมวดหมู่ใหม่</button>
+
+            <div id="groupsEditorContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-height: 200px; overflow-y: auto; text-align: left;">
+                <!-- ช่องกรอกเลนและรายชื่อจะถูกสร้างด้วย JS -->
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+                <button id="saveCategoryBtn" class="btn primary-glow" style="flex: 2;">💾 บันทึกหมวดหมู่</button>
+                <button id="deleteCategoryBtn" class="btn danger" style="flex: 1; margin-top: 0; display: none;">🗑️ ลบหมวด</button>
+            </div>
             <button id="closeCategoryManagerBtn" class="btn secondary-btn">🔙 กลับหน้าหลัก</button>
         </div>
 
@@ -73,9 +93,7 @@
             </div>
             <div class="input-group" style="text-align: left;">
                 <label class="form-label">🛡️ หมวดหมู่เกม:</label>
-                <select id="categorySelect" class="category-select">
-                    <!-- โหลดจาก script.js และ Firebase -->
-                </select>
+                <select id="categorySelect" class="category-select"></select>
             </div>
             <div class="input-group" style="text-align: left;">
                 <label class="form-label" id="roundOrTimeLabel">🔄 จำนวนรอบการพูด:</label>
@@ -97,9 +115,7 @@
                         <option value="whoami">❓ ฉันคือใคร</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
-                        <select id="lobbyCategorySelect" class="category-select" style="flex: 2;">
-                            <!-- โหลดหมวดหมู่ -->
-                        </select>
+                        <select id="lobbyCategorySelect" class="category-select" style="flex: 2;"></select>
                         <input type="number" id="lobbySettingValueInput" value="2" min="1" max="99" class="category-select" style="flex: 1; text-align: center;">
                     </div>
                 </div>
