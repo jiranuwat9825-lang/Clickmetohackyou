@@ -36,7 +36,7 @@
         </div>
 
         <!-- หน้าต่างจัดการ/เพิ่ม/แก้ไขหมวดหมู่ -->
-        <div id="categoryManagerModal" class="box" style="display: none; max-height: 85vh; overflow-y: auto;">
+        <div id="categoryManagerModal" class="box" style="display: none;">
             <h3 class="room-title">⚙️ จัดการหมวดหมู่เกม</h3>
             
             <div class="input-group" style="text-align: left;">
@@ -60,14 +60,14 @@
                 </select>
             </div>
 
-            <hr style="border: 0.5px solid rgba(56, 189, 248, 0.2); margin: 8px 0;">
+            <hr style="border: 0.5px solid rgba(56, 189, 248, 0.2); margin: 6px 0;">
 
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label class="form-label" style="margin: 0;">🛡️ ตำแหน่ง / เลน / กลุ่มย่อย:</label>
-                <button id="addGroupBtn" class="join-room-tab-btn" style="background: #0284c7; padding: 2px 8px;">+ เพิ่มเลน</button>
+                <button id="addGroupBtn" class="join-room-tab-btn" style="background: #0284c7; padding: 3px 10px;">+ เพิ่มเลน</button>
             </div>
 
-            <div id="groupsEditorContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-height: 200px; overflow-y: auto; text-align: left;">
+            <div id="groupsEditorContainer" class="groups-editor-scroll">
                 <!-- ช่องกรอกเลนและรายชื่อจะถูกสร้างด้วย JS -->
             </div>
 
@@ -75,7 +75,7 @@
                 <button id="saveCategoryBtn" class="btn primary-glow" style="flex: 2;">💾 บันทึกหมวดหมู่</button>
                 <button id="deleteCategoryBtn" class="btn danger" style="flex: 1; margin-top: 0; display: none;">🗑️ ลบหมวด</button>
             </div>
-            <button id="closeCategoryManagerBtn" class="btn secondary-btn">🔙 กลับหน้าหลัก</button>
+            <button id="closeCategoryManagerBtn" class="btn secondary-btn" style="margin-top: 6px;">🔙 กลับหน้าหลัก</button>
         </div>
 
         <!-- หน้าต่างตั้งค่าสร้างห้องใหม่ -->
