@@ -1,5 +1,5 @@
 
-// Party Game Hub v2 — Firebase Realtime Database
+// Party Game Hub V3 — Firebase Realtime Database
 const firebaseConfig = {
     apiKey: "AIzaSyC3IuOtFTc200JcUmpVe1GEv13nCj1EM8",
     authDomain: "xo-game-e5fdd.firebaseapp.com",
@@ -14,7 +14,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const categoriesData = {
+const builtinCategories = {
     "rov": {
         name: "ROV",
         groups: {
@@ -40,11 +40,48 @@ const categoriesData = {
             "เครื่องใช้ไฟฟ้าและไอที": ["โทรศัพท์", "คอมพิวเตอร์", "ทีวี", "ตู้เย็น", "พัดลม", "ไมโครเวฟ", "แอร์", "หูฟัง", "เมาส์", "คีย์บอร์ด", "พาวเวอร์แบงค์", "กล้อง", "เครื่องซักผ้า", "เตาอบ", "ลำโพง", "เครื่องดูดฝุ่น"],
             "ของใช้ในบ้านและห้องน้ำ": ["ไม้กวาด", "ถังขยะ", "กระจก", "หมอน", "ผ้าห่ม", "ไม้แขวนเสื้อ", "แชมพู", "สบู่", "ยาสีฟัน", "แปรงสีฟัน", "ผ้าเช็ดตัว", "ขันน้ำ", "กรรไกรตัดเล็บ", "ไดร์เป่าผม", "หวี", "กระดาษทิชชู่"],
             "เครื่องเขียนและอุปกรณ์": ["ปากกา", "ดินสอ", "ยางลบ", "ไม้บรรทัด", "สมุด", "กรรไกร", "กาว", "สีเทียน", "สีน้ำ", "ดินน้ำมัน", "กระดาษ A4", "แฟ้มเอกสาร", "เทปใส", "คัตเตอร์", "พู่กัน", "สมุดโน้ต"],
-            "เครื่องครัวและภาชนะ": ["จาน", "ชาม", "ช้อน", "ส้อม", "แก้วน้ำ", "หม้อ", "กระทะ", "มีด", "เขียง", "ตะหลิว", "ทัพพี", "กาน้ำร้อน", "กล่องข้าว", "ขวดน้ำ", "ตะเกียบ", "เครื่องปั่น"]
+            "เครื่องครัวและภาชนะ": ["จาน", "ชาม", "ช้อน", "ส้อม", "แก้วน้ำ", "หม้อ", "กระทะ", "มีด", "เขียง", "ตะหลิว", "ทัพพี", "กาน้ำร้อน", "กล่องข้าว", "ขวดน้ำ", "ตะเกียบ", "เครื่องปั่น"],
+            "เสื้อผ้าและเครื่องแต่งกาย": ["เสื้อยืด", "เสื้อเชิ้ต", "เสื้อกันหนาว", "เสื้อฮู้ด", "กางเกงยีนส์", "กางเกงขาสั้น", "กระโปรง", "ชุดนอน", "ชุดว่ายน้ำ", "รองเท้าผ้าใบ", "รองเท้าแตะ", "รองเท้าบูท", "ถุงเท้า", "หมวก", "แว่นกันแดด", "นาฬิกาข้อมือ", "เข็มขัด", "กระเป๋าสะพาย", "กระเป๋าเป้", "ผ้าพันคอ", "ถุงมือ", "เสื้อสูท", "เสื้อโปโล", "เสื้อกันฝน"],
+            "อาหารและเครื่องดื่ม": ["ข้าวผัด", "ข้าวมันไก่", "ก๋วยเตี๋ยว", "ต้มยำกุ้ง", "ส้มตำ", "ผัดไทย", "พิซซ่า", "แฮมเบอร์เกอร์", "เฟรนช์ฟรายส์", "ไอศกรีม", "เค้ก", "โดนัท", "คุกกี้", "ขนมปัง", "ข้าวเหนียวมะม่วง", "ชาเย็น", "กาแฟ", "นม", "น้ำผลไม้", "น้ำอัดลม", "บะหมี่กึ่งสำเร็จรูป", "ซูชิ", "แพนเค้ก", "วาฟเฟิล", "น้ำผึ้ง", "ช็อกโกแลต", "ขนมครก", "ลูกอม", "ป๊อปคอร์น", "โยเกิร์ต"],
+            "ยานพาหนะและการเดินทาง": ["รถยนต์", "รถจักรยานยนต์", "จักรยาน", "รถบัส", "รถตู้", "รถไฟ", "รถไฟฟ้า", "แท็กซี่", "รถตุ๊กตุ๊ก", "เครื่องบิน", "เฮลิคอปเตอร์", "เรือ", "เรือดำน้ำ", "สเก็ตบอร์ด", "สกูตเตอร์", "รถบรรทุก", "รถพยาบาล", "รถดับเพลิง", "แผนที่", "กระเป๋าเดินทาง", "พาสปอร์ต", "ตั๋วรถ", "เข็มทิศ", "หมวกกันน็อก"],
+            "กีฬาและงานอดิเรก": ["ลูกฟุตบอล", "ลูกบาสเกตบอล", "ลูกแบดมินตัน", "ไม้เทนนิส", "ลูกวอลเลย์บอล", "เชือกกระโดด", "ดัมเบล", "เสื่อโยคะ", "จักรยานออกกำลังกาย", "กีตาร์", "เปียโน", "กลอง", "ไวโอลิน", "ไมโครโฟน", "บอร์ดเกม", "ไพ่", "ตัวต่อเลโก้", "จิ๊กซอว์", "ตุ๊กตา", "รถบังคับ", "หนังสือ", "การ์ตูน", "ลูกข่าง", "เกมคอนโซล", "ว่าว", "เบ็ดตกปลา"],
+            "สัตว์และธรรมชาติ": ["แมว", "สุนัข", "กระต่าย", "นกแก้ว", "ปลาทอง", "เต่า", "กบ", "ช้าง", "ม้า", "สิงโต", "เสือ", "ยีราฟ", "ลิง", "งู", "ผีเสื้อ", "ผึ้ง", "มด", "แมงมุม", "ต้นไม้", "ดอกกุหลาบ", "ดอกทานตะวัน", "กระบองเพชร", "ภูเขา", "น้ำตก", "ทะเล", "แม่น้ำ", "เมฆ", "สายรุ้ง", "ดวงอาทิตย์", "ดวงจันทร์"],
+            "อุปกรณ์และสิ่งของรอบตัว": ["ร่ม", "กุญแจ", "แม่กุญแจ", "ไฟฉาย", "นาฬิกาปลุก", "เทียน", "ไฟแช็ก", "ถ่านไฟฉาย", "เชือก", "กล่องพัสดุ", "ถุงพลาสติก", "ถุงผ้า", "ตะกร้า", "กล่องเครื่องมือ", "ค้อน", "ไขควง", "ตลับเมตร", "บันได", "ไม้ถูพื้น", "สายชาร์จ", "ปลั๊กพ่วง", "รีโมต", "แบตเตอรี่", "เครื่องคิดเลข", "เครื่องพิมพ์", "สติกเกอร์", "ป้ายชื่อ", "พวงกุญแจ", "กระปุกออมสิน", "หน้ากากอนามัย"]
         }
     }
 };
 
+// หมวดที่จัดการเก็บในเครื่องผู้ใช้ และจะถูกแนบลงห้องเมื่อสร้างห้อง
+const CATEGORY_STORAGE_KEY = 'party_game_categories_v3';
+const MODE_IDS = ['spyfall','whoami_time','whoami_rounds'];
+function defaultLibrary() {
+  const library = JSON.parse(JSON.stringify(builtinCategories));
+  Object.values(library).forEach(c => c.enabledModes = [...MODE_IDS]);
+  return library;
+}
+function loadCategoryLibrary() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CATEGORY_STORAGE_KEY));
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return defaultLibrary();
+    const valid = Object.entries(saved).filter(([key,cat]) =>
+      /^[a-zA-Z0-9_-]{1,50}$/.test(key) && cat &&
+      typeof cat.name === 'string' && cat.groups && typeof cat.groups === 'object' &&
+      Array.isArray(cat.enabledModes));
+    if (valid.length <= 100) return Object.fromEntries(valid);
+  } catch (err) { console.warn('โหลดหมวดที่บันทึกไม่ได้',err); }
+  return defaultLibrary();
+}
+let categoriesData = loadCategoryLibrary();
+function saveCategoryLibrary() {
+  localStorage.setItem(CATEGORY_STORAGE_KEY,JSON.stringify(categoriesData));
+}
+function getCurrentCategoryPack(room = roomState) {
+  return room?.categoryPack || categoriesData[room?.category] || builtinCategories[room?.category] || builtinCategories.rov;
+}
+function availableModes(cat) { return Array.isArray(cat?.enabledModes) ? cat.enabledModes : MODE_IDS; }
+function categoryWords(cat) {
+  return [...new Set(Object.values(cat?.groups || {}).flat().filter(v => typeof v === 'string' && v.trim()))];
+}
 
 // -------------------------------------------------------------------------
 // ตั้งค่าและตัวช่วยทั่วไป
@@ -54,9 +91,9 @@ const CLEANUP_INTERVAL_MS = 30 * 1000;
 const ACTIVITY_THROTTLE_MS = 45 * 1000;
 const $ = (id) => document.getElementById(id);
 const ui = Object.fromEntries([
-  'roomSelection','createRoomModal','roomContent','lobbyArea','gameArea','whoAmIArea','voteArea',
+  'roomSelection','createRoomModal','categoryManager','roomContent','lobbyArea','gameArea','whoAmIArea','voteArea',
   'nameInput','showCreateModalBtn','backToHomeBtn','newRoomInput','gameModeSelect','categorySelect',
-  'settingValueInput','roundOrTimeLabel','confirmCreateBtn','activeRoomsList','roomTitle','roomCode',
+  'settingValueInput','roundOrTimeLabel','settingHint','settingMinusBtn','settingPlusBtn','setupDetails','modeCardList','categoryCardGrid','categoryPickerHint','openManagerBtn','manageFromSetupBtn','confirmCreateBtn','activeRoomsList','roomTitle','roomCode',
   'roomStatusPill','roomCategoryBadge','lobbyHostName','lobbyPlayerCount','playerList','startBtn',
   'waitText','closeRoomBtn','headerLeaveBtn','copyRoomBtn','heroName','heroGrid','heroGroupTitle',
   'roundIndicator','currentSpeakerBox','endTurnBtn','fullTurnOrderContainer','hostControls','skipToVoteBtn',
@@ -65,12 +102,12 @@ const ui = Object.fromEntries([
   'myGuessSearch','searchResultsList','selectedGuessText','submitMyGuessBtn','guessControlsDiv',
   'guessStatusText','whoAmIHostControls','whoAmISkipBtn','voteAreaTitle','voteList','voteResult',
   'scoreBoard','scoreListBody','hostPostVoteControls','nextRoundBtn','backToLobbyBtn','voteInstruction',
-  'toastStack','confirmOverlay','confirmTitle','confirmMessage','confirmCancelBtn','confirmOkBtn'
+  'managerCategoryList','managerCategoryCount','newCategoryBtn','resetCategoriesBtn','categoryEditor','managerEmpty','managerCategoryName','managerModeOptions','managerGroups','addGroupBtn','saveCategoryBtn','deleteCategoryBtn','backFromManagerBtn','toastStack','confirmOverlay','confirmTitle','confirmMessage','confirmCancelBtn','confirmOkBtn'
 ].map(id => [id, $(id)]));
 const serverTimestamp = () => firebase.database.ServerValue.TIMESTAMP;
 const now = () => Date.now() + serverOffset;
 const getRoomRef = () => roomId ? db.ref(`rooms/${roomId}`) : null;
-const getAllItems = (cat) => [...new Set(Object.values((categoriesData[cat] || categoriesData.rov).groups).flat())];
+const getAllItems = (cat, pack = null) => categoryWords(pack || categoriesData[cat] || builtinCategories[cat] || builtinCategories.rov);
 const escapeHTML = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gameModeName = mode => ({spyfall:'Spyfall · จับสายลับ',whoami_time:'ฉันคือใคร · จับเวลา',whoami_rounds:'ฉันคือใคร · นับรอบ'}[mode] || 'Spyfall · จับสายลับ');
 const randomItem = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -84,7 +121,7 @@ function shuffle(items) {
 }
 function setVisible(el, visible) { if (el) el.hidden = !visible; }
 function showView(view) {
-  for (const id of ['roomSelection','createRoomModal','roomContent']) setVisible(ui[id], id === view);
+  for (const id of ['roomSelection','createRoomModal','categoryManager','roomContent']) setVisible(ui[id], id === view);
 }
 function toast(message, type = 'info') {
   const node = document.createElement('div');
@@ -152,6 +189,11 @@ let autoFinalizing = false;
 let isLeaving = false;
 let latestRoomList = {};
 ui.nameInput.value = myName;
+ui.nameInput.addEventListener('input',() => {
+  const name = ui.nameInput.value.trim();
+  localStorage.setItem('rov_spy_myname',name);
+  myName = name;
+});
 db.ref('.info/serverTimeOffset').on('value',s => { serverOffset = Number(s.val()) || 0; });
 
 function rememberName() {
@@ -184,16 +226,14 @@ async function rejoinIfConnected() {
     const snap = await ref.once('value');
     const room = snap.val();
     if (!room) { if (id === roomId) resetToHome('ห้องเดิมไม่อยู่แล้ว'); return; }
+    if (stale(room)) { await tryDeleteInactive(id); if (id === roomId) resetToHome('ห้องหมดอายุจากการไม่มีความเคลื่อนไหว 10 นาที'); return; }
     if (id !== roomId) return;
-    // เกมที่เริ่มแล้วอนุญาตเฉพาะผู้เล่นเดิมที่ยังมีบทบาทกลับเข้ามา
     if (room.status !== 'lobby' && !room.roles?.[myId]) {
       resetToHome('ไม่สามารถกลับเข้าห้องที่เริ่มเกมแล้วได้'); return;
     }
     await registerDisconnect(ref);
     if (id !== roomId) return;
     await ref.child(`players/${myId}`).set({name:myName || 'ผู้เล่น'});
-    // การกลับมาเล่นถือเป็นกิจกรรม ไม่ใช่ background heartbeat
-    await ref.child('lastActivityAt').set(serverTimestamp());
     if (id === roomId && !syncRef) subscribeRoom();
   } catch(err) { gameError(err); }
 }
@@ -202,7 +242,7 @@ db.ref('.info/connected').on('value', snap => {
 });
 
 // -------------------------------------------------------------------------
-// เก็บ lastActivityAt เฉพาะการกระทำของคน / เกม ไม่ใช่การอ่านข้อมูลหรือการนับเวลา
+// การจัดการความเคลื่อนไหวและลบห้องไม่มีการใช้งาน
 // -------------------------------------------------------------------------
 function touchActivity() {
   if (!roomId || isLeaving) return;
@@ -219,12 +259,11 @@ function stale(room) {
 async function tryDeleteInactive(id) {
   const ref = db.ref(`rooms/${id}`);
   try {
-    // Transaction ช่วยป้องกันการลบเมื่อมีคนเพิ่งทำกิจกรรมพร้อมกัน
     await ref.transaction(room => {
       if (!room) return;
       if (stale(room)) return null;
       if (!room.lastActivityAt && !room.createdAt) {
-        room.lastActivityAt = serverTimestamp(); // migrate ห้องจากเวอร์ชันเก่า
+        room.lastActivityAt = serverTimestamp();
         return room;
       }
     }, undefined, false);
@@ -275,19 +314,215 @@ function renderRooms(rooms) {
 }
 
 // -------------------------------------------------------------------------
-// สร้างห้อง เข้าห้อง ออกห้อง
+// หน้าเลือกโหมดและการตั้งค่าห้อง
 // -------------------------------------------------------------------------
+function updateSetupState() {
+  const mode = ui.gameModeSelect.value;
+  setVisible(ui.setupDetails,MODE_IDS.includes(mode));
+  ui.modeCardList.querySelectorAll('[data-mode]').forEach(btn => {
+    const chosen = btn.dataset.mode === mode;
+    btn.classList.toggle('active',chosen);
+    btn.setAttribute('aria-pressed',String(chosen));
+  });
+  if (mode === 'whoami_time') {
+    ui.roundOrTimeLabel.textContent = 'เวลาเล่น (นาที)';
+    ui.settingHint.textContent = 'นับเวลาจากเซิร์ฟเวอร์ เมื่อหมดเวลาจะสรุปคะแนน';
+  } else {
+    ui.roundOrTimeLabel.textContent = 'จำนวนรอบพูด';
+    ui.settingHint.textContent = 'ทุกคนจะได้พูดหรือถามคนละหนึ่งครั้งต่อรอบ';
+  }
+  renderCategoryPicker();
+}
+function renderCategoryPicker() {
+  const mode = ui.gameModeSelect.value;
+  const choices = Object.entries(categoriesData).filter(([,cat]) => availableModes(cat).includes(mode));
+  if (!choices.some(([key]) => key === ui.categorySelect.value)) ui.categorySelect.value = '';
+  ui.categoryCardGrid.replaceChildren();
+  choices.forEach(([key,cat]) => {
+    const active = ui.categorySelect.value === key;
+    const card = document.createElement('button');
+    card.type = 'button'; card.className = `category-card ${active ? 'active' : ''}`;
+    const info = document.createElement('span');
+    const title = document.createElement('strong'); title.textContent = cat.name;
+    const detail = document.createElement('small'); detail.textContent = `${categoryWords(cat).length} คำ · ${Object.keys(cat.groups).length} กลุ่ม`;
+    info.append(title,detail);
+    const tick = document.createElement('span'); tick.className = 'category-check'; tick.textContent = '✓';
+    card.append(info,tick);
+    card.addEventListener('click',() => { ui.categorySelect.value = key; renderCategoryPicker(); });
+    ui.categoryCardGrid.append(card);
+  });
+  if (!choices.length) ui.categoryCardGrid.innerHTML = '<div class="category-empty">ยังไม่มีหมวดที่ใช้กับโหมดนี้ได้ กด “จัดการหมวดหมู่” เพื่อสร้างหรือเปิดใช้งาน</div>';
+  ui.categoryPickerHint.textContent = choices.length ? 'เลือกหมวดที่อยากใช้หนึ่งหมวด · สามารถปรับแต่งคำในตัวจัดการหมวดได้' : '';
+  ui.confirmCreateBtn.disabled = !MODE_IDS.includes(mode) || !ui.categorySelect.value;
+}
+ui.modeCardList.addEventListener('click',e => {
+  const button = e.target.closest('[data-mode]');
+  if (!button) return;
+  const changed = ui.gameModeSelect.value !== button.dataset.mode;
+  ui.gameModeSelect.value = button.dataset.mode;
+  if (changed) {
+    ui.categorySelect.value = '';
+    ui.settingValueInput.value = button.dataset.mode === 'whoami_time' ? '3' : '2';
+  }
+  updateSetupState();
+});
+function setupRoomForm() {
+  ui.gameModeSelect.value = '';
+  ui.categorySelect.value = '';
+  ui.settingValueInput.value = '2';
+  updateSetupState();
+}
+ui.settingMinusBtn.addEventListener('click',() => ui.settingValueInput.value = Math.max(1,Number(ui.settingValueInput.value || 2) - 1));
+ui.settingPlusBtn.addEventListener('click',() => ui.settingValueInput.value = Math.min(99,Number(ui.settingValueInput.value || 2) + 1));
 ui.showCreateModalBtn.addEventListener('click',() => {
   if (!rememberName()) return;
+  setupRoomForm();
   showView('createRoomModal');
   ui.newRoomInput.focus();
 });
 ui.backToHomeBtn.addEventListener('click',() => showView('roomSelection'));
-ui.gameModeSelect.addEventListener('change',() => {
-  const timed = ui.gameModeSelect.value === 'whoami_time';
-  ui.roundOrTimeLabel.textContent = timed ? 'ระยะเวลา (นาที)' : 'จำนวนรอบพูด';
-  ui.settingValueInput.value = timed ? '3' : '2';
+
+// -------------------------------------------------------------------------
+// Content Studio: จัดการหมวด กลุ่มย่อย และคำ
+// -------------------------------------------------------------------------
+let managerReturnView = 'roomSelection';
+let managerKey = null;
+let managerDraft = null;
+let managerIsNew = false;
+function openCategoryManager(from) {
+  managerReturnView = from;
+  showView('categoryManager');
+  if (!managerDraft) {
+    const first = Object.keys(categoriesData)[0];
+    if (first) chooseManagerCategory(first);
+  }
+  renderManagerList();
+}
+ui.openManagerBtn.addEventListener('click',() => openCategoryManager('roomSelection'));
+ui.manageFromSetupBtn.addEventListener('click',() => openCategoryManager('createRoomModal'));
+ui.backFromManagerBtn.addEventListener('click',() => {
+  showView(managerReturnView);
+  if (managerReturnView === 'createRoomModal') updateSetupState();
 });
+function parseWords(value) {
+  const seen = new Set();
+  return String(value).split(/[\n,，]+/).map(w => w.trim()).filter(w => {
+    const code = w.toLocaleLowerCase();
+    if (!w || seen.has(code)) return false;
+    seen.add(code); return true;
+  });
+}
+function renderManagerList() {
+  ui.managerCategoryList.replaceChildren();
+  const entries = Object.entries(categoriesData);
+  ui.managerCategoryCount.textContent = `${entries.length} หมวด`;
+  entries.forEach(([key,cat]) => {
+    const button = document.createElement('button'); button.type='button';
+    button.className = `manager-item ${managerKey === key && !managerIsNew ? 'active' : ''}`;
+    button.textContent = cat.name;
+    const sub = document.createElement('small'); sub.textContent = `${categoryWords(cat).length} คำ · ${availableModes(cat).length} โหมด`;
+    button.append(sub);
+    button.addEventListener('click',() => chooseManagerCategory(key));
+    ui.managerCategoryList.append(button);
+  });
+}
+function chooseManagerCategory(key) {
+  if (!categoriesData[key]) return;
+  managerKey = key; managerIsNew = false;
+  const category = JSON.parse(JSON.stringify(categoriesData[key]));
+  managerDraft = {name:category.name,enabledModes:availableModes(category),groups:Object.entries(category.groups).map(([name,words]) => ({name,words:[...words]}))};
+  renderManagerEditor(); renderManagerList();
+}
+function renderManagerEditor() {
+  setVisible(ui.categoryEditor,!!managerDraft);
+  setVisible(ui.managerEmpty,!managerDraft);
+  if (!managerDraft) return;
+  ui.managerCategoryName.value = managerDraft.name;
+  ui.managerModeOptions.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = managerDraft.enabledModes.includes(input.value));
+  ui.deleteCategoryBtn.disabled = managerIsNew;
+  renderManagerGroups();
+}
+ui.managerCategoryName.addEventListener('input',() => { if (managerDraft) managerDraft.name = ui.managerCategoryName.value; });
+ui.managerModeOptions.addEventListener('change',() => {
+  if (!managerDraft) return;
+  managerDraft.enabledModes = [...ui.managerModeOptions.querySelectorAll('input:checked')].map(el => el.value);
+});
+function renderManagerGroups() {
+  ui.managerGroups.replaceChildren();
+  managerDraft.groups.forEach((group,index) => {
+    const section = document.createElement('section'); section.className='group-editor';
+    const row = document.createElement('div'); row.className='group-editor-top';
+    const name = document.createElement('input'); name.type='text'; name.maxLength=45; name.value=group.name; name.placeholder='ชื่อกลุ่มย่อย';
+    name.addEventListener('input',() => {group.name=name.value;});
+    const remove = document.createElement('button'); remove.type='button'; remove.textContent='ลบกลุ่ม';
+    remove.addEventListener('click',() => {managerDraft.groups.splice(index,1);renderManagerGroups();});
+    row.append(name,remove);
+    const words = document.createElement('textarea'); words.rows=5; words.placeholder='พิมพ์คำละ 1 บรรทัด เช่น\nหมอน\nโต๊ะ\nเก้าอี้'; words.value=group.words.join('\n');
+    const count = document.createElement('div'); count.className='group-count'; count.textContent=`${group.words.length} คำ`;
+    words.addEventListener('input',() => {group.words=parseWords(words.value);count.textContent=`${group.words.length} คำ`;});
+    section.append(row,words,count); ui.managerGroups.append(section);
+  });
+}
+ui.addGroupBtn.addEventListener('click',() => {
+  if (!managerDraft) return;
+  if (managerDraft.groups.length >= 20) {toast('สร้างได้ไม่เกิน 20 กลุ่มย่อยต่อหมวด','error');return;}
+  managerDraft.groups.push({name:`กลุ่ม ${managerDraft.groups.length+1}`,words:[]});
+  renderManagerGroups(); ui.managerGroups.lastElementChild?.querySelector('input')?.focus();
+});
+ui.newCategoryBtn.addEventListener('click',() => {
+  managerKey = null; managerIsNew = true;
+  managerDraft = {name:'',enabledModes:[...MODE_IDS],groups:[{name:'กลุ่ม 1',words:[]}]};
+  renderManagerEditor();renderManagerList();ui.managerCategoryName.focus();
+});
+ui.saveCategoryBtn.addEventListener('click',() => {
+  if (!managerDraft) return;
+  const name = managerDraft.name.trim();
+  if (name.length < 2 || name.length > 40) {toast('ชื่อหมวดต้องยาว 2–40 ตัวอักษร','error');return;}
+  if (!managerDraft.enabledModes.length) {toast('เลือกให้หมวดนี้ใช้กับอย่างน้อย 1 โหมด','error');return;}
+  const groups = {};
+  const used = new Set();
+  for (const group of managerDraft.groups) {
+    const groupName = group.name.trim();
+    if (!groupName || used.has(groupName.toLocaleLowerCase())) {toast('ตั้งชื่อกลุ่มย่อยไม่ซ้ำกันและห้ามเว้นว่าง','error');return;}
+    used.add(groupName.toLocaleLowerCase());
+    if (group.words.length > 150 || group.words.some(word => word.length > 60)) {toast('กลุ่มหนึ่งมีได้ไม่เกิน 150 คำ และคำละไม่เกิน 60 ตัวอักษร','error');return;}
+    if (group.words.length) groups[groupName] = group.words;
+  }
+  if (!Object.keys(groups).length) {toast('เพิ่มคำอย่างน้อยหนึ่งคำก่อนบันทึก','error');return;}
+  if (managerDraft.enabledModes.includes('spyfall') && !Object.values(groups).some(words => words.length >= 2)) {
+    toast('Spyfall ต้องมีกลุ่มย่อยที่มีคำต่างกันอย่างน้อย 2 คำ','error');return;
+  }
+  if (managerIsNew && Object.keys(categoriesData).length >= 100) {toast('มีหมวดได้ไม่เกิน 100 หมวด','error');return;}
+  const key = managerIsNew ? `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}` : managerKey;
+  try {
+    categoriesData[key] = {name,enabledModes:[...managerDraft.enabledModes],groups};
+    saveCategoryLibrary();
+    managerKey = key; managerIsNew = false;
+    chooseManagerCategory(key); renderCategoryPicker();
+    toast('บันทึกหมวดคำเรียบร้อยแล้ว','success');
+  } catch(err) {gameError(err);}
+});
+ui.deleteCategoryBtn.addEventListener('click',async () => {
+  if (!managerKey || !categoriesData[managerKey]) return;
+  const name = categoriesData[managerKey].name;
+  if (!await askConfirm('ลบหมวดหมู่นี้?',`หมวด “${name}” และคำทั้งหมดในหมวดจะถูกลบจากเบราว์เซอร์นี้`,'ลบหมวด')) return;
+  delete categoriesData[managerKey];
+  saveCategoryLibrary(); managerKey = null; managerDraft = null; managerIsNew = false;
+  const first = Object.keys(categoriesData)[0];
+  if (first) chooseManagerCategory(first); else {renderManagerEditor();renderManagerList();}
+  renderCategoryPicker();toast('ลบหมวดหมู่แล้ว','success');
+});
+ui.resetCategoriesBtn.addEventListener('click',async () => {
+  if (!await askConfirm('คืนค่าหมวดเริ่มต้น?', 'หมวดและคำที่ปรับแต่งไว้ในเบราว์เซอร์นี้จะถูกแทนที่ด้วยชุดเริ่มต้นทั้งหมด','คืนค่าเริ่มต้น')) return;
+  categoriesData = defaultLibrary(); saveCategoryLibrary();
+  managerKey = null;managerDraft=null;managerIsNew=false;
+  chooseManagerCategory(Object.keys(categoriesData)[0]);renderCategoryPicker();
+  toast('คืนค่าหมวดมาตรฐานแล้ว','success');
+});
+
+// -------------------------------------------------------------------------
+// สร้างห้อง เข้าห้อง ออกห้อง
+// -------------------------------------------------------------------------
 ui.confirmCreateBtn.addEventListener('click',async () => {
   const id = ui.newRoomInput.value.trim();
   if (!/^[\p{L}\p{N}_-]{1,20}$/u.test(id) || /[.#$\[\]/]/.test(id)) {
@@ -297,14 +532,24 @@ ui.confirmCreateBtn.addEventListener('click',async () => {
   if (!Number.isInteger(rounds) || rounds < 1 || rounds > 99) {
     toast('กรุณากำหนดจำนวนรอบ/นาที ระหว่าง 1 ถึง 99','error'); return;
   }
+  const selectedMode = ui.gameModeSelect.value;
+  const selectedKey = ui.categorySelect.value;
+  const category = categoriesData[selectedKey];
+  if (!MODE_IDS.includes(selectedMode) || !category || !availableModes(category).includes(selectedMode)) {
+    toast('เลือกโหมดและหมวดคำที่รองรับโหมดนี้ก่อน','error'); return;
+  }
+  if (selectedMode === 'spyfall' && !Object.values(category.groups).some(words => new Set(words).size >= 2)) {
+    toast('หมวด Spyfall ต้องมีกลุ่มย่อยที่มีคำอย่างน้อย 2 คำ','error'); return;
+  }
+  if (!categoryWords(category).length) { toast('หมวดนี้ยังไม่มีคำให้เล่น','error'); return; }
   ui.confirmCreateBtn.disabled = true;
   const ref = db.ref(`rooms/${id}`);
   try {
     await registerDisconnect(ref);
     const result = await ref.transaction(current => {
-      if (current) return; // ห้ามสร้างห้องชื่อซ้ำ แม้จะกดพร้อมกัน
+      if (current) return;
       return {
-        hostId:myId,gameMode:ui.gameModeSelect.value,category:ui.categorySelect.value,
+        hostId:myId,gameMode:selectedMode,category:selectedKey,categoryPack:JSON.parse(JSON.stringify(category)),
         settingValue:rounds,status:'lobby',players:{[myId]:{name:myName}},scores:{[myId]:0},
         createdAt:serverTimestamp(),lastActivityAt:serverTimestamp(),gamesPlayed:0
       };
@@ -417,7 +662,7 @@ function renderRoom(state) {
   const ids = Object.keys(players);
   const status = state.status || 'lobby';
   ui.roomStatusPill.textContent = ({lobby:'● รอเริ่ม',playing:'● กำลังเล่น',voting:'● กำลังโหวต',results:'● สรุปผล'})[status] || status;
-  ui.roomCategoryBadge.textContent = `${gameModeName(state.gameMode)}  ·  ${(categoriesData[state.category] || categoriesData.rov).name}  ·  ${state.settingValue || 2} ${state.gameMode === 'whoami_time' ? 'นาที' : 'รอบ'}`;
+  ui.roomCategoryBadge.textContent = `${gameModeName(state.gameMode)}  ·  ${getCurrentCategoryPack(state).name}  ·  ${state.settingValue || 2} ${state.gameMode === 'whoami_time' ? 'นาที' : 'รอบ'}`;
   ui.roomCode.textContent = roomId;
   setVisible(ui.lobbyArea,status === 'lobby');
   setVisible(ui.gameArea,status === 'playing' && state.gameMode === 'spyfall');
@@ -477,7 +722,7 @@ function renderSpyfall(state) {
   const group = state.currentGroup;
   ui.heroGroupTitle.textContent = `คำในกลุ่ม: ${group || '—'}`;
   ui.heroGrid.replaceChildren();
-  const list = (categoriesData[state.category] || categoriesData.rov).groups[group] || [];
+  const list = getCurrentCategoryPack(state).groups[group] || [];
   for (const item of list) {
     const card = document.createElement('div'); card.className = 'hero-item'; card.textContent = item;
     ui.heroGrid.append(card);
@@ -582,18 +827,21 @@ ui.startBtn.addEventListener('click',async () => {
       const min = room.gameMode === 'spyfall' ? 3 : 2;
       if (ids.length < min) return;
       const order = shuffle(ids);
-      const cat = categoriesData[room.category] || categoriesData.rov;
+      const cat = getCurrentCategoryPack(room);
+      if (!cat || !cat.groups) return;
       const roles = {};
       const attempts = {};
       let group = '', spyId = null;
       if (room.gameMode === 'spyfall') {
-        group = randomItem(Object.keys(cat.groups));
-        const candidates = shuffle(cat.groups[group]);
+        const validGroups = Object.entries(cat.groups).filter(([,words]) => [...new Set(words)].length >= 2).map(([key]) => key);
+        if (!validGroups.length) return;
+        group = randomItem(validGroups);
+        const candidates = shuffle([...new Set(cat.groups[group])]);
         const spyWord = candidates[0]; const commonWord = candidates[1];
         spyId = randomItem(ids);
         ids.forEach(id => { roles[id] = id === spyId ? spyWord : commonWord; });
       } else {
-        const items = shuffle(getAllItems(room.category));
+        const items = shuffle(getAllItems(room.category,cat));
         ids.forEach((id,index) => { roles[id] = items[index % items.length]; attempts[id] = 1; });
       }
       room.roles = roles; room.attempts = attempts; room.guessedCorrectly = {};
@@ -615,7 +863,7 @@ ui.startBtn.addEventListener('click',async () => {
 });
 
 // -------------------------------------------------------------------------
-// Who Am I: คำไม่ซ้ำ และกดตอบซ้ำไม่ได้แม้หลายแท็บกดพร้อมกัน
+// Who Am I: คำไม่ซ้ำ และป้องกันตอบซ้ำ
 // -------------------------------------------------------------------------
 ui.myGuessSearch.addEventListener('input',() => {
   selectedGuess = '';
@@ -623,7 +871,7 @@ ui.myGuessSearch.addEventListener('input',() => {
   const query = ui.myGuessSearch.value.trim().toLocaleLowerCase();
   ui.searchResultsList.replaceChildren();
   if (!query || !roomState || !roomState.gameMode?.startsWith('whoami')) { setVisible(ui.searchResultsList,false); return; }
-  const matches = getAllItems(roomState.category).filter(item => item.toLocaleLowerCase().includes(query)).slice(0,12);
+  const matches = getAllItems(roomState.category,getCurrentCategoryPack(roomState)).filter(item => item.toLocaleLowerCase().includes(query)).slice(0,12);
   for (const item of matches) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'search-option'; b.textContent = item;
     b.addEventListener('click',() => { selectedGuess = item; ui.myGuessSearch.value = item; ui.selectedGuessText.textContent = `✓ เลือก ${item}`; setVisible(ui.searchResultsList,false); });
@@ -633,7 +881,7 @@ ui.myGuessSearch.addEventListener('input',() => {
 });
 ui.submitMyGuessBtn.addEventListener('click',async () => {
   if (!roomState || !roomState.gameMode?.startsWith('whoami')) return;
-  const allItems = getAllItems(roomState.category);
+  const allItems = getAllItems(roomState.category,getCurrentCategoryPack(roomState));
   const input = (selectedGuess || ui.myGuessSearch.value.trim()).toLocaleLowerCase();
   const chosen = allItems.find(item => item.toLocaleLowerCase() === input);
   if (!chosen) { toast('กรุณาเลือกคำตอบจากรายชื่อที่มี','error'); return; }
@@ -681,7 +929,7 @@ function maybeFinishWhoAmI(state) {
 }
 
 // -------------------------------------------------------------------------
-// Spyfall: โหวต, รีโหวต 1 ครั้ง, คิดคะแนนครั้งเดียวด้วย transaction
+// Spyfall: โหวตและสรุปคะแนน
 // -------------------------------------------------------------------------
 function renderVoteOrResults(state) {
   const isSpyfall = state.gameMode === 'spyfall';
