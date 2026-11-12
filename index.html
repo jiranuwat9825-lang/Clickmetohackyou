@@ -33,82 +33,31 @@
           <div class="deco-cards" aria-hidden="true"><div class="deco-card purple">?</div><div class="deco-card cyan">⌁</div><div class="deco-card gold">★</div></div>
         </div>
         <div class="home-side">
-          <div class="panel profile-panel">
-            <div class="section-heading"><div><span class="overline">PLAYER PROFILE</span><h2>ชื่อของคุณ</h2></div><span class="section-icon">👤</span></div>
-            <label for="nameInput" class="field-label">ชื่อเล่นที่เพื่อนจะเห็น</label>
-            <div class="profile-input"><span aria-hidden="true">✦</span><input type="text" id="nameInput" maxlength="15" autocomplete="nickname" placeholder="ใส่ชื่อเล่นของคุณ"></div>
-            <p class="field-helper">ระบบจะจดจำชื่อนี้ในเบราว์เซอร์ เมื่อกลับมาเล่นอีกครั้ง</p>
-          </div>
-          <div class="panel quick-create-panel">
-            <span class="overline">HOST A NEW GAME</span>
-            <h2>พร้อมเป็นเจ้าของห้องหรือยัง?</h2>
-            <p class="muted">เลือกโหมดโปรด สร้างห้อง แล้วส่งรหัสชวนเพื่อน</p>
-            <button id="showCreateModalBtn" class="btn btn-primary btn-wide create-cta" type="button"><span>＋ สร้างห้องเกมใหม่</span><span>→</span></button>
-            <button id="openManagerBtn" class="btn btn-soft btn-wide manager-entry" type="button">⚙ จัดการหมวดหมู่และคำศัพท์</button>
+          <div class="panel entry-panel">
+            <div class="section-heading"><div><span class="overline">GET STARTED</span><h2>เริ่มเล่นเลย</h2></div><span class="section-icon">🎮</span></div>
+            <label for="nameInput" class="field-label">ชื่อเล่นในเกม</label>
+            <input type="text" id="nameInput" maxlength="15" autocomplete="nickname" placeholder="เช่น นักสืบอันดับหนึ่ง">
+            <p class="field-helper">ชื่อของคุณจะแสดงให้เพื่อนในห้องเห็น</p>
+            <button id="showCreateModalBtn" class="btn btn-primary btn-wide" type="button">✦ สร้างห้องใหม่ <span>→</span></button>
           </div>
           <div class="panel rooms-panel">
             <div class="section-heading"><div><span class="overline">JOIN THE PARTY</span><h2>ห้องที่เปิดอยู่</h2></div><span class="live-pill"><i></i> LIVE</span></div>
             <div id="activeRoomsList" class="room-list"><p class="empty-message">กำลังเชื่อมต่อห้องเกม…</p></div>
-            <p class="panel-footnote">ห้องที่ไม่มีความเคลื่อนไหวเกิน 10 นาทีจะถูกลบเมื่อระบบตรวจพบ</p>
+            <p class="panel-footnote">ห้องที่ไม่มีการใช้งานเกิน 10 นาทีจะถูกล้างอัตโนมัติเมื่อระบบตรวจพบ</p>
           </div>
         </div>
       </section>
 
       <section id="createRoomModal" class="panel setup-panel" hidden>
-        <div class="section-heading"><div><span class="overline">CREATE YOUR PARTY</span><h2>ตั้งค่าห้องเกม</h2></div><span class="section-icon">🎲</span></div>
-        <p class="setup-intro muted">เริ่มจากเลือกโหมดเกม แล้วตั้งค่าหมวดคำและจำนวนรอบตามต้องการ</p>
-        <div class="setup-step"><span>01</span><strong>ชื่อห้อง</strong></div>
-        <label for="newRoomInput" class="field-label">เพื่อนจะใช้ชื่อนี้ค้นหาห้อง</label>
-        <input id="newRoomInput" type="text" maxlength="20" autocomplete="off" placeholder="เช่น friday-party">
-        <small class="field-helper">ใช้ตัวอักษร ตัวเลข - หรือ _ (1–20 ตัว)</small>
-        <div class="setup-step"><span>02</span><strong>เลือกโหมดที่ต้องการเล่น</strong></div>
-        <input type="hidden" id="gameModeSelect" value="">
-        <div class="mode-card-grid" id="modeCardList" aria-label="โหมดเกม">
-          <button type="button" class="mode-card" data-mode="spyfall" aria-pressed="false"><span class="mode-symbol">🕵️</span><span class="mode-copy"><strong>Spyfall</strong><small>สืบหาใครคือสายลับ</small></span><span class="mode-check">✓</span></button>
-          <button type="button" class="mode-card" data-mode="whoami_time" aria-pressed="false"><span class="mode-symbol">⏱️</span><span class="mode-copy"><strong>ฉันคือใคร · จับเวลา</strong><small>แข่งทายคำก่อนหมดเวลา</small></span><span class="mode-check">✓</span></button>
-          <button type="button" class="mode-card" data-mode="whoami_rounds" aria-pressed="false"><span class="mode-symbol">❓</span><span class="mode-copy"><strong>ฉันคือใคร · นับรอบ</strong><small>ผลัดกันถามตามจำนวนรอบ</small></span><span class="mode-check">✓</span></button>
+        <div class="section-heading"><div><span class="overline">CREATE YOUR PARTY</span><h2>ตั้งค่าห้องเกม</h2></div><span class="section-icon">⚙️</span></div>
+        <p class="muted">ปรับรูปแบบเกมที่ชอบ แล้วชวนเพื่อนเข้ามาเล่นด้วยกัน</p>
+        <div class="form-grid">
+          <div class="field-full"><label for="newRoomInput" class="field-label">ชื่อห้อง</label><input id="newRoomInput" type="text" maxlength="20" autocomplete="off" placeholder="เช่น friday-party"><small class="field-helper">ใช้ตัวอักษร ตัวเลข - หรือ _ เท่านั้น (1–20 ตัว)</small></div>
+          <div><label for="gameModeSelect" class="field-label">โหมดเกม</label><select id="gameModeSelect"><option value="spyfall">🕵️ Spyfall — จับสายลับ</option><option value="whoami_time">⏱️ ฉันคือใคร — จับเวลา</option><option value="whoami_rounds">❓ ฉันคือใคร — นับรอบ</option></select></div>
+          <div><label for="categorySelect" class="field-label">หมวดคำ</label><select id="categorySelect"><option value="rov">⚔️ ROV</option><option value="valorant">🎯 VALORANT</option><option value="general_items">🎒 สิ่งของทั่วไป</option></select></div>
+          <div class="field-full"><label id="roundOrTimeLabel" for="settingValueInput" class="field-label">จำนวนรอบพูด</label><input type="number" id="settingValueInput" min="1" max="99" value="2"></div>
         </div>
-        <div id="setupDetails" hidden>
-          <div class="setup-step"><span>03</span><strong>เลือกหมวดคำ</strong></div>
-          <input type="hidden" id="categorySelect" value="">
-          <div class="category-card-grid" id="categoryCardGrid"></div>
-          <p id="categoryPickerHint" class="field-helper"></p>
-          <button id="manageFromSetupBtn" type="button" class="btn btn-ghost btn-small">⚙ จัดการหมวดหมู่</button>
-          <div class="setup-step"><span>04</span><strong id="roundOrTimeLabel">จำนวนรอบพูด</strong></div>
-          <div class="stepper"><button type="button" id="settingMinusBtn" aria-label="ลดจำนวน">−</button><input type="number" id="settingValueInput" value="2" min="1" max="99"><button type="button" id="settingPlusBtn" aria-label="เพิ่มจำนวน">+</button></div>
-          <p id="settingHint" class="field-helper">จำนวนรอบที่ผู้เล่นแต่ละคนจะได้พูด</p>
-        </div>
-        <div class="button-row setup-actions"><button id="backToHomeBtn" class="btn btn-ghost" type="button">← ย้อนกลับ</button><button id="confirmCreateBtn" class="btn btn-primary" type="button" disabled>สร้างห้องและรอเพื่อน →</button></div>
-      </section>
-
-      <section id="categoryManager" class="panel manager-panel" hidden>
-        <div class="section-heading"><div><span class="overline">CONTENT STUDIO</span><h2>จัดการหมวดหมู่เกม</h2></div><span class="section-icon">📚</span></div>
-        <p class="muted manager-info">แก้ไข เพิ่ม หรือลบหมวดและคำได้อย่างอิสระ พร้อมกำหนดว่าแต่ละหมวดใช้กับเกมใดได้บ้าง</p>
-        <div class="manager-layout">
-          <aside class="manager-sidebar">
-            <div class="manager-sidebar-header"><strong>หมวดคำของฉัน</strong><span id="managerCategoryCount"></span></div>
-            <div id="managerCategoryList" class="manager-category-list"></div>
-            <button id="newCategoryBtn" type="button" class="btn btn-soft btn-wide">＋ สร้างหมวดใหม่</button>
-            <button id="resetCategoriesBtn" type="button" class="btn btn-ghost btn-wide">↺ คืนค่าหมวดมาตรฐาน</button>
-          </aside>
-          <div id="categoryEditor" class="manager-editor" hidden>
-            <label for="managerCategoryName" class="field-label">ชื่อหมวดหมู่</label>
-            <input id="managerCategoryName" type="text" maxlength="40" placeholder="เช่น อาหารและขนม">
-            <h3 class="manager-subtitle">เปิดให้เล่นกับโหมดไหนได้บ้าง?</h3>
-            <div id="managerModeOptions" class="mode-availability">
-              <label><input type="checkbox" value="spyfall"><span>🕵️ Spyfall</span></label>
-              <label><input type="checkbox" value="whoami_time"><span>⏱️ ฉันคือใคร · จับเวลา</span></label>
-              <label><input type="checkbox" value="whoami_rounds"><span>❓ ฉันคือใคร · นับรอบ</span></label>
-            </div>
-            <div class="manager-subtitle-row"><h3 class="manager-subtitle">กลุ่มย่อยและรายการคำ</h3><button id="addGroupBtn" type="button" class="btn btn-soft btn-small">＋ เพิ่มกลุ่มย่อย</button></div>
-            <p class="field-helper">แต่ละบรรทัดหรือคอมมาแทนคำหนึ่งคำ • Spyfall ต้องมีอย่างน้อย 2 คำในกลุ่มเดียวกัน</p>
-            <div id="managerGroups" class="manager-groups"></div>
-            <div class="manager-actions"><button id="saveCategoryBtn" class="btn btn-primary" type="button">✓ บันทึกหมวดหมู่</button><button id="deleteCategoryBtn" class="btn btn-danger-text" type="button">ลบหมวดหมู่นี้</button></div>
-          </div>
-          <div id="managerEmpty" class="manager-empty">เลือกหมวดด้านซ้ายเพื่อแก้ไข หรือสร้างหมวดใหม่ได้เลย ✨</div>
-        </div>
-        <p class="manager-note">หมวดที่แก้ไขบันทึกไว้เฉพาะเบราว์เซอร์นี้ เมื่อสร้างห้อง ระบบจะส่งชุดคำที่เลือกไปกับห้องให้เพื่อนเล่นได้เหมือนกัน</p>
-        <div class="button-row"><button id="backFromManagerBtn" type="button" class="btn btn-ghost">← กลับ</button></div>
+        <div class="button-row"><button id="backToHomeBtn" class="btn btn-ghost" type="button">← ย้อนกลับ</button><button id="confirmCreateBtn" class="btn btn-primary" type="button">สร้างห้องและรอเพื่อน →</button></div>
       </section>
 
       <section id="roomContent" hidden>
