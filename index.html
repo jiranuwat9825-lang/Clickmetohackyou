@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Custom Notification Toast -->
+    <div id="gameToast" class="game-toast">แจ้งเตือนระบบ</div>
+
     <div class="container">
         <!-- ตารางคะแนนสะสม -->
         <div id="scoreBoard" class="scoreboard-modern" style="display: none;">
@@ -15,13 +18,13 @@
             <div id="scoreListBody" class="score-list-body"></div>
         </div>
 
-        <div class="header-badge">🎮 PARTY GAME</div>
-        <h1>Party Game Hub</h1>
+        <div class="header-badge">🎮 PARTY GAME HUB</div>
+        <h1>Ultimate Party Game</h1>
         
         <!-- หน้าแรก: กรอกชื่อ -->
         <div id="roomSelection" class="box">
             <div class="input-group">
-                <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off">
+                <input type="text" id="nameInput" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="off" maxlength="15">
             </div>
             
             <button type="button" id="showCreateModalBtn" class="btn primary-glow">🔨 สร้างห้องใหม่</button>
@@ -38,7 +41,7 @@
         <div id="createRoomModal" class="box" style="display: none;">
             <h3 class="room-title">⚙️ ตั้งค่าห้องใหม่</h3>
             <div class="input-group">
-                <input type="text" id="newRoomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)" autocomplete="off">
+                <input type="text" id="newRoomInput" placeholder="ใส่ชื่อห้อง (เช่น room99)" autocomplete="off" maxlength="15">
             </div>
             <div class="input-group" style="text-align: left;">
                 <label class="form-label">🎮 เลือกโหมดเกม:</label>
