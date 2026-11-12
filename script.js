@@ -1,1103 +1,593 @@
-// --- ตั้งค่า Firebase ---
-const firebaseConfig = {
-    apiKey: "AIzaSyC3IuOtFTc200JcUmpVe1GEv13nCj1EM8",
-    authDomain: "xo-game-e5fdd.firebaseapp.com",
-    databaseURL: "https://xo-game-e5fdd-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "xo-game-e5fdd",
-    storageBucket: "xo-game-e5fdd.appspot.com",
-    messagingSenderId: "890496938682",
-    appId: "1:890496938682:web:c99edd29e639415ac4883",
-    measurementId: "G-4RHMNWP5ZJ"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-const categoriesData = {
-    "rov": {
-        name: "ROV",
-        groups: {
-            "แครี่ (Carry Lane)": ["Valhein", "Yorn", "Violet", "Capheny", "Hayate", "Elsu", "Laville", "Thorne", "Tel'Annas", "Eland'orr", "Fennik", "Slimz", "Moren", "Wisp", "Lindis", "Teeri", "Celica", "Erin", "Stuart"],
-            "เลนกลาง (Mid Lane)": ["Krixi", "Tulen", "Liliana", "Raz", "Lauriel", "Natalya", "Veera", "Ilumia", "Kahlii", "Mganga", "Preyta", "Jinnar", "Aleister", "Diao Chan", "Zata", "Iggy", "Dirak", "Lorion", "Bonnie", "Yue", "Dyadia", "Heino", "Evita", "Gildur", "Azzen'Ka", "Ishar"],
-            "ออฟเลน (Dark Slayer Lane)": ["Florentino", "Yena", "Ryoma", "Maloch", "Lu Bu", "Allain", "Veres", "Omen", "Airi", "Amily", "Edras", "Astrid", "Skud", "Taara", "Qi", "Richter", "Rourke", "Zuka", "Tachi", "Dextra", "Biron", "Bijan", "Yan", "Wonder Woman", "Arduin", "Mortos", "Max", "Errol", "Volkath", "Ata"],
-            "ป่า (Jungle / Assassin)": ["Nakroth", "Murad", "Butterfly", "Aoi", "Keera", "Zill", "Kriknak", "Quillen", "Enzo", "Sinestrea", "Wukong", "Paine", "Bright", "Kaine", "Zanis", "Zephys"],
-            "โรมมิ่ง / ซัพพอร์ต (Roaming)": ["Grakk", "Alice", "Thane", "Toro", "Zip", "Aya", "Arum", "Cresht", "Baldum", "Mina", "Omega", "Annette", "Helen", "Krizzix", "Rouie", "Lumburr", "Ming", "Dolia", "TeeMee", "Chaugnar", "Sephera", "Xeniel", "Ormarr", "Wiro", "Roxie"]
-        }
-    },
-    "valorant": {
-        name: "Valorant",
-        groups: {
-            "Duelist": ["Hush", "Iso", "Jett", "Neon", "Phoenix", "Raze", "Reyna", "Waylay", "Yoru"],
-            "Controller": ["Astra", "Brimstone", "Clove", "Harbor", "Miks", "Omen", "Viper"],
-            "Initiator": ["Breach", "Fade", "Gekko", "KAY/O", "Skye", "Sova", "Tejo"],
-            "Sentinel": ["Chamber", "Cypher", "Deadlock", "Killjoy", "Sage", "Veto", "Vyse"]
-        }
-    },
-    "general_items": {
-        name: "สิ่งของทั่วไป",
-        groups: {
-            "เครื่องใช้ไฟฟ้าและไอที": ["โทรศัพท์", "คอมพิวเตอร์", "ทีวี", "ตู้เย็น", "พัดลม", "ไมโครเวฟ", "แอร์", "หูฟัง", "เมาส์", "คีย์บอร์ด", "พาวเวอร์แบงค์", "กล้อง", "เครื่องซักผ้า", "เตาอบ", "ลำโพง", "เครื่องดูดฝุ่น"],
-            "ของใช้ในบ้านและห้องน้ำ": ["ไม้กวาด", "ถังขยะ", "กระจก", "หมอน", "ผ้าห่ม", "ไม้แขวนเสื้อ", "แชมพู", "สบู่", "ยาสีฟัน", "แปรงสีฟัน", "ผ้าเช็ดตัว", "ขันน้ำ", "กรรไกรตัดเล็บ", "ไดร์เป่าผม", "หวี", "กระดาษทิชชู่"],
-            "เครื่องเขียนและอุปกรณ์": ["ปากกา", "ดินสอ", "ยางลบ", "ไม้บรรทัด", "สมุด", "กรรไกร", "กาว", "สีเทียน", "สีน้ำ", "ดินน้ำมัน", "กระดาษ A4", "แฟ้มเอกสาร", "เทปใส", "คัตเตอร์", "พู่กัน", "สมุดโน้ต"],
-            "เครื่องครัวและภาชนะ": ["จาน", "ชาม", "ช้อน", "ส้อม", "แก้วน้ำ", "หม้อ", "กระทะ", "มีด", "เขียง", "ตะหลิว", "ทัพพี", "กาน้ำร้อน", "กล่องข้าว", "ขวดน้ำ", "ตะเกียบ", "เครื่องปั่น"]
-        }
-    }
-};
-
-const roomSelection = document.getElementById('roomSelection');
-const createRoomModal = document.getElementById('createRoomModal');
-const lobbyArea = document.getElementById('lobbyArea');
-const gameArea = document.getElementById('gameArea');
-const whoAmIArea = document.getElementById('whoAmIArea');
-const voteArea = document.getElementById('voteArea');
-
-const nameInput = document.getElementById('nameInput');
-const showCreateModalBtn = document.getElementById('showCreateModalBtn');
-
-const backToHomeBtn = document.getElementById('backToHomeBtn');
-const newRoomInput = document.getElementById('newRoomInput');
-const gameModeSelect = document.getElementById('gameModeSelect');
-const categorySelect = document.getElementById('categorySelect');
-const settingValueInput = document.getElementById('settingValueInput');
-const roundOrTimeLabel = document.getElementById('roundOrTimeLabel');
-const confirmCreateBtn = document.getElementById('confirmCreateBtn');
-const activeRoomsList = document.getElementById('activeRoomsList');
-
-const roomTitle = document.getElementById('roomTitle');
-const roomCategoryBadge = document.getElementById('roomCategoryBadge');
-const playerList = document.getElementById('playerList');
-const startBtn = document.getElementById('startBtn');
-const waitText = document.getElementById('waitText');
-const closeRoomBtn = document.getElementById('closeRoomBtn');
-
-const heroName = document.getElementById('heroName');
-const heroGrid = document.getElementById('heroGrid');
-const roundIndicator = document.getElementById('roundIndicator');
-const currentSpeakerBox = document.getElementById('currentSpeakerBox');
-const endTurnBtn = document.getElementById('endTurnBtn');
-const fullTurnOrderContainer = document.getElementById('fullTurnOrderContainer');
-const hostControls = document.getElementById('hostControls');
-const skipToVoteBtn = document.getElementById('skipToVoteBtn');
-
-const whoAmITimerContainer = document.getElementById('whoAmITimerContainer');
-const whoAmITimer = document.getElementById('whoAmITimer');
-const whoAmITurnBoxContainer = document.getElementById('whoAmITurnBoxContainer');
-const whoAmIRoundIndicator = document.getElementById('whoAmIRoundIndicator');
-const whoAmICurrentSpeakerBox = document.getElementById('whoAmICurrentSpeakerBox');
-const whoAmIEndTurnBtn = document.getElementById('whoAmIEndTurnBtn');
-const whoAmIFullTurnOrderContainer = document.getElementById('whoAmIFullTurnOrderContainer');
-
-const othersRolesGrid = document.getElementById('othersRolesGrid');
-const myGuessSearch = document.getElementById('myGuessSearch');
-const searchResultsList = document.getElementById('searchResultsList');
-const selectedGuessText = document.getElementById('selectedGuessText');
-const submitMyGuessBtn = document.getElementById('submitMyGuessBtn');
-const guessControlsDiv = document.getElementById('guessControlsDiv');
-const guessStatusText = document.getElementById('guessStatusText');
-const whoAmIHostControls = document.getElementById('whoAmIHostControls');
-const whoAmISkipBtn = document.getElementById('whoAmISkipBtn');
-
-const voteAreaTitle = document.getElementById('voteAreaTitle');
-const voteList = document.getElementById('voteList');
-const voteResult = document.getElementById('voteResult');
-const scoreBoard = document.getElementById('scoreBoard');
-const scoreListBody = document.getElementById('scoreListBody');
-const hostPostVoteControls = document.getElementById('hostPostVoteControls');
-const nextRoundBtn = document.getElementById('nextRoundBtn');
-const backToLobbyBtn = document.getElementById('backToLobbyBtn');
-const voteInstruction = document.getElementById('voteInstruction');
-
-let myName = '';
-let roomId = '';
-let whoAmITimerInterval = null;
-let activeTimerEndTime = null;
-let selectedSearchGuess = "";
-let isHost = false;
-let selectedVoteTarget = null;
-let selectedHeroGuess = "";
-
-let myId = localStorage.getItem('rov_spy_myid');
-if (!myId) {
-    myId = 'user_' + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem('rov_spy_myid', myId);
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Prompt', sans-serif;
 }
 
-const savedName = localStorage.getItem('rov_spy_myname');
-if (savedName) {
-    nameInput.value = savedName;
+body {
+    background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-gameModeSelect.addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val === 'whoami_time') {
-        roundOrTimeLabel.textContent = '⏱️ เวลาจำกัด (นาที):';
-        settingValueInput.value = '3';
-    } else if (val === 'whoami_rounds') {
-        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
-        settingValueInput.value = '2';
-    } else {
-        roundOrTimeLabel.textContent = '🔄 จำนวนรอบการพูด:';
-        settingValueInput.value = '2';
-    }
-});
-
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        db.goOnline();
-        if (roomId && myId) {
-            db.ref(`rooms/${roomId}`).once('value', (snap) => {
-                if (!snap.val()) {
-                    localStorage.removeItem('rov_spy_roomid');
-                    location.reload();
-                } else {
-                    db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName || savedName || "ผู้เล่น" });
-                    db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
-                }
-            });
-        }
-    }
-});
-
-const savedRoomId = localStorage.getItem('rov_spy_roomid');
-if (savedRoomId) {
-    roomId = savedRoomId;
-    myName = savedName || "ผู้เล่น";
-    
-    db.ref(`rooms/${roomId}`).once('value', (snapshot) => {
-        const roomData = snapshot.val();
-        if (roomData) {
-            roomSelection.style.display = 'none';
-            lobbyArea.style.display = 'block';
-            roomTitle.textContent = `ห้อง: ${roomId}`;
-            
-            db.ref(`rooms/${roomId}/players/${myId}`).set({ name: myName });
-            db.ref(`rooms/${roomId}/players/${myId}`).onDisconnect().remove();
-
-            initRoomSync();
-        } else {
-            localStorage.removeItem('rov_spy_roomid');
-        }
-    });
+/* Custom Toast Notification */
+.game-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
 }
 
-function getCategoryData(key) {
-    return categoriesData[key] || categoriesData['rov'];
+.game-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
 }
 
-function getAllCategoryItems(key) {
-    const cat = getCategoryData(key);
-    if (!cat || !cat.groups) return [];
-    return Object.values(cat.groups).flat();
+.container {
+    text-align: center;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 2rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
 }
 
-showCreateModalBtn.addEventListener('click', () => {
-    myName = nameInput.value.trim();
-    if (!myName) {
-        alert('กรุณากรอกชื่อเล่นของคุณก่อน!');
-        nameInput.focus();
-        return;
-    }
-    localStorage.setItem('rov_spy_myname', myName);
-    roomSelection.style.display = 'none';
-    createRoomModal.style.display = 'flex';
-});
-
-backToHomeBtn.addEventListener('click', () => {
-    createRoomModal.style.display = 'none';
-    roomSelection.style.display = 'flex';
-});
-
-db.ref('rooms').on('value', (snapshot) => {
-    const rooms = snapshot.val();
-    activeRoomsList.innerHTML = '';
-
-    if (!rooms || Object.keys(rooms).length === 0) {
-        activeRoomsList.innerHTML = `<p class="no-room-text">ยังไม่มีห้องที่เปิดอยู่ กดสร้างห้องใหม่ด้านบนได้เลย!</p>`;
-        return;
-    }
-
-    Object.keys(rooms).forEach(rId => {
-        const rData = rooms[rId];
-        const rStatus = rData.status || 'lobby';
-        const pCount = rData.players ? Object.keys(rData.players).length : 0;
-        let modeText = '🕵️ Spyfall';
-        if (rData.gameMode === 'whoami_time') modeText = '❓ ฉันใคร(เวลา)';
-        if (rData.gameMode === 'whoami_rounds') modeText = '❓ ฉันใคร(รอบ)';
-
-        const card = document.createElement('div');
-        card.className = 'room-item-card';
-
-        let statusText = '⏳ รอผู้เล่น';
-        let canJoin = true;
-
-        if (rStatus === 'playing') {
-            statusText = '🎮 กำลังเล่น';
-            canJoin = false;
-        } else if (rStatus === 'voting') {
-            statusText = '🗳️ สรุปผล';
-            canJoin = false;
-        }
-
-        if (pCount === 0) {
-            if (!rData.emptySince) {
-                db.ref(`rooms/${rId}/emptySince`).set(Date.now());
-            } else {
-                const elapsed = Date.now() - rData.emptySince;
-                const timeLeft = Math.max(0, Math.ceil((60000 - elapsed) / 1000));
-                if (timeLeft <= 0) {
-                    db.ref(`rooms/${rId}`).remove();
-                    return;
-                }
-                statusText = `⚠️ ห้องร้าง (ลบใน ${timeLeft}s)`;
-            }
-        }
-
-        card.innerHTML = `
-            <div class="room-item-info">
-                <span class="room-item-name">🏠 ห้อง: ${rId} (${pCount} คน)</span>
-                <span class="room-item-status" ${pCount === 0 ? 'style="color:#fbbf24;"' : ''}>${modeText} | ${statusText}</span>
-            </div>
-        `;
-
-        const btn = document.createElement('button');
-        btn.className = 'join-room-tab-btn';
-        btn.textContent = canJoin ? 'เข้าร่วม' : 'ติดเล่น';
-        btn.disabled = !canJoin;
-
-        if (canJoin) {
-            btn.addEventListener('click', () => {
-                myName = nameInput.value.trim();
-                if (!myName) {
-                    alert('กรุณากรอกชื่อเล่นของคุณก่อน!');
-                    nameInput.focus();
-                    return;
-                }
-                localStorage.setItem('rov_spy_myname', myName);
-                joinExistingRoom(rId);
-            });
-        }
-
-        card.appendChild(btn);
-        activeRoomsList.appendChild(card);
-    });
-});
-
-confirmCreateBtn.addEventListener('click', () => {
-    roomId = newRoomInput.value.trim();
-    const gameMode = gameModeSelect.value;
-    const selectedCategory = categorySelect.value;
-    const settingVal = parseInt(settingValueInput.value) || 2;
-
-    if (!roomId) {
-        alert('กรุณากรอกชื่อห้อง');
-        return;
-    }
-
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        if (snapshot.val()) {
-            alert('❌ ชื่อห้องนี้มีอยู่แล้ว');
-            return;
-        }
-
-        createRoomModal.style.display = 'none';
-        lobbyArea.style.display = 'block';
-        roomTitle.textContent = `ห้อง: ${roomId}`;
-
-        roomRef.set({
-            hostId: myId,
-            gameMode: gameMode,
-            category: selectedCategory,
-            settingValue: settingVal,
-            status: 'lobby',
-            emptySince: null
-        });
-
-        roomRef.child(`players/${myId}`).set({ name: myName });
-        roomRef.child(`players/${myId}`).onDisconnect().remove();
-
-        localStorage.setItem('rov_spy_roomid', roomId);
-        initRoomSync();
-    });
-});
-
-function joinExistingRoom(targetRoomId) {
-    roomId = targetRoomId;
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const roomData = snapshot.val();
-        if (!roomData) { alert('❌ ไม่พบห้องนี้'); return; }
-        if (roomData.status && roomData.status !== 'lobby') {
-            alert('❌ ห้องนี้กำลังเล่นอยู่!');
-            return;
-        }
-
-        roomSelection.style.display = 'none';
-        lobbyArea.style.display = 'block';
-        roomTitle.textContent = `ห้อง: ${roomId}`;
-
-        roomRef.child(`players/${myId}`).set({ name: myName });
-        roomRef.child(`players/${myId}`).onDisconnect().remove();
-        roomRef.update({ emptySince: null });
-
-        localStorage.setItem('rov_spy_roomid', roomId);
-        initRoomSync();
-    });
+.scoreboard-modern {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    text-align: left;
 }
 
-closeRoomBtn.addEventListener('click', () => {
-    if (!roomId) return;
-    if (confirm('คุณต้องการปิดห้องใช่หรือไม่?')) {
-        db.ref(`rooms/${roomId}`).remove();
-        localStorage.removeItem('rov_spy_roomid');
-        location.reload();
-    }
-});
-
-function initRoomSync() {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) { 
-            alert('ห้องถูกปิดหรือถูกลบเนื่องจากไม่มีผู้เล่น'); 
-            localStorage.removeItem('rov_spy_roomid');
-            location.reload(); 
-            return; 
-        }
-
-        const players = data.players || {};
-        const playerIds = Object.keys(players);
-        
-        if (playerIds.length === 0) {
-            if (!data.emptySince) {
-                roomRef.update({ emptySince: Date.now() });
-            } else if (Date.now() - data.emptySince > 60000) {
-                roomRef.remove();
-                return;
-            }
-        } else if (data.emptySince) {
-            roomRef.update({ emptySince: null });
-        }
-
-        playerList.innerHTML = '';
-        const hostId = data.hostId;
-        isHost = (hostId === myId);
-
-        playerIds.forEach((id) => {
-            const p = players[id];
-            if (!p) return;
-            const li = document.createElement('li');
-            const isMe = (id === myId);
-            const isThisHost = (id === hostId);
-            li.innerHTML = `👤 ${p.name} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''} ${isThisHost ? '<span style="color:#38bdf8; font-size:0.8rem; margin-left:auto;">(หัวหน้าห้อง)</span>' : ''}`;
-            playerList.appendChild(li);
-        });
-
-        const mode = data.gameMode || 'spyfall';
-        let catKey = data.category || 'rov';
-        if (!categoriesData[catKey]) catKey = 'rov';
-        const setVal = data.settingValue || 2;
-        const catInfo = getCategoryData(catKey);
-
-        let modeDisplayName = 'Spyfall';
-        let settingLabelText = `รอบ: ${setVal}`;
-        if (mode === 'whoami_time') {
-            modeDisplayName = 'ฉันคือใคร (เวลา)';
-            settingLabelText = `เวลา: ${setVal} นาที`;
-        }
-        if (mode === 'whoami_rounds') {
-            modeDisplayName = 'ฉันคือใคร (นับรอบ)';
-            settingLabelText = `รอบ: ${setVal}`;
-        }
-
-        roomCategoryBadge.textContent = `โหมด: ${modeDisplayName} | หมวด: ${catInfo.name} | ${settingLabelText}`;
-
-        if (isHost) {
-            startBtn.style.display = 'block';
-            waitText.style.display = 'none';
-            closeRoomBtn.style.display = 'block';
-        } else {
-            isHost = false;
-            startBtn.style.display = 'none';
-            waitText.style.display = 'block';
-            closeRoomBtn.style.display = 'none';
-        }
-
-        const scores = data.scores || {};
-        scoreListBody.innerHTML = '';
-        Object.keys(players).forEach(id => {
-            const pName = players[id].name;
-            const pScore = scores[id] || 0;
-            const isMe = (id === myId);
-            const row = document.createElement('div');
-            row.className = 'score-row-item';
-            row.innerHTML = `<span>${pName} ${isMe ? '<b style="color:#22c55e;">(you)</b>' : ''}</span> <b>${pScore} แต้ม</b>`;
-            scoreListBody.appendChild(row);
-        });
-        scoreBoard.style.display = 'block';
-
-        const status = data.status || 'lobby';
-
-        if (status === 'lobby') {
-            lobbyArea.style.display = 'block';
-            gameArea.style.display = 'none';
-            whoAmIArea.style.display = 'none';
-            voteArea.style.display = 'none';
-        } else if (status === 'playing') {
-            lobbyArea.style.display = 'none';
-            voteArea.style.display = 'none';
-
-            if (mode === 'spyfall') {
-                whoAmIArea.style.display = 'none';
-                gameArea.style.display = 'block';
-
-                const roles = data.roles || {};
-                heroName.textContent = roles[myId] || "...";
-
-                const turnOrder = data.turnOrder || [];
-                const currentTurnIndex = data.currentTurnIndex || 0;
-                const currentRound = data.currentRound || 1;
-                const totalRounds = data.totalRounds || 2;
-                const currentSpeakerId = turnOrder[currentTurnIndex];
-
-                roundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
-                
-                fullTurnOrderContainer.innerHTML = '';
-                turnOrder.forEach((id, idx) => {
-                    const p = players[id];
-                    if (!p) return;
-                    const isCurrent = (idx === currentTurnIndex);
-                    const div = document.createElement('div');
-                    div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
-                    div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
-                    fullTurnOrderContainer.appendChild(div);
-                });
-
-                if (currentSpeakerId === myId) {
-                    currentSpeakerBox.innerHTML = `🗣️ ตาของคุณพูดแล้ว!`;
-                    endTurnBtn.style.display = 'block';
-                } else {
-                    currentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> พูด...`;
-                    endTurnBtn.style.display = 'none';
-                }
-
-                heroGrid.innerHTML = '';
-                const currentGroup = data.currentGroup;
-                if (catInfo && currentGroup && catInfo.groups[currentGroup]) {
-                    document.querySelector('.section-title').textContent = `🛡️ รายชื่อในกลุ่มปัจจุบัน (${currentGroup}):`;
-                    catInfo.groups[currentGroup].forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'hero-item';
-                        div.textContent = item;
-                        heroGrid.appendChild(div);
-                    });
-                }
-                hostControls.style.display = isHost ? 'block' : 'none';
-
-            } else {
-                gameArea.style.display = 'none';
-                whoAmIArea.style.display = 'block';
-
-                const turnOrder = data.turnOrder || [];
-
-                if (mode === 'whoami_time') {
-                    whoAmITimerContainer.style.display = 'flex';
-                    whoAmITurnBoxContainer.style.display = 'none';
-                    startWhoAmITimer(data.endTime, roomId, data);
-
-                    whoAmIFullTurnOrderContainer.innerHTML = '';
-                    turnOrder.forEach((id, idx) => {
-                        const p = players[id];
-                        if (!p) return;
-                        const div = document.createElement('div');
-                        div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:rgba(15, 23, 42, 0.4); color:#cbd5e1;`;
-                        div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''}`;
-                        whoAmIFullTurnOrderContainer.appendChild(div);
-                    });
-                } else {
-                    whoAmITimerContainer.style.display = 'none';
-                    whoAmITurnBoxContainer.style.display = 'block';
-                    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-
-                    const currentTurnIndex = data.currentTurnIndex || 0;
-                    const currentRound = data.currentRound || 1;
-                    const totalRounds = data.totalRounds || 2;
-                    const currentSpeakerId = turnOrder[currentTurnIndex];
-
-                    whoAmIRoundIndicator.textContent = `🔄 รอบที่ ${currentRound} จาก ${totalRounds} รอบ`;
-
-                    whoAmIFullTurnOrderContainer.innerHTML = '';
-                    turnOrder.forEach((id, idx) => {
-                        const p = players[id];
-                        if (!p) return;
-                        const isCurrent = (idx === currentTurnIndex);
-                        const div = document.createElement('div');
-                        div.style.cssText = `font-size:0.8rem; padding:3px 6px; border-radius:4px; background:${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(15, 23, 42, 0.4)'}; color:${isCurrent ? '#38bdf8' : '#cbd5e1'};`;
-                        div.innerHTML = `${idx + 1}. ${p.name} ${id === myId ? '(you)' : ''} ${isCurrent ? ' 👈' : ''}`;
-                        whoAmIFullTurnOrderContainer.appendChild(div);
-                    });
-
-                    if (currentSpeakerId === myId) {
-                        whoAmICurrentSpeakerBox.innerHTML = `🗣️ ตาของคุณถามแล้ว!`;
-                        whoAmIEndTurnBtn.style.display = 'block';
-                    } else {
-                        whoAmICurrentSpeakerBox.innerHTML = `⏳ กำลังรอ <b style="color:#fbbf24;">${players[currentSpeakerId]?.name}</b> ถาม...`;
-                        whoAmIEndTurnBtn.style.display = 'none';
-                    }
-                }
-
-                othersRolesGrid.innerHTML = '';
-                const roles = data.roles || {};
-                const attempts = data.attempts || {};
-                const guessedCorrectly = data.guessedCorrectly || {};
-
-                turnOrder.forEach((pId) => {
-                    if (pId !== myId && players[pId]) {
-                        const div = document.createElement('div');
-                        div.className = 'hero-item';
-
-                        const isDone = (attempts[pId] ?? 1) <= 0 || guessedCorrectly[pId];
-                        const isCorrect = guessedCorrectly[pId];
-
-                        let bgStyle = "background: rgba(30, 41, 59, 0.9);";
-                        let statusText = "";
-
-                        if (isDone) {
-                            if (isCorrect) {
-                                bgStyle = "background: rgba(34, 197, 94, 0.25); opacity: 0.65; border: 1px solid #22c55e;";
-                                statusText = '<br><span style="color:#22c55e; font-size:0.7rem;">(ตอบถูก ✅)</span>';
-                            } else {
-                                bgStyle = "background: rgba(100, 116, 139, 0.25); opacity: 0.5; border: 1px solid #64748b;";
-                                statusText = '<br><span style="color:#94a3b8; font-size:0.7rem;">(ตอบผิด ❌)</span>';
-                            }
-                        }
-
-                        div.style.cssText = bgStyle + " padding: 8px; border-radius: 6px; text-align: center;";
-                        div.innerHTML = `<b>${players[pId].name}</b><br><span style="color:#38bdf8;">${roles[pId]}</span>${statusText}`;
-                        othersRolesGrid.appendChild(div);
-                    }
-                });
-
-                const myAttempts = attempts[myId] ?? 1;
-                const isAlreadyCorrect = guessedCorrectly[myId];
-
-                if (isAlreadyCorrect) {
-                    guessControlsDiv.style.display = 'none';
-                    guessStatusText.textContent = `🎉 คุณทายถูกแล้ว! รอลุ้นเพื่อนคนอื่น`;
-                } else if (myAttempts <= 0) {
-                    guessControlsDiv.style.display = 'none';
-                    guessStatusText.textContent = `❌ คุณใช้สิทธิ์ตอบไปแล้ว (0 ครั้ง)`;
-                } else {
-                    guessControlsDiv.style.display = 'block';
-                    guessStatusText.textContent = `🎯 ค้นหาและทายตัวละคร (สิทธิ์ตอบ 1 ครั้ง):`;
-                }
-
-                setupSearchDropdown(data.category);
-                whoAmIHostControls.style.display = isHost ? 'block' : 'none';
-            }
-
-        } else if (status === 'voting') {
-            if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-            activeTimerEndTime = null;
-            gameArea.style.display = 'none';
-            whoAmIArea.style.display = 'none';
-            lobbyArea.style.display = 'none';
-            voteArea.style.display = 'block';
-            renderVotingScreen(data);
-        }
-    });
+.score-header {
+    color: #38bdf8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 2px;
+    text-align: center;
 }
 
-// เริ่มเกม (สุ่มใหม่ทุกตา)
-startBtn.addEventListener('click', () => {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        const players = data.players || {};
-        const playerIds = Object.keys(players);
-        const gameMode = data.gameMode || 'spyfall';
-        const catKey = data.category || 'rov';
-        const catData = getCategoryData(catKey);
-        const setVal = data.settingValue || 2;
-
-        const minPlayers = gameMode.startsWith('whoami') ? 2 : 3;
-        if (playerIds.length < minPlayers) {
-            alert(`โหมดนี้ต้องมีผู้เล่นอย่างน้อย ${minPlayers} คนขึ้นไป!`);
-            return;
-        }
-
-        let shuffledPlayerIds = [...playerIds];
-        for (let i = shuffledPlayerIds.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledPlayerIds[i], shuffledPlayerIds[j]] = [shuffledPlayerIds[j], shuffledPlayerIds[i]];
-        }
-
-        let rolesData = {};
-        let attemptsData = {};
-        let selectedGroupKey = "";
-
-        if (gameMode === 'spyfall') {
-            const groupKeys = Object.keys(catData.groups);
-            selectedGroupKey = groupKeys[Math.floor(Math.random() * groupKeys.length)];
-            let groupItems = [...catData.groups[selectedGroupKey]];
-
-            const spyIndex = Math.floor(Math.random() * playerIds.length);
-            const spyId = playerIds[spyIndex];
-
-            const spyItemIdx = Math.floor(Math.random() * groupItems.length);
-            const spyItem = groupItems.splice(spyItemIdx, 1)[0];
-            rolesData[spyId] = spyItem;
-
-            const normalItem = groupItems[Math.floor(Math.random() * groupItems.length)];
-            playerIds.forEach((id) => {
-                if (id !== spyId) rolesData[id] = normalItem;
-            });
-        } else {
-            selectedGroupKey = Object.keys(catData.groups)[0];
-            const allItems = getAllCategoryItems(catKey);
-
-            playerIds.forEach((id) => {
-                const idx = Math.floor(Math.random() * allItems.length);
-                rolesData[id] = allItems[idx];
-                attemptsData[id] = 1;
-            });
-        }
-
-        let freshScores = {};
-        playerIds.forEach(id => { freshScores[id] = 0; });
-
-        const updateObj = {
-            status: 'playing',
-            roles: rolesData,
-            turnOrder: shuffledPlayerIds,
-            currentTurnIndex: 0,
-            currentRound: 1,
-            totalRounds: setVal,
-            endTime: gameMode === 'whoami_time' ? Date.now() + setVal * 60 * 1000 : null,
-            attempts: attemptsData,
-            guessedCorrectly: {},
-            currentGroup: selectedGroupKey,
-            votes: null,
-            guess: null,
-            spyGuess: null,
-            scores: freshScores,
-            emptySince: null
-        };
-
-        if (gameMode === 'spyfall') {
-            updateObj.spyId = Object.keys(rolesData).find(k => rolesData[k] !== Object.values(rolesData).find(v => v));
-        }
-
-        roomRef.update(updateObj);
-    });
-});
-
-function startWhoAmITimer(endTime, rId, data) {
-    if (!endTime) return;
-    if (activeTimerEndTime === endTime) return;
-    activeTimerEndTime = endTime;
-
-    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-
-    const tick = () => {
-        const timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-        const s = (timeLeft % 60).toString().padStart(2, '0');
-        if (whoAmITimer) whoAmITimer.textContent = `${m}:${s}`;
-
-        const players = data.players || {};
-        const pIds = Object.keys(players);
-        const attempts = data.attempts || {};
-        const guessedCorrectly = data.guessedCorrectly || {};
-
-        const allAttemptsUsed = pIds.every(id => (attempts[id] ?? 1) <= 0);
-        const allCorrect = pIds.every(id => guessedCorrectly[id]);
-
-        if (timeLeft <= 0 || allAttemptsUsed || allCorrect) {
-            clearInterval(whoAmITimerInterval);
-            activeTimerEndTime = null;
-            if (isHost && data.status === 'playing') {
-                db.ref(`rooms/${rId}`).update({ status: 'voting' });
-            }
-        }
-    };
-
-    tick();
-    whoAmITimerInterval = setInterval(tick, 1000);
+.score-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
-endTurnBtn.addEventListener('click', () => {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const turnOrder = data.turnOrder || [];
-        let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
-        let currentRound = data.currentRound || 1;
-        const totalRounds = data.totalRounds || 2;
-
-        if (currentTurnIndex >= turnOrder.length) {
-            currentTurnIndex = 0;
-            currentRound += 1;
-        }
-
-        if (currentRound > totalRounds) {
-            roomRef.update({ status: 'voting' });
-        } else {
-            roomRef.update({
-                currentTurnIndex: currentTurnIndex,
-                currentRound: currentRound
-            });
-        }
-    });
-});
-
-whoAmIEndTurnBtn.addEventListener('click', () => {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const turnOrder = data.turnOrder || [];
-        let currentTurnIndex = (data.currentTurnIndex || 0) + 1;
-        let currentRound = data.currentRound || 1;
-        const totalRounds = data.totalRounds || 2;
-
-        if (currentTurnIndex >= turnOrder.length) {
-            currentTurnIndex = 0;
-            currentRound += 1;
-        }
-
-        if (currentRound > totalRounds) {
-            roomRef.update({ status: 'voting' });
-        } else {
-            roomRef.update({
-                currentTurnIndex: currentTurnIndex,
-                currentRound: currentRound
-            });
-        }
-    });
-});
-
-skipToVoteBtn.addEventListener('click', () => {
-    db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-});
-
-whoAmISkipBtn.addEventListener('click', () => {
-    if (isHost) {
-        if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-        activeTimerEndTime = null;
-        db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-    }
-});
-
-function setupSearchDropdown(catKey) {
-    const allItems = getAllCategoryItems(catKey);
-    
-    myGuessSearch.oninput = (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
-        searchResultsList.innerHTML = '';
-        if (!keyword) {
-            searchResultsList.style.display = 'none';
-            return;
-        }
-
-        const filtered = allItems.filter(item => item.toLowerCase().includes(keyword));
-        if (filtered.length === 0) {
-            searchResultsList.style.display = 'none';
-            return;
-        }
-
-        filtered.forEach(item => {
-            const div = document.createElement('div');
-            div.textContent = item;
-            div.onclick = () => {
-                selectedSearchGuess = item;
-                myGuessSearch.value = item;
-                selectedGuessText.textContent = `✔️ เลือก: ${item}`;
-                searchResultsList.style.display = 'none';
-            };
-            searchResultsList.appendChild(div);
-        });
-        searchResultsList.style.display = 'block';
-    };
+.score-row-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 3px 8px;
+    border-radius: 4px;
 }
 
-submitMyGuessBtn.addEventListener('click', () => {
-    const guessVal = selectedSearchGuess || myGuessSearch.value.trim();
-    if (!guessVal) {
-        alert('กรุณาพิมพ์หรือเลือกตัวละครก่อนกดยืนยันคำตอบ');
-        return;
-    }
-
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const myRealRole = data.roles[myId];
-        let attempts = data.attempts || {};
-        let guessedCorrectly = data.guessedCorrectly || {};
-        let scores = data.scores || {};
-        let correctOrder = data.correctOrder || [];
-
-        attempts[myId] = 0;
-
-        let isCorrect = (guessVal.toLowerCase() === myRealRole.toLowerCase());
-        
-        const updates = {};
-        updates[`attempts/${myId}`] = 0;
-        updates[`guessedCorrectly/${myId}`] = isCorrect;
-
-        if (isCorrect) {
-            alert('🎉 ยินดีด้วย! คุณทายถูก!');
-            if (!correctOrder.includes(myId)) {
-                correctOrder.push(myId);
-                updates[`correctOrder`] = correctOrder;
-            }
-            const totalPlayers = Object.keys(data.players || {}).length;
-            const pts = Math.max(1, totalPlayers - correctOrder.length + 1);
-            scores[myId] = (scores[myId] || 0) + pts;
-            updates[`scores/${myId}`] = scores[myId];
-        } else {
-            alert(`❌ ทายผิด! ตัวละครที่ถูกต้องคือ "${myRealRole}"`);
-        }
-
-        roomRef.update(updates).then(() => {
-            roomRef.once('value', (snap) => {
-                const updatedData = snap.val();
-                if (!updatedData || updatedData.status !== 'playing') return;
-                const allPlayers = Object.keys(updatedData.players || {});
-                const allAttemptsUsed = allPlayers.every(pId => (updatedData.attempts?.[pId] ?? 1) <= 0);
-                const allCorrect = allPlayers.every(pId => updatedData.guessedCorrectly?.[pId]);
-
-                if ((allAttemptsUsed || allCorrect) && isHost && updatedData.gameMode === 'whoami_time') {
-                    if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
-                    activeTimerEndTime = null;
-                    db.ref(`rooms/${roomId}`).update({ status: 'voting' });
-                }
-            });
-        });
-    });
-});
-
-function renderVotingScreen(data) {
-    voteList.innerHTML = '';
-    voteResult.style.display = 'none';
-    hostPostVoteControls.style.display = 'none';
-
-    const players = data.players || {};
-    const gameMode = data.gameMode || 'spyfall';
-
-    if (gameMode.startsWith('whoami')) {
-        voteAreaTitle.textContent = "🏁 สรุปผลคะแนนรวม (ฉันคือใคร)";
-        voteInstruction.textContent = "คะแนนสะสมรวมจากการทายตัวละคร:";
-        voteResult.style.display = 'block';
-        if (isHost) {
-            hostPostVoteControls.style.display = 'flex';
-        }
-        
-        let htmlStr = `<h3 style="color:#38bdf8; margin-bottom:10px;">🏆 อันดับคะแนนรวมทั้งหมด:</h3>`;
-        const scores = data.scores || {};
-        const sortedPlayers = Object.keys(players).sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
-
-        sortedPlayers.forEach((pId, idx) => {
-            const pName = players[pId].name;
-            const pScore = scores[pId] || 0;
-            const isMe = (pId === myId);
-            htmlStr += `<p style="font-size:0.95rem; margin:6px 0; background:rgba(15,23,42,0.6); padding:6px 10px; border-radius:6px; display:flex; justify-content:space-between;"><span><b>อันดับ ${idx + 1}:</b> ${pName} ${isMe ? '(you)' : ''}</span> <b style="color:#38bdf8;">${pScore} แต้ม</b></p>`;
-        });
-        voteResult.innerHTML = htmlStr;
-        return;
-    }
-
-    voteAreaTitle.textContent = "🗳️ ช่วงเวลาโหวตหา Spy!";
-    const votes = data.votes || {};
-    const isAmISpy = (myId === data.spyId);
-    
-    const catKey = data.category || 'rov';
-    const catData = getCategoryData(catKey);
-    const currentGroup = data.currentGroup;
-    const currentGroupItems = (catData && currentGroup && catData.groups[currentGroup]) ? catData.groups[currentGroup] : [];
-
-    const activeCandidates = data.tieCandidates || Object.keys(players);
-    const myVote = votes[myId];
-
-    if (isAmISpy) {
-        voteInstruction.textContent = myVote ? "✅ คุณ (Spy) ทำการโหวตแล้ว รอสรุปผล..." : "🤫 คุณคือ Spy! เลือกคนที่คิดว่าน่าสงสัยที่สุด (ห้ามโหวตตัวเอง):";
-    } else {
-        voteInstruction.textContent = myVote ? "✅ คุณได้ทำการโหวตเรียบร้อยแล้ว รอสรุปผล..." : "👉 คลิกเลือกผู้เล่นที่คิดว่าเป็น Spy (ห้ามโหวตตัวเอง):";
-    }
-
-    activeCandidates.forEach(targetId => {
-        if (!players[targetId]) return;
-        if (targetId === myId) return;
-
-        const btn = document.createElement('button');
-        btn.className = 'vote-btn';
-        if (selectedVoteTarget === targetId) {
-            btn.style.borderColor = '#38bdf8';
-            btn.style.background = 'rgba(56, 189, 248, 0.25)';
-        }
-
-        btn.innerHTML = `<span>👤 ${players[targetId].name}</span> <span style="font-size:0.8rem; color:#94a3b8;">(โหวตแล้ว: ${Object.keys(votes).length}/${Object.keys(players).length})</span>`;
-        
-        if (!myVote) {
-            btn.addEventListener('click', () => {
-                selectedVoteTarget = targetId;
-                selectedHeroGuess = "";
-                renderVotingScreen(data);
-            });
-        } else {
-            btn.disabled = true;
-        }
-
-        voteList.appendChild(btn);
-
-        if (selectedVoteTarget === targetId && !myVote) {
-            const selectHero = document.createElement('select');
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = "";
-            defaultOpt.textContent = "-- ไม่ทายตัวละคร (เอาแค่โหวต) --";
-            selectHero.appendChild(defaultOpt);
-
-            currentGroupItems.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item;
-                opt.textContent = item;
-                if (selectedHeroGuess === item) opt.selected = true;
-                selectHero.appendChild(opt);
-            });
-
-            selectHero.addEventListener('change', (e) => { selectedHeroGuess = e.target.value; });
-            voteList.appendChild(selectHero);
-
-            const confirmBtn = document.createElement('button');
-            confirmBtn.className = 'btn primary-glow';
-            confirmBtn.style.marginTop = '6px';
-            confirmBtn.textContent = `🔒 ยืนยันโหวต ${players[targetId].name}`;
-            confirmBtn.addEventListener('click', () => {
-                db.ref(`rooms/${roomId}/votes/${myId}`).set(targetId);
-                if (isAmISpy) {
-                    db.ref(`rooms/${roomId}/spyGuess/${myId}`).set({ targetId: targetId, guessHero: selectedHeroGuess });
-                } else {
-                    db.ref(`rooms/${roomId}/guess/${myId}`).set(selectedHeroGuess);
-                }
-            });
-            voteList.appendChild(confirmBtn);
-        }
-    });
-
-    const totalPlayersCount = Object.keys(players).length;
-    const totalVotes = Object.keys(votes).length;
-
-    if (totalVotes >= totalPlayersCount) {
-        voteResult.style.display = 'block';
-        if (isHost) hostPostVoteControls.style.display = 'flex';
-
-        let voteCounts = {};
-        Object.values(votes).forEach(t => { voteCounts[t] = (voteCounts[t] || 0) + 1; });
-
-        let maxVotes = 0;
-        let topTargets = [];
-        for (let id in voteCounts) {
-            if (voteCounts[id] > maxVotes) {
-                maxVotes = voteCounts[id];
-                topTargets = [id];
-            } else if (voteCounts[id] === maxVotes) {
-                topTargets.push(id);
-            }
-        }
-
-        if (topTargets.length > 1 && !data.tieHandled) {
-            if (isHost) {
-                db.ref(`rooms/${roomId}`).update({
-                    tieCandidates: topTargets,
-                    votes: null, guess: null, spyGuess: null,
-                    tieHandled: true
-                });
-            }
-            voteResult.innerHTML = `<p style="color:#fbbf24; font-weight:700;">⚠️ ผลโหวตเท่ากัน กำลังรีโหวต...</p>`;
-            return;
-        }
-
-        const mostVotedId = topTargets[0];
-        const suspectName = players[mostVotedId] ? players[mostVotedId].name : "ไม่ทราบชื่อ";
-        const suspectHero = data.roles[mostVotedId] || "-";
-        const isTargetSpy = (mostVotedId === data.spyId);
-        const spyId = data.spyId;
-        const spyName = players[spyId] ? players[spyId].name : "ไม่ทราบชื่อ";
-        const realSpyItem = data.roles[spyId] || "-";
-
-        if (isTargetSpy) {
-            voteResult.innerHTML = `
-                <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
-                <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#22c55e; font-weight:700; font-size: 1rem;">🎉 ทายถูก! ฝั่งผู้เล่นจับ Spy สำเร็จ! (+1 แต้ม)</p>
-                <p style="font-size:0.75rem; color:#94a3b8;">(Spy คือ ${spyName})</p>
-            `;
-
-            if (isHost && !data.scoreUpdated) {
-                let updatedScores = data.scores || {};
-                Object.keys(players).forEach(pId => {
-                    if (pId !== spyId) {
-                        if (updatedScores[pId] === undefined) updatedScores[pId] = 0;
-                        updatedScores[pId] += 1;
-                    }
-                });
-                db.ref(`rooms/${roomId}`).update({ scores: updatedScores, scoreUpdated: true });
-            }
-        } else {
-            voteResult.innerHTML = `
-                <h3 style="font-size:0.95rem; margin-bottom:4px;">🔍 ผลการเปิดเผยบทบาท</h3>
-                <p style="margin: 4px 0; font-size:0.85rem;">คนที่ถูกโหวตสูงสุดคือ <b>${suspectName}</b> (ตัวละคร: <b>${suspectHero}</b>)</p>
-                <p style="color:#ef4444; font-weight:700; font-size: 1rem;">❌ ทายผิด! ฝั่ง Spy ชนะ (+2 แต้ม)!</p>
-                <p style="font-size:0.75rem; color:#94a3b8;">(Spy คือ ${spyName} - ตัวละคร ${realSpyItem})</p>
-            `;
-
-            if (isHost && !data.scoreUpdated) {
-                let updatedScores = data.scores || {};
-                if (updatedScores[spyId] === undefined) updatedScores[spyId] = 0;
-                updatedScores[spyId] += 2;
-                db.ref(`rooms/${roomId}`).update({ scores: updatedScores, scoreUpdated: true });
-            }
-        }
-    }
+.score-row-item b {
+    color: #38bdf8;
 }
 
-nextRoundBtn.addEventListener('click', () => {
-    const roomRef = db.ref(`rooms/${roomId}`);
-    roomRef.once('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
+.header-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    color: #0f172a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
-        roomRef.update({
-            status: 'lobby',
-            roles: null,
-            turnOrder: null,
-            currentTurnIndex: 0,
-            currentRound: 1,
-            currentGroup: null,
-            spyId: null,
-            votes: null,
-            guess: null,
-            spyGuess: null,
-            attempts: null,
-            guessedCorrectly: null,
-            correctOrder: null,
-            tieCandidates: null,
-            tieHandled: false,
-            scoreUpdated: false
-        });
-        selectedVoteTarget = null;
-        selectedHeroGuess = "";
-        selectedSearchGuess = "";
-    });
-});
+.category-badge-view {
+    display: inline-block;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
 
-backToLobbyBtn.addEventListener('click', () => {
-    db.ref(`rooms/${roomId}`).remove();
-    localStorage.removeItem('rov_spy_roomid');
-    location.reload();
-});
+h1 {
+    margin-bottom: 1rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #38bdf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    z-index: 2;
+}
+
+.room-title {
+    color: #38bdf8;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-align: left;
+    margin-bottom: 2px;
+}
+
+.input-group {
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    color: #38bdf8;
+    display: block;
+    margin-bottom: 2px;
+    text-align: left;
+}
+
+input, .category-select {
+    width: 100%;
+    min-width: 0;
+    padding: 0.7rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.9rem;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.category-select option {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 10px;
+}
+
+input:focus, .category-select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.search-results-dropdown {
+    position: absolute;
+    width: calc(100% - 2rem);
+    max-height: 120px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid #38bdf8;
+    border-radius: 8px;
+    z-index: 10;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.search-results-dropdown div {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+    text-align: left;
+}
+
+.search-results-dropdown div:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+}
+
+.active-rooms-container {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 0.75rem;
+    padding: 8px;
+    margin-top: 4px;
+    text-align: left;
+}
+
+.active-rooms-list {
+    max-height: 130px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+.no-room-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    padding: 6px;
+}
+
+.room-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    font-size: 0.8rem;
+}
+
+.room-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.room-item-name {
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.room-item-status {
+    font-size: 0.65rem;
+    color: #94a3b8;
+}
+
+.join-room-tab-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 5;
+}
+
+.join-room-tab-btn:hover {
+    background: #047857;
+}
+
+.join-room-tab-btn:disabled {
+    background: #475569;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.player-list {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 0.75rem;
+    padding: 8px;
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+.player-list li {
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-list li:last-child {
+    border-bottom: none;
+}
+
+.role-card {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.6), rgba(30, 41, 59, 0.8));
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+}
+
+.whoami-role-card {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.4), rgba(30, 41, 59, 0.8));
+    border-color: #a855f7;
+}
+
+.card-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.hero-highlight {
+    font-size: 1.8rem;
+    color: #38bdf8;
+    font-weight: 700;
+    margin: 0.2rem 0;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.hint-text {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.section-title {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 8px;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(71, 85, 105, 0.4);
+}
+
+.whoami-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 150px;
+}
+
+.hero-item {
+    background: rgba(30, 41, 59, 0.9);
+    padding: 6px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    color: #e2e8f0;
+    text-align: center;
+    border: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+.turn-box-container {
+    background: rgba(15, 23, 42, 0.7);
+    padding: 10px;
+    border-radius: 0.75rem;
+    margin-bottom: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    text-align: center;
+}
+
+.round-indicator-text {
+    font-size: 0.85rem;
+    color: #fbbf24;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.speaker-text {
+    font-size: 0.95rem;
+    color: #38bdf8;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.turn-order-list-box {
+    background: rgba(15, 23, 42, 0.5);
+    padding: 8px;
+    border-radius: 0.75rem;
+    margin-bottom: 8px;
+    text-align: left;
+    border: 1px solid rgba(71, 85, 105, 0.4);
+}
+
+.order-title {
+    font-size: 0.7rem;
+    color: #38bdf8;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.order-list-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 90px;
+    overflow-y: auto;
+}
+
+.timer-container {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 0.75rem;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timer-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.timer-box {
+    font-size: 1.1rem;
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+.guess-my-card {
+    background: rgba(15, 23, 42, 0.8);
+    padding: 10px;
+    border-radius: 0.75rem;
+    border: 1px solid #38bdf8;
+    margin-top: 6px;
+    position: relative;
+}
+
+.guess-status-title {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.selected-guess-label {
+    font-size: 0.8rem;
+    color: #fbbf24;
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+.compact-vote {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vote-btn {
+    background: rgba(51, 65, 85, 0.7);
+    color: white;
+    border: 1px solid rgba(71, 85, 105, 0.6);
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.vote-btn:hover {
+    background: rgba(14, 165, 233, 0.3);
+    border-color: #38bdf8;
+}
+
+.vote-result {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 0.9rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    text-align: left;
+}
+
+.btn {
+    width: 100%;
+    border: none;
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 5;
+}
+
+.primary-glow {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    color: #0f172a;
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+}
+
+.primary-glow:hover {
+    background: linear-gradient(135deg, #0ea5e9, #0369a1);
+    transform: translateY(-1px);
+}
+
+.secondary-btn {
+    background: rgba(51, 65, 85, 0.9);
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    color: #e2e8f0;
+    margin-top: 6px;
+}
+
+.secondary-btn:hover {
+    background: rgba(71, 85, 105, 0.9);
+    color: white;
+}
+
+.btn.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    padding: 0.7rem;
+    margin-top: 6px;
+}
+
+.btn.warning:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.btn.danger {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    padding: 0.7rem;
+    margin-top: 15px;
+}
+
+.btn.danger:hover {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+.status {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.status-pulse {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
