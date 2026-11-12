@@ -32,6 +32,15 @@ const categoriesData = {
             "Initiator": ["Breach", "Fade", "Gekko", "KAY/O", "Skye", "Sova", "Tejo"],
             "Sentinel": ["Chamber", "Cypher", "Deadlock", "Killjoy", "Sage", "Veto", "Vyse"]
         }
+    },
+    "general_items": {
+        name: "สิ่งของทั่วไป",
+        groups: {
+            "เครื่องใช้ไฟฟ้าและไอที": ["โทรศัพท์", "คอมพิวเตอร์", "ทีวี", "ตู้เย็น", "พัดลม", "ไมโครเวฟ", "แอร์", "หูฟัง", "เมาส์", "คีย์บอร์ด", "พาวเวอร์แบงค์", "กล้อง", "เครื่องซักผ้า", "เตาอบ", "ลำโพง", "เครื่องดูดฝุ่น"],
+            "ของใช้ในบ้านและห้องน้ำ": ["ไม้กวาด", "ถังขยะ", "กระจก", "หมอน", "ผ้าห่ม", "ไม้แขวนเสื้อ", "แชมพู", "สบู่", "ยาสีฟัน", "แปรงสีฟัน", "ผ้าเช็ดตัว", "ขันน้ำ", "กรรไกรตัดเล็บ", "ไดร์เป่าผม", "หวี", "กระดาษทิชชู่"],
+            "เครื่องเขียนและอุปกรณ์": ["ปากกา", "ดินสอ", "ยางลบ", "ไม้บรรทัด", "สมุด", "กรรไกร", "กาว", "สีเทียน", "สีน้ำ", "ดินน้ำมัน", "กระดาษ A4", "แฟ้มเอกสาร", "เทปใส", "คัตเตอร์", "พู่กัน", "สมุดโน้ต"],
+            "เครื่องครัวและภาชนะ": ["จาน", "ชาม", "ช้อน", "ส้อม", "แก้วน้ำ", "หม้อ", "กระทะ", "มีด", "เขียง", "ตะหลิว", "ทัพพี", "กาน้ำร้อน", "กล่องข้าว", "ขวดน้ำ", "ตะเกียบ", "เครื่องปั่น"]
+        }
     }
 };
 
@@ -506,7 +515,6 @@ function initRoomSync() {
                         whoAmIFullTurnOrderContainer.appendChild(div);
                     });
                 } else {
-                    // whoami_rounds (โหมดนับรอบการพูดแบบ Spyfall)
                     whoAmITimerContainer.style.display = 'none';
                     whoAmITurnBoxContainer.style.display = 'block';
                     if (whoAmITimerInterval) clearInterval(whoAmITimerInterval);
@@ -745,7 +753,6 @@ endTurnBtn.addEventListener('click', () => {
     });
 });
 
-// ปุ่มจบเทิร์นสำหรับโหมด ฉันคือใคร (แบบนับรอบการพูด เหมือน Spyfall)
 whoAmIEndTurnBtn.addEventListener('click', () => {
     const roomRef = db.ref(`rooms/${roomId}`);
     roomRef.once('value', (snapshot) => {
