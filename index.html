@@ -53,6 +53,7 @@
                 <select id="categorySelect" class="category-select">
                     <option value="rov">ROV</option>
                     <option value="valorant">Valorant</option>
+                    <option value="general_items">📦 สิ่งของทั่วไป</option>
                 </select>
             </div>
             <div class="input-group" style="text-align: left;">
@@ -104,20 +105,18 @@
             <div class="hero-grid" id="heroGrid"></div>
         </div>
 
-        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร - รองรับทั้งแบบเวลาและแบบรอบการพูด) -->
+        <!-- หน้าจอเล่นเกม (โหมด 2: ฉันคือใคร) -->
         <div id="whoAmIArea" class="box" style="display: none;">
             <div class="role-card whoami-role-card">
                 <span class="card-tag">❓ ตัวละครของคุณคือใคร?</span>
                 <p class="hint-text" style="margin-top: 4px;">คุณมองไม่เห็นตัวเอง แต่เห็นตัวละครของเพื่อนทุกคน</p>
             </div>
 
-            <!-- Timer (แสดงเฉพาะโหมดจับเวลา) -->
             <div id="whoAmITimerContainer" class="timer-container">
                 <span class="timer-label">⏱️ เวลาที่เหลือ</span>
                 <div class="timer-box"><span id="whoAmITimer">00:00</span></div>
             </div>
 
-            <!-- Turn box (แสดงเฉพาะโหมดนับรอบการพูดแบบ Spyfall) -->
             <div id="whoAmITurnBoxContainer" class="turn-box-container" style="display: none;">
                 <div id="whoAmIRoundIndicator" class="round-indicator-text">🔄 กำลังโหลดรอบ...</div>
                 <div id="whoAmICurrentSpeakerBox" class="speaker-text">กำลังรอเริ่มเทิร์น...</div>
