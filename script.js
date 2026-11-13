@@ -935,8 +935,49 @@ async function closeRoom(){if(!isHost||!roomId||!await confirmBox('ปิดห�
 $('deleteRoomBtn').onclick=closeRoom;$('closeAfterBtn').onclick=closeRoom;
 
 // ===== Game rendering =====
+function renderLobbyCategory(r){
+ const select=$('lobbyCategorySelect'),button=$('lobbyChangeCategoryBtn'),pack=packFor(r),currentKey=String(r.category||'');
+ const entries=Object.entries(library)
+  .filter(([,candidate])=>enabledFor(candidate).includes(r.gameMode)&&supportsMode(candidate,r.gameMode))
+  .sort((a,b)=>String(a[1].name||'').localeCompare(String(b[1].name||''),'th'));
+ select.replaceChildren();
+ const hasCurrent=entries.some(([key])=>key===currentKey);
+ if(currentKey&&!hasCurrent){
+  const option=document.createElement('option');option.value=currentKey;
+  option.textContent=`${pack.name||'หมวดปัจจุบัน'} · ใช้อยู่ในห้อง`;select.append(option);
+ }
+ entries.forEach(([key,candidate])=>{
+  const option=document.createElement('option');option.value=key;
+  option.textContent=`${candidate.name} · ${wordsOf(candidate).length} คำ`;select.append(option);
+ });
+ if(currentKey&&[...select.options].some(option=>option.value===currentKey))select.value=currentKey;
+ else if(select.options.length)select.selectedIndex=0;
+ select.disabled=!isHost||entries.length===0;
+ button.hidden=!isHost;button.disabled=!isHost||entries.length===0;
+ $('lobbyCategoryCurrent').textContent=`หมวดปัจจุบัน: ${pack.name||'—'}`;
+ $('lobbyCategoryHint').textContent=isHost?'เลือกหมวดใหม่แล้วกด “ใช้หมวดนี้” ได้จนกว่าจะเริ่มเกม':'ผู้เล่นทุกคนใช้หมวดนี้ · เปลี่ยนหมวดได้โดยหัวหน้าห้อง';
+}
+$('lobbyChangeCategoryBtn').onclick=async()=>{
+ if(!roomId||!isHost||!ensureName())return;
+ const key=$('lobbyCategorySelect').value,pack=library[key],button=$('lobbyChangeCategoryBtn');
+ if(!pack||!roomState||!enabledFor(pack).includes(roomState.gameMode)||!supportsMode(pack,roomState.gameMode)){
+  toast('หมวดนี้ใช้กับโหมดเกมที่เลือกไม่ได้','error');return;
+ }
+ const safePack=firebaseSafePack(pack);button.disabled=true;
+ try{
+  const res=await getRef().transaction(r=>{
+   if(!r||r.status!=='lobby'||r.hostId!==myId||r.gameMode!==roomState.gameMode)return;
+   if(!supportsMode(pack,r.gameMode)||!enabledFor(pack).includes(r.gameMode))return;
+   r.category=key;r.categoryPack=safePack;r.currentGroup=null;r.lastActivityAt=TIMESTAMP();return r;
+  },undefined,false);
+  if(res.committed)toast(`เปลี่ยนหมวดเป็น ${pack.name} แล้ว`,'success');
+  else toast('เปลี่ยนหมวดไม่ได้ ห้องอาจเริ่มเกมไปแล้ว','error');
+ }catch(e){error(e);}
+ finally{button.disabled=false;}
+};
 function renderRoom(r){const players=r.players||{},ids=Object.keys(players),status=r.status;$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomMeta').textContent=`${modeTitle(r.gameMode)} · ${packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาที':'รอบ'}`;renderScores(r);showScreen(({lobby:'lobbyScreen',playing:r.gameMode==='spyfall'?'spyScreen':'whoScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen'})[status]||'lobbyScreen');
  if(status==='lobby'){
+  renderLobbyCategory(r);
   $('hostLine').innerHTML=`👑 หัวหน้าห้อง: ${playerLabelHTML(r.hostId,r)} · ${ids.length} คน`;
   $('playerList').replaceChildren();
   ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag">👑 HOST</span>':''}`;$('playerList').append(el);});
@@ -997,7 +1038,35 @@ function renderResults(r){
 // ===== Game start, turns and final response windows =====
 function toFinalGuess(r){const ids=Object.keys(r.players||{}),pending=ids.some(id=>r.attempts?.[id]!==0);if(!pending){r.status='results';r.finalDeadline=null;return;}r.status='final_guess';r.finalDeadline=serverNow()+FINAL_MS;}
 function toVoting(r){r.status='voting';r.votes={};r.voteHistory={};r.voteRound=1;r.tieCandidates=null;r.voteDeadline=serverNow()+FINAL_MS;}
-function advanceRound(r){const order=r.turnOrder||[];if(!order.length){r.status='results';return;}let i=r.currentTurnIndex||0,round=r.currentRound||1;for(let n=0;n<order.length;n++){i++;if(i>=order.length){i=0;round++;}if(round>(r.totalRounds||1)){if(r.gameMode==='spyfall')toVoting(r);else toFinalGuess(r);return;}if(r.players?.[order[i]]){r.currentTurnIndex=i;r.currentRound=round;return;}}if(r.gameMode==='spyfall')toVoting(r);else toFinalGuess(r);}
+function advanceRound(r){
+ const order=r.turnOrder||[];
+ if(!order.length){if(r.gameMode==='spyfall')toVoting(r);else toFinalGuess(r);return;}
+ let i=r.currentTurnIndex||0,round=r.currentRound||1;
+ for(let n=0;n<order.length;n++){
+  i++;if(i>=order.length){i=0;round++;}
+  if(round>(r.totalRounds||1)){if(r.gameMode==='spyfall')toVoting(r);else toFinalGuess(r);return;}
+  if(r.players?.[order[i]]){r.currentTurnIndex=i;r.currentRound=round;return;}
+ }
+ if(r.gameMode==='spyfall')toVoting(r);else toFinalGuess(r);
+}
+function removeCorrectWhoPlayer(r,id){
+ if(r.gameMode!=='whoami_rounds'||r.status!=='playing')return;
+ const order=Array.isArray(r.turnOrder)?r.turnOrder:[],removedAt=order.indexOf(id);
+ if(removedAt<0)return;
+ const currentIndex=Math.max(0,Math.min(Number(r.currentTurnIndex)||0,order.length-1));
+ const currentId=order[currentIndex],nextOrder=order.filter(playerId=>playerId!==id);
+ r.turnOrder=nextOrder;
+ if(!nextOrder.length){r.currentTurnIndex=0;toFinalGuess(r);return;}
+ if(currentId===id){
+  if(removedAt>=nextOrder.length){
+   r.currentTurnIndex=0;r.currentRound=(Number(r.currentRound)||1)+1;
+   if(r.currentRound>(Number(r.totalRounds)||1))toFinalGuess(r);
+  }else r.currentTurnIndex=removedAt;
+ }else{
+  const preservedIndex=nextOrder.indexOf(currentId);
+  r.currentTurnIndex=preservedIndex>=0?preservedIndex:Math.min(currentIndex,nextOrder.length-1);
+ }
+}
 $('startBtn').onclick=async()=>{
  if(!ensureName()||!isHost||!roomId)return;
  const minPlayers=roomState?.gameMode==='spyfall'?3:2;
@@ -1045,7 +1114,7 @@ $('skipWhoBtn').onclick=async()=>{if(!isHost||!await confirmBox('ข้ามช
 
 // ===== Who Am I answer and scoring =====
 $('guessInput').addEventListener('input',()=>{chosenGuess='';$('guessSelected').textContent='ยังไม่ได้เลือกคำตอบ';const box=$('guessSuggestions');box.replaceChildren();const q=norm($('guessInput').value),r=roomState;if(!q||!r||r.gameMode==='spyfall'){box.hidden=true;return;}wordsOf(packFor(r)).filter(w=>norm(w).includes(q)).slice(0,15).forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{chosenGuess=w;$('guessInput').value=w;$('guessSelected').textContent=`✓ เลือก ${w}`;box.hidden=true;};box.append(b);});box.hidden=!box.children.length;});
-$('guessBtn').onclick=async()=>{if(!roomId||!roomState||roomState.gameMode==='spyfall')return;const option=wordsOf(packFor(roomState)).find(w=>norm(w)===norm(chosenGuess||$('guessInput').value));if(!option){toast('เลือกคำตอบจากหมวดที่กำหนดก่อน','error');return;}if(!await confirmBox('ยืนยันคำตอบ?',`ตอบ “${option}” ได้เพียงครั้งเดียว`,'ส่งคำตอบ'))return;$('guessBtn').disabled=true;try{const res=await getRef().transaction(r=>{if(!r||!['playing','final_guess'].includes(r.status)||r.gameMode==='spyfall'||!r.players?.[myId]||r.attempts?.[myId]!==1)return;if(r.status==='final_guess'&&serverNow()>=r.finalDeadline)return;if(r.status==='playing'&&r.gameMode==='whoami_time'&&serverNow()>=r.playDeadline)return;const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,Object.keys(r.players).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?`🎉 ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
+$('guessBtn').onclick=async()=>{if(!roomId||!roomState||roomState.gameMode==='spyfall')return;const option=wordsOf(packFor(roomState)).find(w=>norm(w)===norm(chosenGuess||$('guessInput').value));if(!option){toast('เลือกคำตอบจากหมวดที่กำหนดก่อน','error');return;}if(!await confirmBox('ยืนยันคำตอบ?',`ตอบ “${option}” ได้เพียงครั้งเดียว`,'ส่งคำตอบ'))return;$('guessBtn').disabled=true;try{const res=await getRef().transaction(r=>{if(!r||!['playing','final_guess'].includes(r.status)||r.gameMode==='spyfall'||!r.players?.[myId]||r.attempts?.[myId]!==1)return;if(r.status==='final_guess'&&serverNow()>=r.finalDeadline)return;if(r.status==='playing'&&r.gameMode==='whoami_time'&&serverNow()>=r.playDeadline)return;const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,Object.keys(r.players).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(correct&&r.gameMode==='whoami_rounds')removeCorrectWhoPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?`🎉 ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
 
 // ===== Spyfall voting =====
 $('voteWord').onchange=e=>chosenWord=e.target.value;

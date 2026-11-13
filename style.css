@@ -172,3 +172,13 @@
 .answer-reveal strong{font-size:14px}
 .answer-reveal span{font-size:13px;color:var(--muted,#aab7d2)}
 .answer-reveal span b{color:var(--text,#f4f6ff)}
+
+/* V12: change the game category from the room lobby before starting */
+.lobby-category{margin:16px 0;padding:15px;border:1px solid var(--line);border-radius:14px;background:#0b172b}
+.lobby-category>label{margin-bottom:5px}
+.lobby-category>p{font-size:11px;margin:0 0 10px}
+.lobby-category-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
+.lobby-category-controls select{min-width:0;min-height:46px}
+.lobby-category-controls .btn{white-space:nowrap}
+.lobby-category #lobbyCategoryHint{margin:9px 0 0}
+@media(max-width:520px){.lobby-category-controls{grid-template-columns:1fr}.lobby-category-controls .btn{width:100%}}

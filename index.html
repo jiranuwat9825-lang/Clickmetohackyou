@@ -106,6 +106,15 @@
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div><span class="panel-emoji">🚀</span></div>
 <p id="hostLine" class="muted"></p><div id="playerList" class="player-list"></div>
+<div id="lobbyCategoryPanel" class="lobby-category">
+ <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
+ <p id="lobbyCategoryCurrent" class="muted"></p>
+ <div class="lobby-category-controls">
+  <select id="lobbyCategorySelect"></select>
+  <button id="lobbyChangeCategoryBtn" type="button" class="btn soft">ใช้หมวดนี้</button>
+ </div>
+ <p id="lobbyCategoryHint" class="muted"></p>
+</div>
 <p id="lobbyNotice" class="notice">รอหัวหน้าห้องกดเริ่ม</p>
 <button id="startBtn" class="btn primary full" hidden>▶ เริ่มเกม</button><button id="deleteRoomBtn" class="btn danger full" hidden>ลบห้อง</button>
 </section>
