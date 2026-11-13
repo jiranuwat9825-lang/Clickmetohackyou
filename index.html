@@ -23,20 +23,33 @@
 <h1>รวมแก๊งให้พร้อม<br><em>แล้วลุยเกมกัน!</em></h1>
 <p>เล่น Spyfall จับสายลับ หรือทายตัวเองใน Who Am I แข่งขันกับเพื่อนแบบเรียลไทม์</p>
 <div class="pills"><span>🎮 3 โหมด</span><span>⚡ เล่นออนไลน์</span><span>🏆 คะแนนสะสม</span></div>
-<section class="avatar-select-area" aria-label="เลือกตัวละครผู้เล่น">
-<div class="avatar-select-head"><div><small class="eyebrow">PICK YOUR CHARACTER</small><h2>เลือกตัวละครของคุณ</h2><p>ตัวละครจะปรากฏข้างชื่อของคุณในเกม</p></div><span id="avatarPreview" class="avatar-preview">🦊</span></div>
-<div id="avatarPicker" class="avatar-picker"></div>
-</section>
-</div>
-<div class="home-side">
-<div class="panel pad">
-<div class="section-head"><div><small>PLAYER PROFILE</small><h2>ชื่อผู้เล่น</h2></div><span id="profileAvatar" class="panel-emoji">🦊</span></div>
+<div class="profile-panel">
+<div class="section-head"><div><small>PLAYER PROFILE</small><h2>ชื่อผู้เล่น</h2></div><span id="profileAvatar" class="panel-emoji avatar-profile tone-orange">🦊</span></div>
 <label for="nameInput">ชื่อเล่นที่เพื่อนจะเห็น</label>
 <div class="name-confirm-row">
 <input id="nameInput" type="text" maxlength="15" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="nickname">
 <button id="confirmNameBtn" type="button" class="btn primary name-confirm-btn" title="ยืนยันชื่อ" aria-label="ยืนยันชื่อ">✓</button>
 </div>
 <p id="nameStatus" class="muted hint">กรอกชื่อแล้วกดปุ่ม ✓ เพื่อยืนยันชื่อ</p>
+</div>
+<div class="avatar-studio">
+<div class="avatar-studio-head">
+<div><small>CHOOSE YOUR AVATAR</small><h2>เลือกตัวละครประจำตัว</h2><p>เลือกมาสคอตแทนตัวคุณ แล้วเพื่อนจะเห็นตัวละครนี้หน้าชื่อในเกม</p></div>
+<div id="avatarPreview" class="avatar-preview tone-orange" aria-label="ตัวละครที่เลือก">🦊</div>
+</div>
+<div id="avatarPicker" class="avatar-picker" role="group" aria-label="เลือกตัวละคร"></div>
+<p id="avatarSelectedLabel" class="avatar-selected-label">ตัวละครของคุณ: จิ้งจอก</p>
+</div>
+</div>
+<div class="home-side">
+<div class="panel pad join-code-panel">
+<div class="section-head"><div><small>JOIN THE PARTY</small><h2>เข้าร่วมห้องด้วยเลขห้อง</h2></div><span class="panel-emoji">🔑</span></div>
+<label for="joinRoomCodeInput">เลขห้อง / รหัสห้อง</label>
+<div class="join-room-row">
+<input id="joinRoomCodeInput" type="text" maxlength="24" placeholder="เช่น 482731" autocomplete="off" inputmode="text">
+<button id="joinRoomCodeBtn" class="btn primary" type="button">เข้าร่วม →</button>
+</div>
+<p class="muted hint">ใส่เลขห้องที่เพื่อนส่งให้ หรือวางรหัสห้องที่คัดลอกมา</p>
 </div>
 <div class="panel pad create-panel">
 <small class="eyebrow">HOST A GAME</small><h2>สร้างปาร์ตี้ของคุณ</h2>
@@ -54,8 +67,8 @@
 <section id="createView" class="panel page" hidden>
 <div class="section-head"><div><small>CREATE YOUR PARTY</small><h2>ตั้งค่าห้องเกม</h2></div><span class="panel-emoji">🎲</span></div>
 <p class="muted">เลือกโหมดก่อน แล้วตัวเลือกที่เกี่ยวข้องจะปรากฏ</p>
-<h3 class="step"><b>01</b> ชื่อห้อง</h3><input id="roomNameInput" maxlength="20" placeholder="เช่น friday-party" autocomplete="off">
-<p class="muted hint">ตัวอักษรไทย/อังกฤษ ตัวเลข - และ _ ไม่เกิน 20 ตัว</p>
+<h3 class="step"><b>01</b> ชื่อห้อง (ไม่บังคับ)</h3><input id="roomNameInput" maxlength="20" placeholder="เว้นว่างเพื่อใช้ชื่อ room ตามเลขห้อง" autocomplete="off">
+<p class="muted hint">หากไม่กรอก ระบบจะตั้งชื่อเป็น room ตามด้วยเลขห้องให้อัตโนมัติ</p>
 <h3 class="step"><b>02</b> เลือกโหมดเกม</h3>
 <div id="modeOptions" class="mode-grid">
 <button class="choice mode" data-mode="spyfall"><span>🕵️</span><strong>Spyfall</strong><small>จับสายลับ</small></button>
@@ -64,7 +77,6 @@
 </div>
 <div id="createDetails" hidden>
 <h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div>
-<button id="manageInCreateBtn" class="btn outline small" type="button">⚙ จัดการหมวดคำ</button>
 <h3 class="step"><b>04</b> <span id="durationLabel">จำนวนรอบ</span></h3>
 <div class="stepper"><button id="minusBtn" aria-label="ลด">−</button><input id="durationInput" type="number" min="1" max="99" value="2"><button id="plusBtn" aria-label="เพิ่ม">+</button></div>
 <p id="durationHelp" class="muted hint"></p>
@@ -73,9 +85,9 @@
 </section>
 <section id="managerView" class="panel page" hidden>
 <div class="section-head"><div><small>CONTENT STUDIO</small><h2>จัดการหมวดหมู่เกม</h2></div><span class="panel-emoji">📚</span></div>
-<p class="muted">เพิ่ม ลบ แก้ไขหมวดและคำ พร้อมเลือกโหมดที่ใช้ได้ (บันทึกไว้ในเบราว์เซอร์นี้)</p>
+<p class="muted">เพิ่ม ลบ แก้ไขหมวดและคำ พร้อมเลือกโหมดที่ใช้ได้ (บันทึกลงเบราว์เซอร์นี้ และคงอยู่หลังรีเฟรชหน้าเว็บ)</p>
 <div class="manager-layout">
-<aside class="manager-side"><div id="managerList" class="manager-list"></div><button id="newCategoryBtn" class="btn soft full">＋ หมวดใหม่</button><button id="resetCategoriesBtn" class="btn outline full">↺ คืนค่าเริ่มต้น</button></aside>
+<aside class="manager-side"><div id="managerList" class="manager-list"></div><button id="newCategoryBtn" class="btn soft full">＋ หมวดใหม่</button></aside>
 <div id="managerEditor" class="manager-editor" hidden>
 <label for="editCategoryName">ชื่อหมวด</label><input id="editCategoryName" maxlength="40">
 <h3>เปิดให้ใช้กับเกมใดบ้าง</h3>
@@ -93,7 +105,7 @@
 <div class="actions"><button id="managerBackBtn" class="btn outline">← กลับ</button></div>
 </section>
 <section id="roomView" hidden>
-<div class="panel room-banner"><div><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-code"><b id="roomCode"></b><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอก</button></div></div>
+<div class="panel room-banner"><div><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอกเลขห้อง</button></div></div>
 <div class="game-layout"><div>
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div><span class="panel-emoji">🚀</span></div>
@@ -102,16 +114,18 @@
 <button id="startBtn" class="btn primary full" hidden>▶ เริ่มเกม</button><button id="deleteRoomBtn" class="btn danger full" hidden>ลบห้อง</button>
 </section>
 <section id="spyScreen" class="panel page" hidden>
-<div class="section-head"><div><small>SPYFALL</small><h2>ใครคือสายลับ?</h2></div><span class="panel-emoji">🕵️</span></div>
-<div class="role-card"><small>ตัวละครลับของคุณ</small><h2 id="mySpyWord">—</h2><p>เก็บคำของคุณเป็นความลับ แล้วจับพิรุธกัน!</p></div>
+<div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div><span class="panel-emoji">🕵️</span></div>
+<div id="spyProgress" class="game-stats"></div>
+<div class="role-card"><div id="spyMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำลับของคุณ</small><h2 id="mySpyWord">—</h2><p>จำคำของตัวเองไว้ พูดคุยและจับพิรุธผู้เล่นคนอื่น</p></div>
 <div class="turn-panel"><small id="spyRound">รอบที่ 1</small><h3 id="spySpeaker">กำลังรอ…</h3><button id="spyDoneBtn" class="btn primary full" hidden>✓ พูดจบแล้ว</button></div>
 <h3>ลำดับการพูด</h3><div id="spyOrder" class="chips"></div>
 <h3 class="section-gap" id="spyGroupName">คำในกลุ่ม</h3><div id="spyWords" class="word-grid"></div>
 <button id="skipSpyBtn" class="btn outline full section-gap" hidden>⏭ ข้ามไปโหวต</button>
 </section>
 <section id="whoScreen" class="panel page" hidden>
-<div class="section-head"><div><small>WHO AM I?</small><h2>ฉันคือใคร?</h2></div><span class="panel-emoji">❔</span></div>
-<div class="role-card purple"><small>คุณมองไม่เห็นคำของตัวเอง</small><h2>YOU ARE ?</h2><p>ถามคำถาม แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
+<div class="section-head"><div><small>WHO AM I? · GUESS YOUR WORD</small><h2>ฉันคือใคร?</h2></div><span class="panel-emoji">❔</span></div>
+<div id="whoProgress" class="game-stats"></div>
+<div class="role-card purple"><div id="whoMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำของคุณถูกซ่อนไว้</small><h2>YOU ARE ?</h2><p>ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
 <div id="whoTimerBlock" class="timer-block" hidden><span id="whoTimerLabel">เวลาที่เหลือ</span><strong id="whoTimer">00:00</strong></div>
 <div id="whoTurnBlock" class="turn-panel" hidden><small id="whoRound"></small><h3 id="whoSpeaker"></h3><button id="whoDoneBtn" class="btn primary full" hidden>✓ ถามจบแล้ว</button></div>
 <h3>ลำดับการถาม</h3><div id="whoOrder" class="chips"></div>
@@ -120,7 +134,8 @@
 <button id="skipWhoBtn" class="btn outline full section-gap" hidden>⏭ จบเกมก่อนเวลา</button>
 </section>
 <section id="voteScreen" class="panel page" hidden>
-<div class="section-head"><div><small>FINAL VOTE</small><h2 id="voteHeading">โหวตหา Spy</h2></div><span class="panel-emoji">🗳️</span></div>
+<div class="section-head"><div><small>FINAL VOTE · MAKE YOUR CALL</small><h2 id="voteHeading">โหวตหา Spy</h2></div><span class="panel-emoji">🗳️</span></div>
+<div id="voteProgress" class="game-stats"></div>
 <div class="timer-block danger-timer"><span>⏳ เหลือเวลาลงคะแนน</span><strong id="voteTimer">02:00</strong></div>
 <p id="voteNote" class="muted"></p><div id="voteChoices" class="vote-list"></div>
 <div id="voteAnswer" class="guess-box" hidden><label for="voteWord">คำของคนที่คุณโหวต (ไม่บังคับ)</label><select id="voteWord"></select><p class="muted hint">หากทายถูกตามเงื่อนไข ได้โบนัส +1</p><button id="voteSubmitBtn" class="btn primary full">✓ ยืนยันโหวตและคำทาย</button></div>
