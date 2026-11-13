@@ -137,3 +137,31 @@
  .join-room-row .btn{width:100%}
  .room-code{flex-wrap:wrap;justify-content:flex-end}
 }
+ 
+/* V10: balanced home dashboard without the promotional hero banner */
+.home-layout{
+ grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+ align-items:stretch;
+ gap:20px;
+}
+.profile-card{
+ min-width:0;
+ min-height:0;
+ padding:24px;
+ background:linear-gradient(150deg,rgba(26,36,61,.96),rgba(13,21,38,.97));
+}
+.profile-panel{margin-top:0}
+.profile-card .avatar-studio{margin-top:25px}
+.home-side{gap:16px;align-content:start}
+.home-side>.panel{min-width:0}
+.avatar-picker{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:760px){
+ .home-layout{grid-template-columns:1fr;align-items:stretch}
+ .profile-card{padding:22px}
+ .avatar-picker{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .profile-card{padding:18px 16px}
+ .profile-card .avatar-studio{margin-top:22px}
+ .avatar-picker{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
