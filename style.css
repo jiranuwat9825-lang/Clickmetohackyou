@@ -165,3 +165,10 @@
  .profile-card .avatar-studio{margin-top:22px}
  .avatar-picker{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+
+/* V11: Who Am I answer reveal panel */
+.answer-reveal{display:grid;gap:7px;margin:12px 0 15px;padding:14px 16px;border:1px solid rgba(94,211,174,.35);border-radius:14px;background:rgba(31,132,105,.12);color:var(--text,#f4f6ff);line-height:1.6}
+.answer-reveal[hidden]{display:none}
+.answer-reveal strong{font-size:14px}
+.answer-reveal span{font-size:13px;color:var(--muted,#aab7d2)}
+.answer-reveal span b{color:var(--text,#f4f6ff)}
