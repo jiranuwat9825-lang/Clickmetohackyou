@@ -257,3 +257,13 @@
  .summary-grid,.summary-answer-grid{grid-template-columns:1fr}
  .player-timer-grid{grid-template-columns:1fr}
 }
+
+/* V16 Spyfall: self-aware spy */
+.spy-reveal{background:linear-gradient(145deg,#56254e,#201b43)!important;border-color:#e79bda!important}
+.spy-reveal #mySpyWord{color:#ffc6e9}
+#spyGuessPanel{background:#211d39;border-color:#e79bda66}
+.spy-vote-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.spy-vote-summary>div{display:grid;gap:5px;background:#12243e;border:1px solid var(--line);padding:12px;border-radius:12px}
+.spy-vote-summary small{color:var(--muted);font-size:11px}.spy-vote-summary strong{overflow-wrap:anywhere}
+.spy-vote-summary p{grid-column:1/-1;color:var(--green);font-size:12px}
+@media(max-width:600px){.spy-vote-summary{grid-template-columns:1fr}.spy-vote-summary p{grid-column:1}}
