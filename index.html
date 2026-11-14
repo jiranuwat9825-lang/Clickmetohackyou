@@ -130,11 +130,11 @@
 <div class="actions"><button id="managerBackBtn" class="btn outline">← กลับ</button></div>
 </section>
 <section id="roomView" hidden>
-<div class="panel room-banner"><div class="room-heading"><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-banner-right"><div class="room-banner-buttons"><button id="leaveBtn" class="btn outline small" hidden> ออกจากห้อง</button><button id="deleteRoomBtn" class="btn danger small" hidden>ลบห้อง</button></div><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอกเลขห้อง</button></div></div></div>
+<div class="panel room-banner"><div class="room-heading"><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-banner-right"><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอกเลขห้อง</button></div><div class="room-banner-buttons"><button id="leaveBtn" class="btn outline small" hidden> ออกจากห้อง</button><button id="deleteRoomBtn" class="btn danger small" hidden>ลบห้อง</button></div></div></div>
 <div class="game-layout"><div>
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
-<p id="hostLine" class="muted"></p><div id="playerList" class="player-list"></div>
+<div id="playerList" class="player-list"></div>
 <div id="lobbyCategoryPanel" class="lobby-category">
  <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
  <p id="lobbyCategoryCurrent" class="muted"></p>
@@ -176,6 +176,10 @@
 <div id="insiderMasterPanel" class="guess-box" hidden><h3>Master · ตั้งโจทย์</h3><p class="muted hint">พิมพ์คำตอบอะไรก็ได้ ภายใน 1 นาที แล้วยืนยันเพื่อเริ่มเกมทันที</p><input id="insiderMasterWord" maxlength="100" autocomplete="off" placeholder="เช่น ดาวเสาร์, แตงโม"><button id="insiderMasterSubmit" class="btn primary full">ยืนยันโจทย์</button></div>
 <div id="insiderKnownPanel" class="guess-box" hidden><h3>คุณคือ Insider · คำตอบลับ</h3><p class="insider-secret-answer" id="insiderKnownWord"></p><p class="muted hint">อย่าให้คนอื่นรู้ว่าคุณมีคำตอบอยู่แล้ว</p></div>
 <div id="insiderGuessPanel" class="guess-box" hidden><h3>พิมพ์คำตอบของคุณ</h3><p id="insiderRemaining" class="muted hint">เหลือ 5 ครั้ง</p><input id="insiderGuessInput" maxlength="100" autocomplete="off" placeholder="พิมพ์คำตอบ"><button id="insiderGuessSubmit" class="btn primary full">ยืนยันคำตอบ</button><div id="insiderGuessHistory" class="insider-attempts"></div></div>
+<section id="insiderLiveFeedPanel" class="insider-live-feed-panel" hidden aria-label="คำตอบของทุกคน">
+ <div class="insider-live-feed-header"><div><small>LIVE ANSWERS</small><h3>คำตอบของทุกคน</h3></div><span id="insiderLiveFeedCount" class="insider-feed-count">0 คำตอบ</span></div>
+ <div id="insiderLiveFeed" class="insider-live-feed" role="log" aria-live="polite" aria-relevant="additions text"></div>
+</section>
 <div id="insiderVotePanel" class="guess-box" hidden><h3>โหวตว่าใครคือ Insider</h3><p id="insiderVoteProgress" class="muted hint"></p><div id="insiderVoteChoices" class="vote-list"></div><button id="insiderVoteSubmit" class="btn primary full" disabled>ยืนยันโหวต</button></div>
 <div class="who-note-panel"><div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>สมุดโน้ตของฉัน</h3></div><span class="who-note-tag">เฉพาะคุณ</span></div><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div>
 </section>
