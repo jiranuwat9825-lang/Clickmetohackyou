@@ -514,3 +514,33 @@ body.landing-active{overflow:hidden}
  .landing-footnote{font-size:9px;letter-spacing:.18em}
 }
 @media(prefers-reduced-motion:reduce){.landing-cover{animation:none}.landing-enter{transition:none}}
+
+/* V22: compact cover with the generated neon-E logo */
+.landing-content{
+ width:min(100%,880px);
+ padding:32px 22px 38px;
+}
+.landing-logo{
+ display:block;width:clamp(96px,10.5vw,124px);height:auto;aspect-ratio:1;
+ object-fit:cover;border-radius:22%;margin:0 0 20px;
+ filter:drop-shadow(0 0 16px rgba(35,188,255,.35));
+}
+.landing-kicker{font-size:10px;letter-spacing:.28em;margin-bottom:9px}
+.landing-heading{font-size:clamp(43px,6.3vw,93px);letter-spacing:-.046em}
+.landing-subtitle{font-size:clamp(18px,2.2vw,27px);margin:18px 0 24px}
+.landing-enter{
+ min-width:202px;min-height:53px;padding:10px 24px;
+ font-size:18px;border-radius:15px;gap:13px;
+}
+.landing-enter-arrow{font-size:21px}
+.landing-footnote{font-size:9px;letter-spacing:.2em;margin-top:20px}
+@media(max-width:600px){
+ .landing-content{padding:26px 17px 34px}
+ .landing-logo{width:clamp(82px,23vw,105px);margin-bottom:17px}
+ .landing-kicker{font-size:9px;letter-spacing:.15em;margin-bottom:8px}
+ .landing-heading{font-size:clamp(37px,9.5vw,58px)}
+ .landing-subtitle{font-size:clamp(17px,4.9vw,21px);margin:16px 0 22px}
+ .landing-enter{min-width:184px;min-height:49px;padding:9px 20px;font-size:16px}
+ .landing-enter-arrow{font-size:19px}
+ .landing-footnote{font-size:9px;letter-spacing:.12em;margin-top:18px}
+}
