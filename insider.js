@@ -54,6 +54,44 @@ function insiderClock(r){
  if(play)$('insiderGuessSubmit').disabled=insiderRole(r)==='master'||Number(r.insiderAttempts?.[myId]||0)>=5||serverNow()>=Number(r.insiderGuessDeadline||0);
  if(vote)$('insiderVoteSubmit').disabled=!!r.insiderVotes?.[myId]||!insiderVoteChoice||serverNow()>=Number(r.insiderDeadline||0);
 }
+function insiderGuessEvents(r){
+ if(Array.isArray(r.insiderGuessFeed))return r.insiderGuessFeed;
+ // Support an active room started before this feature was deployed.
+ const events=[];
+ for(const [id,words] of Object.entries(r.insiderGuesses||{})){
+  (Array.isArray(words)?words:[]).forEach((answer,index)=>events.push({
+   playerId:id,answer,correct:norm(answer)===norm(r.insiderAnswer||''),attempt:index+1
+  }));
+ }
+ return events;
+}
+function insiderRenderGuessFeed(r){
+ const active=['playing','insider_voting'].includes(r.status);
+ $('insiderLiveFeedPanel').hidden=!active;
+ if(!active)return;
+ const events=insiderGuessEvents(r),target=$('insiderLiveFeed');
+ $('insiderLiveFeedCount').textContent=events.length+' คำตอบ';
+ target.replaceChildren();
+ if(!events.length){
+  const empty=document.createElement('p');empty.className='insider-feed-empty';
+  empty.textContent='ยังไม่มีใครส่งคำตอบ · คำตอบจะขึ้นที่นี่ทันทีที่มีคนส่ง';
+  target.append(empty);return;
+ }
+ for(const event of [...events].reverse()){
+  const row=document.createElement('div');
+  row.className='insider-feed-item '+(event.correct?'correct':'incorrect');
+  const identity=document.createElement('div');identity.className='insider-feed-identity';
+  const name=document.createElement('span');name.className='insider-feed-name';
+  name.textContent=(r.players?.[event.playerId]||r.gamePlayers?.[event.playerId]||r.playerProfiles?.[event.playerId])?.name||'ผู้เล่น';
+  const number=document.createElement('small');number.textContent='ครั้งที่ '+(Number(event.attempt)||1);
+  identity.append(name,number);
+  const answer=document.createElement('strong');answer.className='insider-feed-answer';
+  answer.textContent=String(event.answer||'');
+  const status=document.createElement('b');status.className='insider-feed-status';
+  status.textContent=event.correct?'✓ ถูกต้อง':'✕ ไม่ถูกต้อง';
+  row.append(identity,answer,status);target.append(row);
+ }
+}
 function renderInsider(r){
  insiderSyncNotes(r);
  const role=insiderRole(r),master=role==='master',spy=role==='insider',prep=r.status==='insider_prepare',play=r.status==='playing',vote=r.status==='insider_voting';
@@ -69,6 +107,7 @@ function renderInsider(r){
  $('insiderGuessPanel').hidden=!play||master||remaining===0;
  $('insiderVotePanel').hidden=!vote;
  $('insiderRemaining').textContent='โอกาสทายคงเหลือ '+remaining+' / 5 ครั้ง';
+ insiderRenderGuessFeed(r);
  const guesses=$('insiderGuessHistory');guesses.replaceChildren();
  (r.insiderGuesses?.[myId]||[]).forEach((word,i)=>{const p=document.createElement('p');p.className='insider-attempt';p.textContent='ครั้งที่ '+(i+1)+': '+word;guesses.append(p)});
  const voters=Object.keys(r.players||{}).filter(id=>r.roles?.[id]);
@@ -102,6 +141,24 @@ function renderInsiderResults(r,target,players){
  }
  insiderIds(r).forEach(id=>{const row=document.createElement('div');row.className='result-row';row.innerHTML='<span>'+playerLabelHTML(id,r)+'</span><b>+'+Number(res.awards?.[id]||0)+' คะแนน</b>';section.append(row)});
  target.append(section);
+ const events=insiderGuessEvents(r);
+ if(events.length){
+  const title=document.createElement('h3');title.className='insider-result-feed-title';
+  title.textContent='ประวัติคำตอบของทุกคน';
+  const log=document.createElement('div');log.className='insider-live-feed';
+  for(const event of events){
+   const item=document.createElement('div');
+   item.className='insider-feed-item '+(event.correct?'correct':'incorrect');
+   const name=document.createElement('span');name.className='insider-feed-name';
+   name.textContent=(players[event.playerId]?.name||'ผู้เล่น')+' · ครั้งที่ '+(Number(event.attempt)||1);
+   const word=document.createElement('strong');word.className='insider-feed-answer';
+   word.textContent=String(event.answer||'');
+   const verdict=document.createElement('b');verdict.className='insider-feed-status';
+   verdict.textContent=event.correct?'✓ ถูกต้อง':'✕ ไม่ถูกต้อง';
+   item.append(name,word,verdict);log.append(item);
+  }
+  target.append(title,log);
+ }
 }
 $('insiderMasterSubmit').onclick=async()=>{
  if(!roomId||roomState?.gameMode!=='insider'||myId!==roomState.insiderMasterId)return;
@@ -126,7 +183,10 @@ $('insiderGuessSubmit').onclick=async()=>{
    Number(r.insiderAttempts?.[myId]||0)>=5)return;
   r.insiderAttempts||={};r.insiderAttempts[myId]=Number(r.insiderAttempts[myId]||0)+1;
   r.insiderGuesses||={};r.insiderGuesses[myId]=[...(r.insiderGuesses[myId]||[]),answer];
-  if(norm(answer)===norm(r.insiderAnswer))insiderStartVoting(r,myId);
+  const correct=norm(answer)===norm(r.insiderAnswer);
+  r.insiderGuessFeed||=[];
+  r.insiderGuessFeed.push({playerId:myId,answer,correct,attempt:r.insiderAttempts[myId]});
+  if(correct)insiderStartVoting(r,myId);
   r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);
  if(res.committed){$('insiderGuessInput').value='';const ok=res.snapshot.val()?.insiderWinner===myId;toast(ok?'ตอบถูก! เริ่มโหวต Insider':'บันทึกคำตอบแล้ว',ok?'success':'error')}
