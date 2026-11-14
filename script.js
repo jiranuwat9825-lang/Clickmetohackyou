@@ -2055,12 +2055,24 @@ $('nextGameBtn').onclick=async()=>{if(!isHost||!roomId||!await confirmBox('ก�
 // Restore remembered room only after the player confirms the prefilled name.
 if(roomId){$('roomCode').textContent=roomId;$('roomTitle').textContent=`ห้อง ${roomId}`;$('leaveBtn').hidden=false;showOnly('homeView');}else showOnly('homeView');
 // Fullscreen entry cover; do not interrupt people reconnecting to an active room.
+let landingTransitioning=false;
 function closeLandingCover(){
- const splash=$('landingCover');
- if(!splash||splash.hidden)return;
+ const splash=$('landingCover'),button=$('landingEnterBtn');
+ if(!splash||splash.hidden||landingTransitioning)return;
+ landingTransitioning=true;
+ button.disabled=true;
+ // Fade the full-screen cover out while the main page fades in underneath.
+ document.body.classList.add('landing-transitioning');
  splash.classList.add('landing-leaving');
  document.body.classList.remove('landing-active');
- window.setTimeout(()=>{splash.hidden=true;splash.classList.remove('landing-leaving');},330);
+ const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ window.setTimeout(()=>{
+  splash.hidden=true;
+  splash.classList.remove('landing-leaving');
+  document.body.classList.remove('landing-transitioning');
+  button.disabled=false;
+  landingTransitioning=false;
+ },reducedMotion?0:780);
 }
 $('landingEnterBtn').addEventListener('click',closeLandingCover);
 if(roomId){
