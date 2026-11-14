@@ -662,3 +662,20 @@ body.landing-transitioning .shell{
 .score-offline-icon svg{display:block;width:15px;height:15px}
 .score-offline-label{display:none!important}
 @media(max-width:650px){.insider-feed-item{gap:7px 12px}.insider-feed-identity{min-width:0}.insider-feed-answer{padding-left:0}.score-row .score-identity{flex-wrap:nowrap;gap:6px}}
+
+/* Who Am I: Customize By Player */
+.who-custom-write-card{padding:23px;border:1px solid rgba(170,145,255,.32);border-radius:17px;background:linear-gradient(140deg,rgba(68,53,119,.28),rgba(16,31,55,.95))}
+.who-custom-write-card h3{font-size:clamp(19px,2.8vw,25px);margin:8px 0}
+.who-custom-write-card h3 span{color:var(--cyan)}
+.who-custom-write-card p{font-size:13px;line-height:1.65;margin:10px 0 16px}
+.who-custom-write-card label{margin-top:17px}
+.who-custom-write-card input{min-height:52px}
+.who-custom-write-card .btn{margin-top:12px}
+.who-custom-guesses{display:grid;gap:8px;margin-top:14px}
+.who-custom-guess-item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 13px;border-radius:11px;border:1px solid var(--line);background:#0b172b;font-size:12px}
+.who-custom-guess-item span{overflow-wrap:anywhere;min-width:0}
+.who-custom-guess-item b{white-space:nowrap;color:var(--red)}
+.who-custom-guess-item.correct{border-color:rgba(95,231,181,.3)}
+.who-custom-guess-item.correct b{color:var(--green)}
+#whoFormatSection .format-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:700px){#whoFormatSection .format-grid{grid-template-columns:1fr}.who-custom-write-card{padding:18px}.who-custom-guess-item{gap:9px}}
