@@ -1107,9 +1107,6 @@ function renderModeChoices(){
  document.querySelectorAll('#modeOptions [data-mode]').forEach(b=>{const on=b.dataset.mode==='whoami'?selectedMode.startsWith('whoami'):selectedMode==='spyfall';b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
  $('whoFormatSection').hidden=!selectedMode.startsWith('whoami');
  $('spyFormatSection').hidden=selectedMode!=='spyfall';
- $('spyRulesHint').textContent=selectedSpyVariant==='aware'
-  ?'จับ Spy ถูก: คนปกติคนละ +1 / Spy รอด: +1 / Spy ทายคำถูก: +1 (เฉพาะ Spy เท่านั้นที่ทายคำ)'
-  :'จับ Spy ถูก: คนปกติคนละ +1 / Spy รอด: +2 / คนที่ทายคำฝ่ายตรงข้ามถูกได้โบนัส +1 (ไม่บังคับ)';
  document.querySelectorAll('[data-spy-format]').forEach(b=>{
   const active=b.dataset.spyFormat===selectedSpyVariant;
   b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
