@@ -567,9 +567,9 @@ body.landing-transitioning .shell{
  body.landing-transitioning .shell{transition:none;transform:none}
  .landing-cover.landing-leaving{transition:none;filter:none}
 }
-/* V23: third game shown as disabled/coming soon */
+/* V24: coming-soon games including Insider, Avalon, and Steal cheese */
 #modeOptions{grid-template-columns:repeat(3,minmax(0,1fr))}
-#modeOptions .choice.mode.insider-soon{
+#modeOptions .choice.mode.coming-soon{
  min-width:0;
  background:linear-gradient(145deg,rgba(133,145,166,.22),rgba(73,84,107,.23));
  border:1.5px solid #63718d;
@@ -580,9 +580,9 @@ body.landing-transitioning .shell{
  cursor:not-allowed;
  pointer-events:none;
 }
-#modeOptions .choice.mode.insider-soon strong{color:#cbd2de}
-#modeOptions .choice.mode.insider-soon small{color:#aab5c7;font-weight:600}
-#modeOptions .choice.mode.insider-soon:hover{
+#modeOptions .choice.mode.coming-soon strong{color:#cbd2de}
+#modeOptions .choice.mode.coming-soon small{color:#aab5c7;font-weight:600}
+#modeOptions .choice.mode.coming-soon:hover{
  transform:none;
  border-color:#63718d;
  background:linear-gradient(145deg,rgba(133,145,166,.22),rgba(73,84,107,.23));
