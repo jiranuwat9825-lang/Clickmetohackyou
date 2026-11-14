@@ -625,3 +625,12 @@ body.landing-transitioning .shell{
  .score-row .score-identity{flex-wrap:wrap;gap:6px}
  .vote-player-offline{font-size:9px;padding:2px 5px}
 }
+
+/* Insider mode */
+.insider-page .insider-role{background:radial-gradient(circle at 80% 10%,rgba(97,220,255,.16),transparent 55%),#171b39;border-color:rgba(125,161,255,.5)}
+.insider-page .insider-role h2{letter-spacing:2px;color:var(--violet)}
+.insider-secret-answer{font-size:clamp(23px,5vw,35px);font-weight:800;color:var(--cyan);text-align:center;overflow-wrap:anywhere;padding:10px}
+.insider-attempts{display:grid;gap:6px;margin-top:10px}
+.insider-attempt{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:8px}
+#insiderVoteChoices{display:grid;gap:9px}
+#insiderMasterWord,#insiderGuessInput{margin-top:7px}
