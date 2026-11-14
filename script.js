@@ -2866,7 +2866,8 @@ function renderResults(r){
     <div class="summary-answer-grid">
      <div><small>คำตอบที่ถูกต้อง</small><strong>${esc(correct)}</strong></div>
      <div><small>คำที่ผู้เล่นตอบ</small><strong>${esc(answer)}</strong></div>
-    </div><div class="summary-answer-points">ได้ +${d.points||0} คะแนน${d.correct&&['whoami_rounds','whoami_custom'].includes(r.gameMode)?` · รอบที่ ${d.round||1}`:''}</div>`;
+    </div><div class="summary-answer-points">ได้ +${d.points||0} คะแนน${d.correct&&['whoami_rounds','whoami_custom'].includes(r.gameMode)?` · รอบที่ ${d.round||1}`:''}</div>
+    ${r.gameMode==='whoami_custom'?'<div class="who-custom-result-guesses">คำที่เคยทาย: '+(r.whoCustomGuesses?.[id]||[]).map((g,i)=>esc((i+1)+'. '+g.answer+(g.correct?' ✓':' ✕'))).join(' · ')+'</div>':''}`;
    list.append(row);
   });
   section.append(list);target.append(section);
