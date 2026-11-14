@@ -2156,7 +2156,7 @@ const packFor=r=>{
  const candidates=[r?.categoryPack,library[r?.category],builtinCategories[r?.category]];
  return candidates.find(pack=>supportsMode(pack,r?.gameMode))||candidates.find(pack=>wordsOf(pack).length)||builtinCategories.rov;
 },enabledFor=p=>Array.isArray(p?.enabledModes)&&p.enabledModes.length?p.enabledModes:MODES;
-function showOnly(v){['homeView','createView','managerView','roomView'].forEach(id=>$(id).hidden=id!==v);}function showScreen(v){['lobbyScreen','spyScreen','whoScreen','voteScreen','resultsScreen','grandFinalScreen'].forEach(id=>$(id).hidden=id!==v);}
+function showOnly(v){['homeView','createView','managerView','roomView'].forEach(id=>$(id).hidden=id!==v);}function showScreen(v){['lobbyScreen','insiderScreen','spyScreen','whoScreen','voteScreen','resultsScreen','grandFinalScreen'].forEach(id=>$(id).hidden=id!==v);}
 function toast(msg,type='info'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;$('toasts').prepend(el);setTimeout(()=>el.remove(),5000);}
 function error(e){
  console.error('Party Game Firebase error:',e);
@@ -2216,7 +2216,7 @@ function renderModeChoices(){
  document.querySelectorAll('[data-who-format]').forEach(b=>{const on=b.dataset.whoFormat===selectedMode;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
  renderCategoryChoices();
 }
-$('modeOptions').onclick=e=>{const b=e.target.closest('[data-mode]');if(b)chooseMode(b.dataset.mode==='whoami'?'whoami_time':'spyfall');};
+$('modeOptions').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;chooseMode(b.dataset.mode==='whoami'?'whoami_time':b.dataset.mode);};
 $('whoFormatSection').onclick=e=>{const b=e.target.closest('[data-who-format]');if(b)chooseMode(b.dataset.whoFormat);};
 $('spyFormatSection').onclick=e=>{
  const b=e.target.closest('[data-spy-format]');if(!b)return;
