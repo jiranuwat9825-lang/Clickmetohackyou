@@ -490,7 +490,7 @@ body.landing-active{overflow:hidden}
  position:relative;min-width:256px;min-height:66px;display:flex;align-items:center;justify-content:center;
  gap:20px;padding:13px 29px;border:2px solid #91eaff;border-radius:18px;
  background:linear-gradient(110deg,#0dc9ef,#5d72fd 64%,#ae4dec);
- color:#fff;font:900 22px/1.3 inherit;letter-spacing:.015em;
+ color:#fff;font-family:inherit;font-weight:900;font-size:22px;line-height:1.3;letter-spacing:.015em;
  box-shadow:0 0 0 3px #19d2ff33,0 10px 35px #10a5fca8,0 0 44px #873bfd8c;
  cursor:pointer;text-shadow:0 1px 2px #102264;
  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease
