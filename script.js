@@ -2548,7 +2548,7 @@ function renderLobbyFormat(r){
  if(document.activeElement!==mode)mode.value=r.gameMode;
  if(document.activeElement!==setting)setting.value=r.settingValue||2;
  mode.disabled=!isHost;setting.disabled=!isHost;button.hidden=!isHost;
- $('lobbyFormatHint').textContent=r.gameMode==='whoami_custom'?`Customize By Player · คิดคำ 1 นาที · ตอบได้คนละ 2 ครั้ง · ${r.settingValue||2} รอบถาม`:`${modeTitle(r.gameMode)} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาทีต่อคน':'รอบ'}`;
+
 }
 $('lobbyChangeFormatBtn').onclick=async()=>{
  if(!roomId||!isHost)return;
