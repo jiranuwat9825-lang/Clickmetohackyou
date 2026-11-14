@@ -214,6 +214,13 @@
 <section id="whoScreen" class="panel page" hidden>
 <div class="section-head"><div><small>WHO AM I? · GUESS YOUR WORD</small><h2>ฉันคือใคร?</h2></div></div>
 <div id="whoProgress" class="game-stats"></div>
+<div id="whoCustomJudgePanel" class="who-custom-judge-panel" hidden role="status" aria-live="polite">
+  <div class="who-custom-judge-heading"><span aria-hidden="true">📨</span><div><small>ANSWER REVIEW · PLEASE DECIDE</small><h3>เพื่อนส่งคำตอบมาให้คุณตรวจ</h3></div></div>
+  <p>คำตอบจาก <strong id="whoCustomJudgeName">เพื่อนของคุณ</strong></p>
+  <div id="whoCustomJudgeAnswer" class="who-custom-judge-answer"></div>
+  <p id="whoCustomJudgeStatus" class="muted hint">เลือกผลคำตอบให้เพื่อน</p>
+  <div class="who-custom-judge-actions"><button type="button" id="whoCustomJudgeCorrect" class="btn primary">✓ ถูกต้อง</button><button type="button" id="whoCustomJudgeWrong" class="btn outline">✕ ไม่ถูกต้อง</button></div>
+</div>
 <div class="role-card purple"><div id="whoMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำของคุณถูกซ่อนไว้</small><h2>YOU ARE ?</h2><p id="whoRoleHint">ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
 <div id="whoTimerBlock" class="timer-block" hidden><span id="whoTimerLabel">เวลาที่เหลือ</span><strong id="whoTimer">00:00</strong></div>
 <div id="playerTimerPanel" class="player-timer-panel" hidden><h3> เวลาคงเหลือของแต่ละคน</h3><div id="playerTimerList" class="player-timer-grid"></div><p class="muted hint">เวลาลดเฉพาะตอนถึงตาของคนนั้น และหยุดเมื่อผ่านเทิร์น</p></div>
@@ -227,7 +234,7 @@
  <textarea id="whoNoteInput" rows="5" maxlength="3000" placeholder="เช่น: แก๊งนี้ถามถึงตัวละครเกม / เพื่อนบอกว่าเป็นสายโจมตี..."></textarea>
  <div class="who-note-footer"><span> เห็นเฉพาะเบราว์เซอร์นี้</span><span id="whoNoteCount">0 / 3000</span></div>
  </div>
- <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full"> ยืนยันคำตอบ</button><div id="whoCustomGuessHistory" class="who-custom-guesses" hidden></div></div></div>
+ <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full"> ยืนยันคำตอบ</button></div><p id="whoCustomAwaiting" class="who-custom-awaiting notice" hidden>รอคนตั้งคำตรวจคำตอบของคุณ…</p><div id="whoCustomGuessHistory" class="who-custom-guesses" hidden></div></div>
 
 </section>
 <section id="voteScreen" class="panel page" hidden>
