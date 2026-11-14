@@ -679,3 +679,5 @@ body.landing-transitioning .shell{
 .who-custom-guess-item.correct b{color:var(--green)}
 #whoFormatSection .format-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:700px){#whoFormatSection .format-grid{grid-template-columns:1fr}.who-custom-write-card{padding:18px}.who-custom-guess-item{gap:9px}}
+
+.who-custom-result-guesses{margin-top:10px;padding:9px 12px;border:1px solid var(--line);background:rgba(170,145,255,.06);border-radius:9px;font-size:12px;line-height:1.65;color:var(--muted);overflow-wrap:anywhere}
