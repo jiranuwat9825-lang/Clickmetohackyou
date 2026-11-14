@@ -594,3 +594,34 @@ body.landing-transitioning .shell{
 @media(max-width:680px){
  #modeOptions{grid-template-columns:1fr;gap:10px}
 }
+
+/* V26: audit fixes, disconnected participants and expired-turn accessibility */
+.score-row.score-offline{
+ opacity:.75;
+ border-style:dashed;
+}
+.score-offline-label,
+.vote-player-offline{
+ display:inline-flex;
+ align-items:center;
+ flex-shrink:0;
+ font-size:10px;
+ line-height:1.35;
+ font-weight:600;
+ color:#b1bfd9;
+ padding:3px 7px;
+ border:1px solid rgba(149,164,190,.25);
+ border-radius:999px;
+ background:rgba(82,100,130,.16);
+}
+#guessBtn:disabled{
+ cursor:not-allowed;
+ opacity:.58;
+ filter:saturate(.55);
+ box-shadow:none;
+ transform:none;
+}
+@media(max-width:650px){
+ .score-row .score-identity{flex-wrap:wrap;gap:6px}
+ .vote-player-offline{font-size:9px;padding:2px 5px}
+}

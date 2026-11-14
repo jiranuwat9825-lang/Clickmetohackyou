@@ -7,6 +7,19 @@ const serverNow=()=>Date.now()+serverOffset,esc=v=>String(v??'').replace(/[&<>"'
 const modeTitle=m=>({spyfall:'Spyfall',whoami_time:'Who Am I · จับเวลา',whoami_rounds:'Who Am I · นับรอบ'}[m]||'Spyfall');
 const random=a=>a[Math.floor(Math.random()*a.length)],shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const getRef=()=>db.ref(`rooms/${roomId}`),copyPack=v=>JSON.parse(JSON.stringify(v)),wordsOf=p=>[...new Set(Object.values(p?.groups||{}).flat().filter(x=>typeof x==='string'&&x.trim()))],norm=s=>String(s??'').trim().toLocaleLowerCase();
+function gameParticipantIds(r){
+ const snap=r?.gamePlayers||{},roles=r?.roles||{};
+ return Object.keys(snap).length?Object.keys(snap):Object.keys(roles).length?Object.keys(roles):Object.keys(r?.players||{});
+}
+function gameParticipants(r){
+ const ids=gameParticipantIds(r),all={...(r?.playerProfiles||{}),...(r?.gamePlayers||{}),...(r?.players||{})};
+ return Object.fromEntries(ids.map(id=>[id,all[id]||{name:'ผู้เล่น',avatar:'fox'}]));
+}
+function everyoneWithScores(r){
+ const ids=new Set([...Object.keys(r?.scores||{}),...Object.keys(r?.players||{})]);
+ const known={...(r?.playerProfiles||{}),...(r?.gamePlayers||{}),...(r?.players||{})};
+ return Object.fromEntries([...ids].map(id=>[id,known[id]||{name:'ผู้เล่นที่ออกจากห้อง',avatar:'fox'}]));
+}
 function firebaseSafePack(pack){
  const groups={},groupLabels={};
  Object.entries(pack?.groups||{}).forEach(([label,words],index)=>{
@@ -30,8 +43,8 @@ function spyVotesComplete(r){
 function supportsMode(pack,mode){
  if(!pack?.groups||!MODES.includes(mode))return false;
  const groups=Object.values(pack.groups).filter(Array.isArray);
- if(mode==='spyfall')return groups.some(words=>new Set(words.filter(w=>typeof w==='string'&&w.trim())).size>=2);
- return groups.some(words=>words.some(w=>typeof w==='string'&&w.trim()));
+ if(mode==='spyfall')return groups.some(words=>new Set(words.filter(w=>typeof w==='string'&&w.trim()).map(norm)).size>=2);
+ return new Set(wordsOf(pack).map(norm)).size>=2;
 }
 let serverOffset=0,roomState=null,roomId=sessionStorage.getItem('pg_room_v6')||'',myId=sessionStorage.getItem('pg_tab_id')||`u_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 let myName=localStorage.getItem('rov_spy_myname')||'',nameConfirmed=false,myAvatar=localStorage.getItem('party_game_avatar_v1')||'fox';
@@ -91,7 +104,7 @@ const AVATARS=[
 const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
 if(!AVATARS.some(a=>a.id===myAvatar)){myAvatar='fox';try{localStorage.setItem('party_game_avatar_v1',myAvatar);}catch(e){}}
 const avatarMarkup=(player,cls='avatar-inline')=>{const a=avatarById(player?.avatar||'fox');return `<span class="avatar-token tone-${a.tone} ${cls}" title="${esc(a.name)}">${a.emoji}</span>`;};
-const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
+const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||r?.gamePlayers?.[id]||r?.playerProfiles?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
 function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const a=avatarById(avatarId);el.textContent=a.emoji;el.className=`game-avatar tone-${a.tone}`;}
 let avatarFilter='all';
 const AVATAR_FILTERS=[
@@ -2290,7 +2303,7 @@ $('saveCategoryBtn').onclick=async()=>{
   if(g.words.length)groups[n]=[...new Set(g.words)];
  }
  if(!Object.keys(groups).length){toast('เพิ่มคำอย่างน้อยหนึ่งคำ','error');return;}
- if(editDraft.enabledModes.includes('spyfall')&&!Object.values(groups).some(g=>g.length>=2)){
+ if(editDraft.enabledModes.includes('spyfall')&&!Object.values(groups).some(g=>new Set(g.map(norm)).size>=2)){
   toast('Spyfall ต้องมีกลุ่มที่มีอย่างน้อยสองคำ','error');return;
  }
  const key=editNew?`custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`:editKey;
@@ -2327,7 +2340,7 @@ function unsubscribe(){if(subscribedRef&&roomCallback)subscribedRef.off('value',
 function goHome(msg=''){unsubscribe();roomId='';roomState=null;isHost=false;leaving=false;sessionStorage.removeItem('pg_room_v6');$('leaveBtn').hidden=true;showOnly('homeView');if(msg)toast(msg);}
 function enterRoom(id){unsubscribe();roomId=id;leaving=false;lastTouch=serverNow();sessionStorage.setItem('pg_room_v6',id);$('roomTitle').textContent='กำลังโหลดห้อง…';$('roomCode').textContent=id;$('leaveBtn').hidden=false;showOnly('roomView');subscribe();}
 function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.keys(ps).length&&!ps[r.hostId])ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{});if(ids.length&&!x.players[x.hostId]){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
-async function reconnect(){if(!roomId||leaving||reconnectBusy)return;if(!nameConfirmed||!myName){showOnly('homeView');toast('กรุณายืนยันชื่อก่อนกลับเข้าห้อง','error');return;}reconnectBusy=true;const id=roomId,ref=db.ref(`rooms/${id}`);try{const s=await ref.once('value'),r=s.val();if(id!==roomId)return;if(!r||inactive(r)){if(r)await removeInactive(id);goHome('ห้องเดิมหมดอายุแล้ว');return;}if(r.status!=='lobby'&&r.status!=='finished'&&!r.roles?.[myId]){goHome('เกมเริ่มแล้ว ไม่สามารถเข้ากลางเกมได้');return;}await ref.child(`players/${myId}`).onDisconnect().remove();await ref.child(`players/${myId}`).set({name:myName,avatar:myAvatar});if(!subscribedRef)subscribe();}catch(e){error(e);}finally{reconnectBusy=false;}}
+async function reconnect(){if(!roomId||leaving||reconnectBusy)return;if(!nameConfirmed||!myName){showOnly('homeView');toast('กรุณายืนยันชื่อก่อนกลับเข้าห้อง','error');return;}reconnectBusy=true;const id=roomId,ref=db.ref(`rooms/${id}`);try{const s=await ref.once('value'),r=s.val();if(id!==roomId)return;if(!r||inactive(r)){if(r)await removeInactive(id);goHome('ห้องเดิมหมดอายุแล้ว');return;}if(r.status!=='lobby'&&r.status!=='finished'&&!r.roles?.[myId]){goHome('เกมเริ่มแล้ว ไม่สามารถเข้ากลางเกมได้');return;}await ref.child(`players/${myId}`).onDisconnect().remove();await ref.child(`players/${myId}`).set({name:myName,avatar:myAvatar});await ref.child(`playerProfiles/${myId}`).set({name:myName,avatar:myAvatar});if(!subscribedRef)subscribe();}catch(e){error(e);}finally{reconnectBusy=false;}}
 db.ref('.info/connected').on('value',s=>{if(s.val()===true&&roomId&&!leaving&&nameConfirmed)reconnect();});
 
 async function generateRoomCode(){
@@ -2347,7 +2360,7 @@ $('createConfirmBtn').onclick=async()=>{
  if(!selectedMode||!pack||!enabledFor(pack).includes(selectedMode)){toast('เลือกโหมดและหมวดคำก่อน','error');return;}
  if(!supportsMode(pack,selectedMode)){toast('หมวดนี้ยังไม่มีคำที่พร้อมเล่นกับโหมดที่เลือก','error');return;}
  if(!Number.isInteger(n)||n<1||n>99){toast('จำนวนรอบ/นาทีต้องอยู่ระหว่าง 1–99','error');return;}
- if(selectedMode==='spyfall'&&!Object.values(pack.groups).some(g=>new Set(g).size>=2)){toast('หมวดนี้ต้องมีกลุ่มที่มีคำไม่ซ้ำอย่างน้อย 2 คำสำหรับ Spyfall','error');return;}
+ if(selectedMode==='spyfall'&&!Object.values(pack.groups).some(g=>new Set(g.map(norm)).size>=2)){toast('หมวดนี้ต้องมีกลุ่มที่มีคำไม่ซ้ำอย่างน้อย 2 คำสำหรับ Spyfall','error');return;}
  if(!wordsOf(pack).length){toast('หมวดไม่มีคำ','error');return;}
  const button=$('createConfirmBtn');
  button.disabled=true;button.textContent='กำลังสร้างห้อง…';
@@ -2359,7 +2372,7 @@ $('createConfirmBtn').onclick=async()=>{
   const roomData={
    roomName,roomCode,hostId:myId,gameMode:selectedMode,category:selectedCategory,
    categoryPack:firebaseSafePack(pack),settingValue:n,spyVariant:selectedMode==='spyfall'?selectedSpyVariant:'secret',status:'lobby',
-   players:{[myId]:{name:myName,avatar:myAvatar}},scores:{[myId]:0},
+   players:{[myId]:{name:myName,avatar:myAvatar}},playerProfiles:{[myId]:{name:myName,avatar:myAvatar}},scores:{[myId]:0},
    createdAt:TIMESTAMP(),lastActivityAt:TIMESTAMP(),gamesPlayed:0
   };
   await ref.set(roomData);
@@ -2369,7 +2382,7 @@ $('createConfirmBtn').onclick=async()=>{
  }catch(e){error(e);}
  finally{button.disabled=false;button.textContent='สร้างห้อง →';renderCategoryChoices();}
 };
-async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>{if(!r||r.status!=='lobby'||inactive(r))return;r.players||={};r.players[myId]={name:myName,avatar:myAvatar};r.scores||={};r.scores[myId]??=0;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast('ห้องนี้เข้าร่วมไม่ได้แล้ว','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
+async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>{if(!r||r.status!=='lobby'||inactive(r))return;r.players||={};r.players[myId]={name:myName,avatar:myAvatar};r.playerProfiles||={};r.playerProfiles[myId]={name:myName,avatar:myAvatar};r.scores||={};r.scores[myId]??=0;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast('ห้องนี้เข้าร่วมไม่ได้แล้ว','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
 async function joinRoomByCode(){
  if(!ensureName())return;
  const code=$('joinRoomCodeInput').value.trim();
@@ -2395,7 +2408,7 @@ $('deleteRoomBtn').onclick=closeRoom;$('closeAfterBtn').onclick=closeRoom;
 
 // ===== Final match closing and cumulative results =====
 function finalStandingsForRoom(r){
- const players=r.players||{},scores=r.scores||{};
+ const players=everyoneWithScores(r),scores=r.scores||{};
  const standings=Object.keys(players).map(id=>({
   id,name:String(players[id]?.name||'ผู้เล่น'),avatar:String(players[id]?.avatar||'fox'),
   score:Number(scores[id])||0
@@ -2586,7 +2599,13 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
   $('hostLine').innerHTML=` หัวหน้าห้อง: ${playerLabelHTML(r.hostId,r)} · ${ids.length} คน`;
   $('playerList').replaceChildren();
   ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag"> HOST</span>':''}`;$('playerList').append(el);});
-  const min=r.gameMode==='spyfall'?3:2;$('startBtn').hidden=!isHost;$('startBtn').disabled=ids.length<min;$('startBtn').textContent=ids.length<min?`ต้องมีอย่างน้อย ${min} คน`:' เริ่มเกม';
+  const min=r.gameMode==='spyfall'?3:2;
+   const startPack=library[r.category]||packFor(r);
+   const availableDistinctWords=new Set(wordsOf(startPack).map(norm)).size;
+   const missingRoleWords=r.gameMode!=='spyfall'&&availableDistinctWords<ids.length;
+   $('startBtn').hidden=!isHost;
+   $('startBtn').disabled=ids.length<min||missingRoleWords;
+   $('startBtn').textContent=ids.length<min?`ต้องมีอย่างน้อย ${min} คน`:missingRoleWords?`หมวดมี ${availableDistinctWords} คำ ไม่พอสำหรับ ${ids.length} คน`:'เริ่มเกม';
   $('finishMatchPanel').hidden=!(isHost&&Number(r.gamesPlayed||0)>=1);
   $('deleteRoomBtn').hidden=!isHost;$('lobbyNotice').hidden=isHost;$('lobbyNotice').textContent=`รอ ${players[r.hostId]?.name||'Host'} เริ่มเกม…`;
  }else if(status==='playing'&&r.gameMode==='spyfall')renderSpy(r);
@@ -2595,7 +2614,17 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
  else if(status==='results')renderResults(r);
  else if(status==='finished')renderGrandFinal(r);
 }
-function renderScores(r){const p=r.players||{},scores=r.scores||{};$('scoreList').replaceChildren();Object.keys(p).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).forEach((id,i)=>{const el=document.createElement('div');el.className='score-row';el.innerHTML=`<span class="score-identity"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r)}</span><b>${scores[id]||0} pts</b>`;$('scoreList').append(el);});}
+function renderScores(r){
+ const p=everyoneWithScores(r),scores=r.scores||{};
+ $('scoreList').replaceChildren();
+ Object.keys(p).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).forEach((id,i)=>{
+  const el=document.createElement('div');el.className='score-row';
+  const offline=!r.players?.[id];
+  if(offline)el.classList.add('score-offline');
+  el.innerHTML=`<span class="score-identity"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r)}${offline?'<small class="score-offline-label">ออกจากห้อง</small>':''}</span><b>${scores[id]||0} pts</b>`;
+  $('scoreList').append(el);
+ });
+}
 function renderSpy(r){
  const idx=r.currentTurnIndex||0,speaker=r.turnOrder?.[idx],players=r.players||{};
  const awareSpy=isAwareSpy(r)&&myId===r.spyId;
@@ -2688,8 +2717,10 @@ function renderWho(r){
   others.append(el);
  });
  const mine=r.attempts?.[myId]===0,details=r.guessDetails?.[myId]||{};
+ const myTimeOver=timed&&remainingWhoMs(r,myId)<=0;
  $('guessInputs').hidden=mine;
- $('guessHeading').textContent=mine?(details.timedOut?' เวลาของคุณหมดแล้ว':details.correct?' คุณตอบถูกแล้ว!':' คุณตอบผิดแล้ว'):(final?' โอกาสสุดท้าย! ตอบภายใน 2 นาที':' ทายคำของคุณ (1 ครั้ง)');
+ $('guessBtn').disabled=mine||myTimeOver;
+ $('guessHeading').textContent=mine?(details.timedOut?' เวลาของคุณหมดแล้ว':details.correct?' คุณตอบถูกแล้ว!':' คุณตอบผิดแล้ว'):(myTimeOver?'เวลาของคุณหมดแล้ว กำลังสรุปผล':final?'โอกาสสุดท้าย! ตอบภายใน 2 นาที':'ทายคำของคุณ (1 ครั้ง)');
  const reveal=$('answerReveal');
  reveal.hidden=!mine;
  reveal.innerHTML=mine?`<strong>${details.timedOut?' หมดเวลา':details.correct?' คำตอบถูกต้อง':' คำตอบไม่ถูกต้อง'}</strong>
@@ -2697,11 +2728,11 @@ function renderWho(r){
   <span>คำที่คุณตอบ: <b>${esc(details.answer||'ไม่ได้ตอบ')}</b></span>`:'';
 }
 function renderVotes(r){
- const aware=isAwareSpy(r),youAreSpy=aware&&myId===r.spyId,players=r.players||{};
+ const aware=isAwareSpy(r),youAreSpy=aware&&myId===r.spyId,players=gameParticipants(r);
  const mine=youAreSpy?r.spyGuess?.submitted:r.votes?.[myId];
- const eligible=Object.keys(players).filter(id=>!aware||id!==r.spyId);
+ const eligible=Object.keys(r.players||{}).filter(id=>!aware||id!==r.spyId);
  const votesReceived=eligible.filter(id=>!!r.votes?.[id]).length;
- const total=eligible.length,choices=r.tieCandidates||Object.keys(players);
+ const total=eligible.length,choices=r.tieCandidates||gameParticipantIds(r);
  $('voteHeading').textContent=youAreSpy?' Spy ทายคำของคนปกติ':r.tieCandidates?' โหวตรอบตัดสิน':' ใครคือ Spy?';
  $('voteTimer').textContent=formatLeft(r.voteDeadline);
  $('voteNote').textContent=aware
@@ -2736,7 +2767,7 @@ function renderVotes(r){
  choices.filter(id=>id!==myId&&players[id]).forEach(id=>{
   const button=document.createElement('button');
   button.className=`vote-choice ${id===chosenVote?'selected':''}`;
-  button.innerHTML=`${playerLabelHTML(id,r)}<b>${id===chosenVote?' เลือกแล้ว':'เลือก →'}</b>`;
+  button.innerHTML=`${playerLabelHTML(id,r)}${!r.players?.[id]?'<small class="vote-player-offline">ออกจากห้อง</small>':''}<b>${id===chosenVote?' เลือกแล้ว':'เลือก →'}</b>`;
   button.onclick=()=>{chosenVote=id;chosenWord='';renderVotes(r);};
   $('voteChoices').append(button);
  });
@@ -2756,7 +2787,7 @@ function renderVotes(r){
 }
 function addDetail(target,text){const el=document.createElement('p');el.className='result-details';el.textContent=text;target.append(el);}
 function renderResults(r){
- const players=r.players||{},scores=r.scores||{},ids=Object.keys(players).sort((a,b)=>(scores[b]||0)-(scores[a]||0));
+ const players=gameParticipants(r),scores=r.scores||{},ids=gameParticipantIds(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0));
  const target=$('resultContent');target.replaceChildren();
  const spy=r.gameMode==='spyfall',res=r.result||{};
  const hero=document.createElement('section');hero.className='result-hero';
@@ -2940,20 +2971,23 @@ $('startBtn').onclick=async()=>{
    r.categoryPack=firebaseSafePack(pack);
    const roles={},attempts={};let group='',spy=null;
    if(r.gameMode==='spyfall'){
-    const eligibleGroups=Object.entries(r.categoryPack.groups||{}).filter(([,words])=>Array.isArray(words)&&new Set(words.filter(w=>typeof w==='string'&&w.trim())).size>=2);
+    const eligibleGroups=Object.entries(r.categoryPack.groups||{}).filter(([,words])=>Array.isArray(words)&&new Set(words.filter(w=>typeof w==='string'&&w.trim()).map(norm)).size>=2);
     if(!eligibleGroups.length){failMessage='หมวดนี้ต้องมีกลุ่มที่มีคำไม่ซ้ำอย่างน้อย 2 คำ';return;}
     group=random(eligibleGroups.map(([name])=>name));
-    const uniqueWords=[...new Set(r.categoryPack.groups[group].filter(w=>typeof w==='string'&&w.trim()))];
+    const uniqueWords=[...new Map(r.categoryPack.groups[group].filter(w=>typeof w==='string'&&w.trim()).map(word=>[norm(word),word])).values()];
     const [a,b]=shuffle(uniqueWords);
     spy=random(ids);
     ids.forEach(id=>roles[id]=id===spy?(isAwareSpy(r)?'คุณเป็น SPY':a):b);
     r.spyCommonWord=isAwareSpy(r)?b:null;
    }else{
-    const ws=shuffle(wordsOf(pack));
-    if(!ws.length){failMessage='หมวดนี้ไม่มีคำสำหรับเล่น';return;}
-    ids.forEach((id,i)=>{roles[id]=ws[i%ws.length];attempts[id]=1;});
+    const ws=shuffle([...new Map(wordsOf(pack).map(word=>[norm(word),word])).values()]);
+    if(ws.length<ids.length){
+     failMessage=`หมวดนี้มีเพียง ${ws.length} คำ แต่มีผู้เล่น ${ids.length} คน กรุณาเลือกหมวดที่มีคำมากกว่านี้`;
+     return;
+    }
+    ids.forEach((id,i)=>{roles[id]=ws[i];attempts[id]=1;});
    }
-   r.status='playing';r.turnOrder=shuffle(ids);r.currentTurnIndex=0;r.currentRound=1;
+   r.status='playing';r.gamePlayers=copyPack(r.players);r.playerProfiles={...(r.playerProfiles||{}),...copyPack(r.players)};r.turnOrder=shuffle(ids);r.currentTurnIndex=0;r.currentRound=1;
    r.totalRounds=r.settingValue||2;r.roles=roles;r.spyId=spy;r.currentGroup=group;
    r.attempts=attempts;r.guessedCorrectly={};r.correctOrder=[];r.guessDetails={};
    r.votes={};r.voteHistory={};r.spyGuess=null;r.voteRound=0;r.voteDeadline=null;r.tieCandidates=null;r.result=null;
@@ -2995,7 +3029,7 @@ $('guessInput').addEventListener('input',()=>{chosenGuess='';$('guessSelected').
 $('guessBtn').onclick=async()=>{if(!roomId||!roomState||roomState.gameMode==='spyfall')return;const option=wordsOf(packFor(roomState)).find(w=>norm(w)===norm(chosenGuess||$('guessInput').value));if(!option){toast('เลือกคำตอบจากหมวดที่กำหนดก่อน','error');return;}if(!await confirmBox('ยืนยันคำตอบ?',`ตอบ “${option}” ได้เพียงครั้งเดียว`,'ส่งคำตอบ'))return;$('guessBtn').disabled=true;try{const res=await getRef().transaction(r=>{if(!r||!['playing','final_guess'].includes(r.status)||r.gameMode==='spyfall'||!r.players?.[myId]||r.attempts?.[myId]!==1)return;if(r.status==='final_guess'&&serverNow()>=r.finalDeadline)return;if(r.status==='playing'&&r.gameMode==='whoami_time'){
  if(remainingWhoMs(r,myId)<=0)return;
  if(currentWhoSpeaker(r)===myId){r.whoTimeRemaining||={};r.whoTimeRemaining[myId]=remainingWhoMs(r,myId);}
-}const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,Object.keys(r.players).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(r.status==='playing'&&(r.gameMode==='whoami_rounds'||r.gameMode==='whoami_time'))removeWhoAnsweredPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?` ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
+}const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,gameParticipantIds(r).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(r.status==='playing'&&(r.gameMode==='whoami_rounds'||r.gameMode==='whoami_time'))removeWhoAnsweredPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?` ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
 
 // ===== Spyfall voting =====
 $('voteWord').onchange=e=>chosenWord=e.target.value;
@@ -3007,8 +3041,8 @@ async function submitSpyVote(){
  button.disabled=true;
  try{
   const res=await getRef().transaction(r=>{
-   const allowed=r?.tieCandidates||Object.keys(r?.players||{});
-   if(!r||r.status!=='voting'||serverNow()>=r.voteDeadline||!r.players?.[myId]||!r.players?.[target]||target===myId||!allowed.includes(target)||r.votes?.[myId])return;
+   const allowed=r?.tieCandidates||gameParticipantIds(r);
+   if(!r||r.status!=='voting'||serverNow()>=r.voteDeadline||!r.players?.[myId]||!r.roles?.[myId]||!r.roles?.[target]||target===myId||!allowed.includes(target)||r.votes?.[myId])return;
    if(isAwareSpy(r)&&myId===r.spyId)return;
    if(!isAwareSpy(r)&&word&&!new Set(packFor(r).groups?.[r.currentGroup]||[]).has(word))return;
    r.votes||={};r.votes[myId]={targetId:target,guessWord:isAwareSpy(r)?'':word};
@@ -3034,10 +3068,10 @@ $('spyGuessSubmitBtn').onclick=async()=>{
  }catch(e){error(e);}finally{button.disabled=false;}
 };
 function resolveVotes(r){
- const ids=Object.keys(r.players||{}),ballots=copyPack(r.votes||{}),roundNo=Number(r.voteRound)||1;
+ const ids=gameParticipantIds(r),ballots=copyPack(r.votes||{}),roundNo=Number(r.voteRound)||1;
  r.voteHistory||={};r.voteHistory[`round_${roundNo}`]=ballots;
  const counts={};
- for(const [id,b] of Object.entries(ballots))if(r.players?.[id]&&r.players?.[b.targetId])counts[b.targetId]=(counts[b.targetId]||0)+1;
+ for(const [id,b] of Object.entries(ballots))if(r.roles?.[id]&&r.roles?.[b.targetId])counts[b.targetId]=(counts[b.targetId]||0)+1;
  const high=Math.max(0,...Object.values(counts)),top=Object.keys(counts).filter(id=>counts[id]===high);
  if(top.length>1&&roundNo===1){
   r.tieCandidates=top;r.voteRound=2;r.votes={};r.voteDeadline=serverNow()+FINAL_MS;return;
@@ -3096,7 +3130,15 @@ async function runAutomatic(){
     if(done){endTimedGame(x);return x;}
     const active=currentWhoSpeaker(x);
     if(!active){endTimedGame(x);return x;}
-    if(!x.players?.[active]||x.attempts?.[active]===0){
+    if(!x.players?.[active]){
+     const remaining=remainingWhoMs(x,active);
+     if(remaining<=0){settleTimedSpeaker(x);return x;}
+     x.whoTimeRemaining||={};
+     x.whoTimeRemaining[active]=remaining;
+     // Retain their turn-order position for a possible reconnect.
+     advanceTimedTurn(x);return x;
+    }
+    if(x.attempts?.[active]===0){
      removeWhoAnsweredPlayer(x,active);return x;
     }
     if(remainingWhoMs(x,active)<=0){settleTimedSpeaker(x);return x;}
@@ -3123,6 +3165,7 @@ function refreshWhoClockDisplay(){
   document.querySelectorAll('#playerTimerList [data-timer-of]').forEach(el=>{
    el.textContent=msClock(remainingWhoMs(r,el.dataset.timerOf));
   });
+  if(r.attempts?.[myId]!==0&&remainingWhoMs(r,myId)<=0)$('guessBtn').disabled=true;
  }
 }
 setInterval(()=>{
@@ -3134,7 +3177,7 @@ setInterval(()=>{
 },1000);
 
 // ===== Summary and return to lobby =====
-$('nextGameBtn').onclick=async()=>{if(!isHost||!roomId||!await confirmBox('กลับล็อบบี้?','ทุกคนจะกลับไปรอเริ่มเกมรอบใหม่ และคะแนนสะสมยังอยู่','กลับล็อบบี้'))return;try{const res=await getRef().transaction(r=>{if(!r||r.hostId!==myId||r.status!=='results')return;r.status='lobby';r.roles=null;r.spyId=null;r.spyCommonWord=null;r.spyGuess=null;r.currentGroup=null;r.turnOrder=[];r.currentRound=1;r.currentTurnIndex=0;r.attempts={};r.guessedCorrectly={};r.guessDetails={};r.correctOrder=[];r.playDeadline=null;r.finalDeadline=null;r.turnStartedAt=null;r.whoTimeRemaining={};r.voteDeadline=null;r.votes={};r.voteHistory={};r.voteRound=0;r.tieCandidates=null;r.result=null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(res.committed){chosenGuess='';chosenWord='';chosenVote='';chosenSpyGuess='';$('guessInput').value='';toast('กลับล็อบบี้แล้ว','success');}}catch(e){error(e);}};
+$('nextGameBtn').onclick=async()=>{if(!isHost||!roomId||!await confirmBox('กลับล็อบบี้?','ทุกคนจะกลับไปรอเริ่มเกมรอบใหม่ และคะแนนสะสมยังอยู่','กลับล็อบบี้'))return;try{const res=await getRef().transaction(r=>{if(!r||r.hostId!==myId||r.status!=='results')return;r.status='lobby';r.gamePlayers=null;r.roles=null;r.spyId=null;r.spyCommonWord=null;r.spyGuess=null;r.currentGroup=null;r.turnOrder=[];r.currentRound=1;r.currentTurnIndex=0;r.attempts={};r.guessedCorrectly={};r.guessDetails={};r.correctOrder=[];r.playDeadline=null;r.finalDeadline=null;r.turnStartedAt=null;r.whoTimeRemaining={};r.voteDeadline=null;r.votes={};r.voteHistory={};r.voteRound=0;r.tieCandidates=null;r.result=null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(res.committed){chosenGuess='';chosenWord='';chosenVote='';chosenSpyGuess='';$('guessInput').value='';toast('กลับล็อบบี้แล้ว','success');}}catch(e){error(e);}};
 
 // Restore remembered room only after the player confirms the prefilled name.
 if(roomId){$('roomCode').textContent=roomId;$('roomTitle').textContent=`ห้อง ${roomId}`;$('leaveBtn').hidden=false;showOnly('homeView');}else showOnly('homeView');
