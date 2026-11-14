@@ -803,6 +803,20 @@ const builtinCategories ={
     }
   }
 };
+const SONG_ARTISTS_V16={"อย่ามากกว่าฉันก็พอ (Jealous)":"GAVIN:D, Violette Wautier","ได้แค่เดินมาส่ง (The Last Walk)":"GAVIN:D, BLVCKHEART","เมื่อไหร่จะมี (มีใจให้กัน)":"BLVCKHEART","เขียว เหลือง แดง (Get high)":"PUN, THE TOYS","ขึ้นใจ (3am call)":"Mirrr, BLVCKHEART","Airdrop":"BLVCKHEART","รอ SIS (TER)":"DICEBLUE, DICE","Living Death":"PUN","Reborn":"Atom Chanakan","ไม่ได้เลวขนาดนั้น":"PORZAX","มาเฟียบ้านนอก":"บุ๊ค ศุภกาญจน์","ไม่รักดีกว่า":"Z9","สายไป":"9tokyo, BLVCKHEART","ดีใจที่ตรงนั้นไม่ใช่เรา":"Only Monday","กลัวว่าฉันจะไม่เสียใจ (Fear)":"PURPEECH","รักให้เธอได้รู้ (Proof.)":"PUN","เมื่อถูกค้นพบ (Finally She Found.)":"FREEHAND","อยากจะกอดเธอนาน ๆ (HAVE A GOOD TIME)":"BLVCKHEART","ยิ้มอันตราย":"PORZAX","กลัวความเสียใจ":"SARAN feat. Pearpilincys","ซ่อนกลิ่น":"PALMY","ถ้าเราเจอกันอีก":"Tilly Birds","วาฬเกยตื้น":"GUNGUN","แค่คุณ":"Musketeers","ข้างกัน":"Three Man Down feat. ออม TELEx TELEXs","เป็นทุกอย่าง":"Room39","ฤดูที่ฉันเหงา":"Flure","คู่ชีวิต":"COCKTAIL","ดึงดัน":"COCKTAIL, ตั๊ก ศิริพร","ทน":"SPRITE, GUYGEEGEE","ลาลาลอย":"THE TOYS","สลักจิต":"ป๊อบ ปองกูล feat. ดา เอ็นโดรฟิน","รักแรก":"NONT TANONT","ทรงอย่างแบด":"Paper Planes","ทิ้งไว้กลางทาง":"POTATO","ภาพจำ":"ป๊อบ ปองกูล","คนไม่จำเป็น":"Getsunova","ไม่บอกเธอ":"Bedroom Audio","คำยินดี":"KLEAR","ไกลแค่ไหนคือใกล้":"Getsunova","กะทันหัน":"ฟิล์ม บงกช, รุจ ศุภรุจ, LOWFAT","คุกเข่า":"COCKTAIL","เธอหมุนรอบฉัน ฉันหมุนรอบเธอ":"Scrubb","ฝนตกไหม":"Three Man Down","เพื่อนเล่น ไม่เล่นเพื่อน":"Tilly Birds feat. MILLI","ถ้าเธอรักฉันจริง":"Three Man Down","ลบไม่ได้ช่วยให้ลืม":"INK WARUNTORN","ขอใจเธอแลกเบอร์โทร":"หญิงลี ศรีจุมพล","ใจสั่งมา":"LOSO","แสงสุดท้าย":"Bodyslam","แอบดี":"STAMP","หมอกหรือควัน":"เบิร์ด ธงไชย","ภาวนา":"MEYOU","เจ็บจนพอ":"WANYAi","แพ้ทาง":"LABANOON","อยู่ต่อเลยได้ไหม":"สิงโต นำโชค"};
+function creditSongTitles(categories){
+ const groups=categories?.thai_songs?.groups;
+ if(!groups)return categories;
+ for(const [groupName,list] of Object.entries(groups)){
+  if(!Array.isArray(list))continue;
+  groups[groupName]=[...new Set(list.map(value=>{
+   const title=String(value).trim();
+   const artist=SONG_ARTISTS_V16[title];
+   return artist?`${title} — ${artist}`:title;
+  }))];
+ }
+ return categories;
+}
 const EXTRA_WORDS_V15={"thai_songs":{"เพลงไทยที่ร้องตามกันได้":"ซ่อนกลิ่น|ถ้าเราเจอกันอีก|วาฬเกยตื้น|แค่คุณ|ข้างกัน|เป็นทุกอย่าง|ฤดูที่ฉันเหงา|คู่ชีวิต|ดึงดัน|ทน|ลาลาลอย|สลักจิต|รักแรก|ทรงอย่างแบด|ทิ้งไว้กลางทาง|ภาพจำ|คนไม่จำเป็น|ไม่บอกเธอ|คำยินดี|ไกลแค่ไหนคือใกล้|กะทันหัน|คุกเข่า|เธอหมุนรอบฉัน ฉันหมุนรอบเธอ|ฝนตกไหม|เพื่อนเล่น ไม่เล่นเพื่อน|ถ้าเธอรักฉันจริง|ลบไม่ได้ช่วยให้ลืม|ขอใจเธอแลกเบอร์โทร|ใจสั่งมา|แสงสุดท้าย|แอบดี|หมอกหรือควัน|ภาวนา|เจ็บจนพอ|แพ้ทาง|อยู่ต่อเลยได้ไหม"},"general_items":{"ของใช้ในบ้าน":"โต๊ะ|เก้าอี้|โซฟา|เตียง|ตู้เสื้อผ้า|ชั้นวางของ|พรม|ผ้าม่าน|ถังน้ำ|กะละมัง|กระบอกน้ำ|กระเป๋าเดินทาง|รองเท้าแตะ|ไม้หนีบผ้า|นาฬิกาแขวน|เบาะรองนั่ง|กล่องเก็บของ","เครื่องใช้ไฟฟ้าและไอที":"สมาร์ตวอตช์|เครื่องดูดฝุ่น|เตาอบ|เครื่องทำน้ำอุ่น|เครื่องเป่าผม|เครื่องชาร์จ|ปลั๊กไฟ|ไฟตั้งโต๊ะ|เครื่องเล่นเกม|จอยเกม|ไมโครโฟน|สาย USB|ไวไฟเราเตอร์|แฟลชไดรฟ์","เครื่องครัว":"กระชอน|ตะเกียบ|ถาดอาหาร|กระติกน้ำ|กล่องใส่อาหาร|ช้อนชา|ที่เปิดขวด|แก้วกาแฟ|จานรอง|ผ้ากันเปื้อน|กระติกน้ำร้อน|เครื่องปิ้งขนมปัง","สิ่งของรอบตัว":"กระเป๋าเป้|หมวก|แว่นตา|แว่นกันแดด|หน้ากากอนามัย|ผ้าเช็ดหน้า|สมุด|ปากกา|ดินสอ|ยางลบ|ไม้บรรทัด|กรรไกร|เทปใส|กระดาษ|บัตรประชาชน|กระเป๋าสตางค์|เหรียญ|พวงกุญแจ"},"places":{"สถานที่ท่องเที่ยวในประเทศไทย":"หาดบางแสน|หาดป่าตอง|อ่าวมาหยา|เกาะล้าน|เขาค้อ|ภูทับเบิก|แม่กำปอง|ตลาดจตุจักร|ไอคอนสยาม|สนามหลวง|อนุสาวรีย์ชัยสมรภูมิ|สะพานพระราม 8|วัดโพธิ์|วัดร่องขุ่น|น้ำตกทีลอซู|เขื่อนเชี่ยวหลาน","สถานที่สำคัญทั่วโลก":"สวนสนุกดิสนีย์เวิลด์|ฮอลลีวูด|ทำเนียบขาว|ลาสเวกัส|เซ็นทรัลพาร์ก|สะพานโกลเดนเกต|ภูเขาเอเวอเรสต์|ทะเลเดดซี|หอคอยแห่งลอนดอน|สนามเวมบลีย์|กำแพงเบอร์ลิน","สถานที่ใกล้ตัว":"โรงเรียน|มหาวิทยาลัย|โรงพยาบาล|ร้านสะดวกซื้อ|ร้านอาหาร|ร้านกาแฟ|ตลาดสด|ห้างสรรพสินค้า|สวนสาธารณะ|สถานีรถไฟ|สถานีรถไฟฟ้า|สนามบิน|สถานีตำรวจ|สถานีดับเพลิง|ธนาคาร|ไปรษณีย์|ห้องสมุด|สนามฟุตบอล|สระว่ายน้ำ|โรงภาพยนตร์|โรงแรม|สวนสัตว์|สวนสนุก|ปั๊มน้ำมัน|ร้านตัดผม|ร้านขายยา|วัด|โบสถ์|ชายหาด|น้ำตก|ภูเขา"},"countries":{"เอเชีย":"เกาหลีเหนือ|อิสราเอล|อิหร่าน|อิรัก|มองโกเลีย|บังกลาเทศ|มัลดีฟส์","ยุโรป":"เช็ก|ฮังการี|โรมาเนีย|ไอร์แลนด์|เซอร์เบีย","อเมริกาและโอเชียเนีย":"โคลอมเบีย|คิวบา|จาเมกา|ปานามา|อุรุกวัย","แอฟริกา":"ซูดาน|ลิเบีย|กานา|แอลจีเรีย"},"food":{"อาหารไทย":"ข้าวไข่เจียว|ข้าวหมูแดง|ข้าวหน้าไก่|ข้าวซอย|ก๋วยเตี๋ยวเรือ|เย็นตาโฟ|ราดหน้า|สุกี้|หมูกระทะ|ชาบู|จิ้มจุ่ม|ไก่ย่าง|ไข่พะโล้|ทอดมันปลา|ผัดผักบุ้ง|หอยทอด|ข้าวต้ม|ข้าวเหนียวหมูทอด|แกงจืด","อาหารนานาชาติ":"สปาเกตตี|ออมเล็ต|เฟรนช์ฟรายส์|นักเก็ตไก่|แซนด์วิช|มักกะโรนี|ข้าวแกงกะหรี่ญี่ปุ่น|ข้าวปั้น|ซาชิมิ|อุด้ง|ไส้กรอก|บาร์บีคิว|กิมจิ|ข้าวผัดกิมจิ|ปิ้งย่างเกาหลี|ซาลาเปา|ติ่มซำ|ขนมจีบ","ขนมและของหวาน":"ข้าวเหนียวมะม่วง|ลอดช่อง|บัวลอย|ขนมครก|ขนมเบื้อง|กล้วยทอด|โรตี|ขนมถ้วย|ทองหยิบ|ฝอยทอง|ขนมชั้น|วุ้นมะพร้าว|เฉาก๊วย|เต้าฮวย|ข้าวเหนียวทุเรียน|ชีสเค้ก|พายแอปเปิล","เครื่องดื่ม":"ลาเต้|คาปูชิโน|เอสเพรสโซ|อเมริกาโน|น้ำมะม่วง|น้ำแอปเปิล|น้ำสับปะรด|น้ำองุ่น|น้ำอัดลมรสโคล่า|นมช็อกโกแลต|นมถั่วเหลือง|ชาเย็น"}};
 function addFamiliarWords(categories){
  for(const [id,groups] of Object.entries(EXTRA_WORDS_V15)){
@@ -811,7 +825,7 @@ function addFamiliarWords(categories){
    category.groups[name]=[...new Set([...(Array.isArray(category.groups[name])?category.groups[name]:[]),...csv.split('|')])];
   }
  }
- return categories;
+ return creditSongTitles(categories);
 }
 addFamiliarWords(builtinCategories);
 function defaultCategories(){const c=copyPack(builtinCategories);Object.values(c).forEach(x=>x.enabledModes=[...MODES]);return c;}
@@ -828,10 +842,27 @@ function migrateSharedFamiliarWords(){
   let doc;try{doc=JSON.parse(raw);}catch{return;}
   if(!doc?.categories||doc.contentRevisions?.familiarV15)return;
   addFamiliarWords(doc.categories);
-  doc.contentRevisions={...(doc.contentRevisions||{}),familiarV15:Date.now()};
+  creditSongTitles(doc.categories);
+  doc.contentRevisions={...(doc.contentRevisions||{}),familiarV15:Date.now(),artistCreditsV16:Date.now()};
   doc.updatedAt=Date.now();
   return JSON.stringify(doc);
  },undefined,false).catch(err=>console.warn('Shared content expansion requires Firebase write permission',err));
+}
+let songArtistMigrationStarted=false;
+function migrateSharedSongArtists(){
+ if(songArtistMigrationStarted||!sharedCategoryReady)return;
+ songArtistMigrationStarted=true;
+ sharedCategoryRef.transaction(raw=>{
+  if(typeof raw!=='string')return;
+  let doc;try{doc=JSON.parse(raw);}catch{return;}
+  if(!doc?.categories||doc.contentRevisions?.artistCreditsV16)return;
+  creditSongTitles(doc.categories);
+  doc.contentRevisions={...(doc.contentRevisions||{}),artistCreditsV16:Date.now()};
+  doc.updatedAt=Date.now();
+  return JSON.stringify(doc);
+ },undefined,false).catch(err=>{
+  console.warn('Song artist update could not sync; check Firebase write permissions',err);
+ });
 }
 let library=defaultCategories();
 let sharedCategoryReady=false,sharedCategoryBootstrapping=false,managerDirty=false;
@@ -862,6 +893,7 @@ function applySharedCategoryDocument(raw){
  managerSyncStatus('● ซิงก์กับ Firebase แล้ว · การแก้ไขจะมีผลกับผู้เล่นทุกคน','ready');
  renderCategoryChoices();
  migrateSharedFamiliarWords();
+ migrateSharedSongArtists();
  const view=$('managerView');
  if(view&&!view.hidden){
   if(!managerDirty&&!editNew){
