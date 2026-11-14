@@ -2624,7 +2624,7 @@ function renderScores(r){
   const el=document.createElement('div');el.className='score-row';
   const offline=!r.players?.[id];
   if(offline)el.classList.add('score-offline');
-  el.innerHTML=`<span class="score-identity"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r)}${offline?'<small class="score-offline-label">ออกจากห้อง</small>':''}</span><b>${scores[id]||0} pts</b>`;
+  el.innerHTML=`<span class="score-identity"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r)}${offline?'<span class="score-offline-icon" role="img" aria-label="ไม่ได้เชื่อมต่ออยู่ในห้อง" title="ไม่ได้เชื่อมต่ออยู่ในห้อง"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.82a15.9 15.9 0 0 1 4.17-2.65"/><path d="M10.66 5c4.06-.34 8.15.92 11.34 3.82"/><path d="M8.53 10.45a9.9 9.9 0 0 1 6.72 1.53"/><path d="M12 17h.01"/><path d="m2 2 20 20"/></svg></span>':''}</span><b>${scores[id]||0} pts</b>`;
   $('scoreList').append(el);
  });
 }
