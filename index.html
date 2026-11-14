@@ -97,6 +97,7 @@
 <p class="muted">เพิ่ม แก้ไข และลบหมวดคำส่วนกลาง เมื่อกดบันทึก ทุกคนจะได้รับข้อมูลเดียวกันผ่าน Firebase</p>
 <p id="managerSyncStatus" class="manager-sync-status" role="status">กำลังโหลดหมวดคำจาก Firebase…</p>
 <p class="muted hint">การแก้ไขมีผลกับทุกคนที่เข้าเว็บไซต์ ไม่ใช่เฉพาะเบราว์เซอร์ของคุณ</p>
+<div class="manager-history-toolbar"><button type="button" id="openCategoryHistoryBtn" class="btn soft"><span aria-hidden="true">🕘</span> ดูประวัติการแก้ไขหมวดหมู่ <span aria-hidden="true">›</span></button><span class="muted">บันทึกการเพิ่ม แก้ไข และลบหมวดส่วนกลาง</span></div>
 <div class="manager-layout">
 <aside class="manager-side"><div id="managerList" class="manager-list"></div><button id="newCategoryBtn" class="btn soft full">＋ หมวดใหม่</button></aside>
 <div id="managerEditor" class="manager-editor" hidden>
@@ -148,6 +149,10 @@
 </div>
 <p id="lobbyNotice" class="notice">รอหัวหน้าห้องกดเริ่ม</p>
 <button id="startBtn" class="btn primary full" hidden>▶ เริ่มเกม</button>
+<div id="finishMatchPanel" class="finish-match-panel" hidden>
+ <div class="finish-match-prompt"><span class="finish-match-emoji">🏁</span><div><strong>เล่นครบแล้วหรือยัง?</strong><p>ถ้าทุกคนพร้อมจบการแข่งขัน กดสรุปผลเพื่อดูอันดับและผู้ชนะจากคะแนนสะสมทุกตา</p></div></div>
+ <button id="finishMatchBtn" type="button" class="btn finish-match-btn full">🏆 จบเกม · สรุปคะแนนและผู้ชนะ</button>
+</div>
 </section>
 <section id="spyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div><span class="panel-emoji">🕵️</span></div>
@@ -167,7 +172,14 @@
 <div id="whoTurnBlock" class="turn-panel" hidden><small id="whoRound"></small><h3 id="whoSpeaker"></h3><button id="whoDoneBtn" class="btn primary full" hidden>✓ ถามจบแล้ว</button></div>
 <h3>ลำดับการถาม</h3><div id="whoOrder" class="chips"></div>
 <h3 class="section-gap">คำของเพื่อน</h3><div id="otherWords" class="word-grid"></div>
-<div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full">🔒 ยืนยันคำตอบ</button></div></div>
+<div class="who-note-panel">
+ <div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>📝 สมุดโน้ตของฉัน</h3></div><span class="who-note-tag">เฉพาะคุณ</span></div>
+ <p class="muted hint">จดเบาะแส คำถาม หรือสิ่งที่เพื่อนตอบไว้ระหว่างเล่น · โน้ตจะล้างอัตโนมัติเมื่อเกมจบ</p>
+ <label for="whoNoteInput">โน้ตระหว่างเกม</label>
+ <textarea id="whoNoteInput" rows="5" maxlength="3000" placeholder="เช่น: แก๊งนี้ถามถึงตัวละครเกม / เพื่อนบอกว่าเป็นสายโจมตี..."></textarea>
+ <div class="who-note-footer"><span>🔒 เห็นเฉพาะเบราว์เซอร์นี้</span><span id="whoNoteCount">0 / 3000</span></div>
+ </div>
+ <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full">🔒 ยืนยันคำตอบ</button></div></div>
 
 </section>
 <section id="voteScreen" class="panel page" hidden>
@@ -191,6 +203,15 @@
 <div id="resultHostActions" class="actions column" hidden><button id="nextGameBtn" class="btn primary full">✓ ดูจบแล้ว · กลับล็อบบี้</button><button id="closeAfterBtn" class="btn outline full">ปิดห้องและกลับหน้าแรก</button></div>
 <p id="resultWaiting" class="notice" hidden>รอหัวหน้าห้องกดกลับล็อบบี้เพื่อเริ่มรอบใหม่</p>
 </section>
+<section id="grandFinalScreen" class="panel page grand-final-page" hidden>
+ <div class="section-head"><div><small>THE FINAL RESULTS · PARTY GAME HUB</small><h2>🏆 สรุปผลการแข่งขันทั้งหมด</h2></div><span class="panel-emoji">🎊</span></div>
+ <div id="grandFinalContent"></div>
+ <div class="grand-final-actions">
+  <button type="button" id="grandFinalLeaveBtn" class="btn primary full">↩ กลับหน้าแรก</button>
+  <button type="button" id="grandFinalCloseBtn" class="btn danger full" hidden>ปิดห้องและกลับหน้าแรก (หัวหน้าห้อง)</button>
+ </div>
+ <p class="muted grand-final-note">เกมจบแล้ว ไม่สามารถเริ่มรอบใหม่ในห้องนี้ได้</p>
+</section>
 </div>
 <aside class="panel page scoreboard"><div class="section-head"><div><small>LEADERBOARD</small><h2>🏆 คะแนนสะสม</h2></div></div><div id="scoreList" class="score-list"></div></aside>
 </div>
@@ -198,7 +219,20 @@
 </main>
 <footer>✦ PARTY GAME HUB · เล่นให้สนุก เคารพเพื่อนร่วมเกม</footer>
 </div>
-<div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><span class="panel-emoji">⚠️</span><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
+<div id="categoryHistoryOverlay" class="dialog-backdrop" hidden>
+ <section class="category-history-card" role="dialog" aria-modal="true" aria-labelledby="categoryHistoryTitle">
+  <div class="category-history-head">
+   <div><small>CONTENT STUDIO · CHANGE LOG</small><h2 id="categoryHistoryTitle">🕘 ประวัติการแก้ไขหมวดหมู่</h2></div>
+   <button type="button" class="btn outline small" id="closeCategoryHistoryBtn" aria-label="ปิดประวัติ">✕ ปิด</button>
+  </div>
+  <p class="muted hint">แสดงรายการบันทึกหมวดที่เกิดขึ้นหลังเปิดใช้ระบบประวัตินี้ และเก็บล่าสุดสูงสุด 100 รายการ</p>
+  <label for="historyCategoryFilter">แสดงประวัติของหมวด</label>
+  <select id="historyCategoryFilter"><option value="all">ทุกหมวดหมู่</option></select>
+  <p id="categoryHistoryCount" class="category-history-count"></p>
+  <div id="categoryHistoryList" class="category-history-list" aria-live="polite"></div>
+ </section>
+ </div>
+ <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><span class="panel-emoji">⚠️</span><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js"></script>

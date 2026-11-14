@@ -267,3 +267,98 @@
 .spy-vote-summary small{color:var(--muted);font-size:11px}.spy-vote-summary strong{overflow-wrap:anywhere}
 .spy-vote-summary p{grid-column:1/-1;color:var(--green);font-size:12px}
 @media(max-width:600px){.spy-vote-summary{grid-template-columns:1fr}.spy-vote-summary p{grid-column:1}}
+
+/* V18: clearer interactive avatar filters */
+.avatar-filter-bar{gap:10px;margin:17px 0 9px}
+.avatar-filter{
+  appearance:none;-webkit-appearance:none;cursor:pointer;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:47px;padding:10px 17px;
+  background:linear-gradient(180deg,#1d3052 0%,#11203a 100%);
+  border:1.5px solid #536e96;border-bottom-width:3px;
+  box-shadow:0 4px 0 rgba(1,6,19,.55),0 8px 19px rgba(2,9,26,.25);
+  border-radius:14px;color:#ebf4ff;font-size:12px;font-weight:800;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.avatar-filter::after{content:"⌄";font-size:16px;line-height:1;color:#97b1df;transition:transform .16s ease}
+.avatar-filter.selected{
+  background:linear-gradient(125deg,#245b7c,#2a3f74);
+  border:1.5px solid #6ce4ff;border-bottom-width:3px;
+  box-shadow:0 4px 0 rgba(0,56,88,.6),0 0 0 2px rgba(83,205,249,.16),0 9px 20px rgba(8,42,80,.3);
+  color:#fff
+}
+.avatar-filter.selected::after{content:"✓";color:#a4f7ff;font-weight:900}
+.avatar-filter:hover{transform:translateY(-2px);border-color:#99d6ff;box-shadow:0 6px 0 rgba(1,6,19,.45),0 12px 22px rgba(11,77,117,.32)}
+.avatar-filter:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(1,6,19,.5)}
+.avatar-filter:focus-visible{outline:3px solid #e5beff;outline-offset:4px}
+@media(max-width:650px){.avatar-filter{min-height:44px;padding:9px 12px;font-size:11px}}
+/* Private Who Am I notebook */
+.who-note-panel{display:grid;gap:11px;margin:23px 0 21px;padding:19px;border-radius:17px;
+ border:1.5px solid rgba(100,193,245,.43);
+ background:linear-gradient(145deg,#172b47,#10213b);
+ box-shadow:0 12px 25px rgba(2,9,20,.18)}
+.who-note-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.who-note-header small{color:#81caff;font-size:10px;font-weight:900;letter-spacing:1.2px}
+.who-note-header h3{margin:4px 0 0;font-size:17px}
+.who-note-tag{padding:5px 10px;border-radius:99px;border:1px solid #5285b9;background:#1c3858;color:#b9e2ff;font-size:10px;white-space:nowrap}
+.who-note-panel .hint{margin:0;font-size:11px;line-height:1.65}
+.who-note-panel textarea{width:100%;min-height:128px;resize:vertical;background:#0a162a;border:1.5px solid #3b5678;border-radius:12px;padding:14px;color:#eaf2ff;line-height:1.7;box-sizing:border-box;font-family:inherit}
+.who-note-panel textarea:focus{border-color:#69d9ff;outline:2px solid #398ad17a;outline-offset:1px}
+.who-note-footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#afc6e1;font-size:10px}
+#whoNoteCount{font-variant-numeric:tabular-nums}
+/* Shared category edit history */
+.manager-history-toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:16px 0 18px}
+.manager-history-toolbar>button{min-height:46px;border:1.5px solid #7fa6e8;box-shadow:0 4px 0 #0b172a;font-weight:800}
+.manager-history-toolbar>button:hover{transform:translateY(-1px);border-color:#a5dcff}
+.manager-history-toolbar>span{font-size:11px}
+.category-history-card{width:min(690px,calc(100vw - 28px));max-height:min(82vh,850px);overflow-y:auto;
+ background:linear-gradient(145deg,#1b2a49,#111c33);border:1px solid #52668f;border-radius:20px;
+ padding:24px;box-shadow:0 26px 80px #0009;box-sizing:border-box}
+.category-history-head,.category-history-entry-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.category-history-head h2{margin:6px 0 0;font-size:20px}
+.category-history-head small{letter-spacing:1px;color:#a38eff;font-weight:900}
+.category-history-card>label{display:block;margin:15px 0 7px}
+.category-history-card select{width:100%;min-height:45px}
+.category-history-count{font-size:12px;color:#b5d6ee;margin:12px 0}
+.category-history-list{display:grid;gap:11px}
+.category-history-entry{border:1px solid #40577d;border-left:3px solid #73c9ff;background:#0d1d34;border-radius:12px;padding:14px}
+.category-history-entry strong{color:#f1f5ff;font-size:13px;overflow-wrap:anywhere}
+.category-history-entry time{font-size:11px;color:#afc7df;white-space:nowrap}
+.category-history-actor{margin:8px 0;color:#c0d1e9;font-size:11px}
+.category-history-details{margin:8px 0 0;padding-left:21px;display:grid;gap:6px;font-size:12px;color:#d6e5fb;overflow-wrap:anywhere}
+.category-history-empty{padding:18px;border-radius:12px;background:#101f35;color:#b5cde7}
+@media(max-width:650px){.category-history-card{padding:17px}.category-history-entry-head{flex-direction:column;gap:5px}}
+
+/* V18: Finish the match after one or more complete rounds */
+.finish-match-panel{margin-top:19px;display:grid;gap:14px;padding:17px;border-radius:17px;
+  border:1px solid #cba4ff78;background:linear-gradient(130deg,#2a284e,#1b2845)}
+.finish-match-panel[hidden]{display:none}
+.finish-match-prompt{display:flex;align-items:flex-start;gap:13px}
+.finish-match-emoji{font-size:32px;line-height:1}
+.finish-match-prompt strong{font-size:15px}
+.finish-match-prompt p{font-size:12px;color:#bbcee9;margin:5px 0 0;line-height:1.65}
+.finish-match-btn{min-height:52px;color:#1b2141;background:linear-gradient(115deg,#ffd47d,#ffa4ce);font-size:14px;font-weight:900;border:0}
+.finish-match-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.finish-match-btn:focus-visible{outline:3px solid #ffe79b;outline-offset:3px}
+.grand-final-hero{padding:28px 19px;border:1px solid #d8b47e88;border-radius:19px;
+  background:radial-gradient(ellipse at 50% 0,#4f3874,#192644 65%);text-align:center;margin-bottom:19px}
+.grand-final-kicker{font-size:12px;letter-spacing:1px;font-weight:800;color:#d7c3ff;margin:0 0 8px}
+.grand-final-hero h2{margin:0 0 17px;font-size:clamp(20px,4vw,30px);color:#fff2c7}
+.grand-final-winners{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.grand-final-champion{display:grid;justify-items:center;gap:8px;min-width:min(100%,165px);
+  border:1px solid #eac279ab;border-radius:13px;padding:16px;background:#1c2e52bd}
+.grand-final-champion-label{display:grid;justify-items:center;gap:9px}
+.grand-final-champion-label strong{overflow-wrap:anywhere;font-size:15px}
+.grand-final-champion b{color:#ffd98d;font-size:19px}
+.grand-final-standings{display:grid;gap:10px}
+.grand-final-rank-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px;border:1px solid #455779;border-radius:12px;background:#0e1e35}
+.grand-final-rank-row.champion{border-color:#e3c077;background:#252743}
+.grand-final-rank-identity{display:flex;align-items:center;gap:12px;min-width:0}
+.grand-final-rank-badge{font-size:20px;display:grid;place-items:center;width:30px;min-width:30px}
+.grand-final-rank-name{display:flex;align-items:center;gap:8px;min-width:0;font-weight:800}
+.grand-final-rank-name span:last-child{overflow-wrap:anywhere}
+.grand-final-rank-row>strong{color:#a3efff;white-space:nowrap;font-variant-numeric:tabular-nums}
+.grand-final-actions{display:grid;gap:12px;margin-top:22px}
+.grand-final-note{margin-top:13px;text-align:center;font-size:11px}
+@media(max-width:560px){.grand-final-rank-row{padding:10px}.grand-final-rank-row>strong{font-size:12px}}
