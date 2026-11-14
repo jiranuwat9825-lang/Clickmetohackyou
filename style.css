@@ -383,3 +383,6 @@
  .brand .brand-copy>small{font-size:9px;letter-spacing:.25px}
  .top-actions .online{font-size:9px}
 }
+
+/* V19: labels without decorative emoji; preserve playable Avatar artwork */
+.name-confirm-btn{min-width:72px;padding:0 12px;font-size:13px;letter-spacing:.1px}

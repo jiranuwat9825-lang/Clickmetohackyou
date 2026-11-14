@@ -96,9 +96,9 @@ function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const 
 let avatarFilter='all';
 const AVATAR_FILTERS=[
  {id:'all',label:'ทั้งหมด'},
- {id:'animals',label:'🐾 สัตว์น่ารัก'},
- {id:'cool',label:'⚡ สายเท่'},
- {id:'fantasy',label:'✨ แฟนตาซี'}
+ {id:'animals',label:' สัตว์น่ารัก'},
+ {id:'cool',label:' สายเท่'},
+ {id:'fantasy',label:' แฟนตาซี'}
 ];
 function renderAvatarPicker(){
  const grid=$('avatarPicker'),filters=$('avatarFilterBar');
@@ -1076,17 +1076,17 @@ $('dialogCancel').onclick=()=>dismissConfirm(false);$('dialogYes').onclick=()=>d
 
 // Player name: localStorage changes ONLY after clicking the check button.
 // On refresh, old saved name is prefilled and editable; it must be confirmed again.
-function renderNameConfirmation(){const input=$('nameInput'),button=$('confirmNameBtn'),status=$('nameStatus');input.value=myName;input.disabled=nameConfirmed;button.disabled=nameConfirmed;input.classList.toggle('name-locked',nameConfirmed);button.classList.toggle('confirmed',nameConfirmed);status.classList.toggle('name-confirmed',nameConfirmed);button.textContent='✓';button.title=nameConfirmed?'ยืนยันชื่อเรียบร้อยแล้ว':'กดยืนยันชื่อ';button.setAttribute('aria-label',button.title);status.textContent=nameConfirmed?`✓ ยืนยันชื่อ ${myName} เรียบร้อยแล้ว`:myName?`พบชื่อเดิม "${myName}" แก้ไขได้ แล้วกด ✓ เพื่อยืนยัน`:'กรอกชื่อแล้วกดปุ่ม ✓ เพื่อยืนยันชื่อ';}
+function renderNameConfirmation(){const input=$('nameInput'),button=$('confirmNameBtn'),status=$('nameStatus');input.value=myName;input.disabled=nameConfirmed;button.disabled=nameConfirmed;input.classList.toggle('name-locked',nameConfirmed);button.classList.toggle('confirmed',nameConfirmed);status.classList.toggle('name-confirmed',nameConfirmed);button.textContent='';button.title=nameConfirmed?'ยืนยันชื่อเรียบร้อยแล้ว':'กดยืนยันชื่อ';button.setAttribute('aria-label',button.title);status.textContent=nameConfirmed?` ยืนยันชื่อ ${myName} เรียบร้อยแล้ว`:myName?`พบชื่อเดิม "${myName}" แก้ไขได้ แล้วกด  เพื่อยืนยัน`:'กรอกชื่อแล้วกดปุ่มยืนยันเพื่อยืนยันชื่อ';}
 $('nameInput').addEventListener('input',()=>{if(nameConfirmed)$('nameInput').value=myName;});
-$('confirmNameBtn').addEventListener('click',()=>{if(nameConfirmed)return;const value=$('nameInput').value.trim();if(!value){toast('กรุณากรอกชื่อเล่นก่อนยืนยัน','error');$('nameInput').focus();return;}if(value.length>15){toast('ชื่อเล่นต้องไม่เกิน 15 ตัวอักษร','error');return;}myName=value;localStorage.setItem('rov_spy_myname',myName);nameConfirmed=true;renderNameConfirmation();toast('✓ ยืนยันชื่อเรียบร้อยแล้ว','success');if(roomId){showOnly('roomView');reconnect();}});
+$('confirmNameBtn').addEventListener('click',()=>{if(nameConfirmed)return;const value=$('nameInput').value.trim();if(!value){toast('กรุณากรอกชื่อเล่นก่อนยืนยัน','error');$('nameInput').focus();return;}if(value.length>15){toast('ชื่อเล่นต้องไม่เกิน 15 ตัวอักษร','error');return;}myName=value;localStorage.setItem('rov_spy_myname',myName);nameConfirmed=true;renderNameConfirmation();toast(' ยืนยันชื่อเรียบร้อยแล้ว','success');if(roomId){showOnly('roomView');reconnect();}});
 renderNameConfirmation();
 renderAvatarPicker();
-function ensureName(){if(!nameConfirmed||!myName){toast('กรุณากรอกชื่อและกด ✓ ยืนยันชื่อก่อนเล่นเกม','error');if(!$('nameInput').value.trim())$('nameInput').focus();else $('confirmNameBtn').focus();return false;}return true;}
+function ensureName(){if(!nameConfirmed||!myName){toast('กรุณากรอกชื่อและกดยืนยันชื่อก่อนเล่นเกม','error');if(!$('nameInput').value.trim())$('nameInput').focus();else $('confirmNameBtn').focus();return false;}return true;}
 
 // ===== Room list and automatic cleanup =====
 function inactive(r){const t=r?.lastActivityAt??r?.createdAt;return typeof t==='number'&&serverNow()-t>=IDLE_MS;}
 db.ref('rooms').on('value',s=>renderRoomList(s.val()||{}),error);
-function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย ✨</p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=`🏠 ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';btn.textContent=r.status==='lobby'?'เข้าร่วม':'กำลังเล่น';btn.disabled=r.status!=='lobby';btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
+function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย </p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=` ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';btn.textContent=r.status==='lobby'?'เข้าร่วม':'กำลังเล่น';btn.disabled=r.status!=='lobby';btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
 async function removeInactive(id){await db.ref(`rooms/${id}`).transaction(r=>{if(r&&inactive(r))return null;},undefined,false);}
 async function sweep(){if(sweepBusy)return;sweepBusy=true;try{const s=await db.ref('rooms').once('value');for(const [id,r] of Object.entries(s.val()||{}))if(inactive(r))await removeInactive(id);}catch(e){console.warn('Idle cleanup',e);}finally{sweepBusy=false;}}
 setTimeout(sweep,1500);setInterval(sweep,30000);
@@ -1215,7 +1215,7 @@ $('saveCategoryBtn').onclick=async()=>{
  try{
   await mutateSharedCategory(key,pack,wasNew);
   managerDirty=false;chooseCategory(key);
-  toast('✓ บันทึกหมวดลง Firebase แล้ว ทุกคนเห็นข้อมูลใหม่ทันที','success');
+  toast(' บันทึกหมวดลง Firebase แล้ว ทุกคนเห็นข้อมูลใหม่ทันที','success');
  }catch(e){
   console.error('Shared category save failed',e);
   toast(`บันทึกส่วนกลางไม่สำเร็จ: ${e.message||'ตรวจสอบ Firebase Rules'}`,'error');
@@ -1337,7 +1337,7 @@ function renderGrandFinal(r){
  const kicker=document.createElement('p');kicker.className='grand-final-kicker';
  kicker.textContent=`เล่นทั้งหมด ${data.roundsPlayed||0} ตา · ${list.length} ผู้เล่น`;
  const heading=document.createElement('h2');
- heading.textContent=winners.length>1?'🏆 ผู้ชนะร่วมของการแข่งขัน':winners.length===1?'🥇 แชมป์การแข่งขัน':'🏁 เกมจบแล้ว';
+ heading.textContent=winners.length>1?' ผู้ชนะร่วมของการแข่งขัน':winners.length===1?' แชมป์การแข่งขัน':' เกมจบแล้ว';
  const champion=document.createElement('div');champion.className='grand-final-winners';
  if(winners.length)winners.forEach(player=>{
   const tile=document.createElement('div');tile.className='grand-final-champion';
@@ -1348,13 +1348,13 @@ function renderGrandFinal(r){
  });else champion.textContent='ไม่มีผู้เล่นในสรุปการแข่งขัน';
  hero.append(kicker,heading,champion);content.append(hero);
  const section=document.createElement('section');section.className='result-section';
- const title=document.createElement('h3');title.textContent='📊 ตารางคะแนนสะสมสุดท้าย';
+ const title=document.createElement('h3');title.textContent=' ตารางคะแนนสะสมสุดท้าย';
  const rows=document.createElement('div');rows.className='grand-final-standings';
  list.forEach(player=>{
   const row=document.createElement('div');row.className=`grand-final-rank-row ${player.rank===1?'champion':''}`;
   const identity=document.createElement('div');identity.className='grand-final-rank-identity';
   const rank=document.createElement('span');rank.className='grand-final-rank-badge';
-  rank.textContent=({1:'🥇',2:'🥈',3:'🥉'})[player.rank]||String(player.rank);
+  rank.textContent=String(player.rank);
   const name=document.createElement('div');name.className='grand-final-rank-name';
   name.innerHTML=`${avatarMarkup({avatar:player.avatar})}<span>${esc(player.name)}</span>`;
   identity.append(rank,name);
@@ -1366,7 +1366,7 @@ function renderGrandFinal(r){
 }
 $('finishMatchBtn').onclick=async()=>{
  if(!roomId||!isHost||!roomState||roomState.status!=='lobby'||Number(roomState.gamesPlayed||0)<1)return;
- if(!await confirmBox('จบการแข่งขันทั้งหมด?', 'จะปิดการแข่งขันและแสดงคะแนนสะสมกับผู้ชนะให้ทุกคนในห้อง ไม่สามารถเริ่มตาใหม่ได้อีก', '🏁 จบเกม'))return;
+ if(!await confirmBox('จบการแข่งขันทั้งหมด?', 'จะปิดการแข่งขันและแสดงคะแนนสะสมกับผู้ชนะให้ทุกคนในห้อง ไม่สามารถเริ่มตาใหม่ได้อีก', ' จบเกม'))return;
  const button=$('finishMatchBtn');button.disabled=true;
  try{
   const result=await getRef().transaction(r=>{
@@ -1374,7 +1374,7 @@ $('finishMatchBtn').onclick=async()=>{
    r.finalSummary=finalStandingsForRoom(r);r.status='finished';r.lastActivityAt=TIMESTAMP();
    return r;
   },undefined,false);
-  if(result.committed)toast('🏆 เกมจบแล้ว! กำลังแสดงสรุปผู้ชนะทุกคน','success');
+  if(result.committed)toast(' เกมจบแล้ว! กำลังแสดงสรุปผู้ชนะทุกคน','success');
   else toast('ไม่สามารถจบเกมได้ กรุณาตรวจสอบสถานะห้อง','error');
  }catch(e){error(e);}finally{button.disabled=false;}
 };
@@ -1499,10 +1499,10 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
   renderLobbyCategory(r);
   renderLobbyFormat(r);
   renderLobbySpyFormat(r);
-  $('hostLine').innerHTML=`👑 หัวหน้าห้อง: ${playerLabelHTML(r.hostId,r)} · ${ids.length} คน`;
+  $('hostLine').innerHTML=` หัวหน้าห้อง: ${playerLabelHTML(r.hostId,r)} · ${ids.length} คน`;
   $('playerList').replaceChildren();
-  ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag">👑 HOST</span>':''}`;$('playerList').append(el);});
-  const min=r.gameMode==='spyfall'?3:2;$('startBtn').hidden=!isHost;$('startBtn').disabled=ids.length<min;$('startBtn').textContent=ids.length<min?`ต้องมีอย่างน้อย ${min} คน`:'▶ เริ่มเกม';
+  ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag"> HOST</span>':''}`;$('playerList').append(el);});
+  const min=r.gameMode==='spyfall'?3:2;$('startBtn').hidden=!isHost;$('startBtn').disabled=ids.length<min;$('startBtn').textContent=ids.length<min?`ต้องมีอย่างน้อย ${min} คน`:' เริ่มเกม';
   $('finishMatchPanel').hidden=!(isHost&&Number(r.gamesPlayed||0)>=1);
   $('deleteRoomBtn').hidden=!isHost;$('lobbyNotice').hidden=isHost;$('lobbyNotice').textContent=`รอ ${players[r.hostId]?.name||'Host'} เริ่มเกม…`;
  }else if(status==='playing'&&r.gameMode==='spyfall')renderSpy(r);
@@ -1511,7 +1511,7 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
  else if(status==='results')renderResults(r);
  else if(status==='finished')renderGrandFinal(r);
 }
-function renderScores(r){const p=r.players||{},scores=r.scores||{};$('scoreList').replaceChildren();Object.keys(p).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).forEach((id,i)=>{const el=document.createElement('div');el.className='score-row';el.innerHTML=`<span class="score-identity"><span class="score-medal">${['🥇','🥈','🥉'][i]||i+1}</span>${playerLabelHTML(id,r)}</span><b>${scores[id]||0} pts</b>`;$('scoreList').append(el);});}
+function renderScores(r){const p=r.players||{},scores=r.scores||{};$('scoreList').replaceChildren();Object.keys(p).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).forEach((id,i)=>{const el=document.createElement('div');el.className='score-row';el.innerHTML=`<span class="score-identity"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r)}</span><b>${scores[id]||0} pts</b>`;$('scoreList').append(el);});}
 function renderSpy(r){
  const idx=r.currentTurnIndex||0,speaker=r.turnOrder?.[idx],players=r.players||{};
  const awareSpy=isAwareSpy(r)&&myId===r.spyId;
@@ -1562,14 +1562,14 @@ function renderWho(r){
  $('whoTurnBlock').hidden=final;
  $('whoTimerBlock').hidden=!timed&&!final;
  $('playerTimerPanel').hidden=!timed;
- $('whoTimerLabel').textContent=final?'⏳ ช่วงตอบสุดท้าย (2 นาที)':`⏱️ เวลาที่เหลือของ ${players[speaker]?.name||'ผู้เล่น'}`;
+ $('whoTimerLabel').textContent=final?' ช่วงตอบสุดท้าย (2 นาที)':` เวลาที่เหลือของ ${players[speaker]?.name||'ผู้เล่น'}`;
  $('whoTimer').textContent=final?formatLeft(r.finalDeadline):msClock(remainingWhoMs(r,speaker));
  $('whoRound').textContent=timed?`รอบการถาม ${r.currentRound||1}`:`รอบ ${r.currentRound||1} / ${r.totalRounds||2}`;
  $('whoSpeaker').innerHTML=speaker===myId
   ?`<span class="player-identity">${avatarMarkup({avatar:myAvatar})}<span>ถึงตาคุณถามแล้ว</span></span>`
   :`<span class="player-identity">${avatarMarkup(players[speaker])}<span>ถึงตา ${esc(players[speaker]?.name||'ผู้เล่น')} ถาม</span></span>`;
  $('whoDoneBtn').hidden=final||speaker!==myId;
- $('whoDoneBtn').textContent=timed?'⏭ ผ่านเทิร์น · หยุดเวลาของฉัน':'✓ ถามจบแล้ว · ต่อคนถัดไป';
+ $('whoDoneBtn').textContent=timed?' ผ่านเทิร์น · หยุดเวลาของฉัน':' ถามจบแล้ว · ต่อคนถัดไป';
  renderOrder($('whoOrder'),r,!final);
  const answered=Object.values(r.attempts||{}).filter(v=>v===0).length;
  renderGameStats('whoProgress',[
@@ -1585,7 +1585,7 @@ function renderWho(r){
    const d=r.guessDetails?.[id]||{},card=document.createElement('article');
    card.className=`player-timer-card ${active?'active':''} ${answeredPlayer?'finished':''}`;
    const left=document.createElement('div');left.className='timer-player-name';
-   left.innerHTML=`${playerLabelHTML(id,r,false)}<small>${d.timedOut?'⌛ หมดเวลา':answeredPlayer?(d.correct?'✓ ตอบถูกแล้ว':'✕ ตอบผิดแล้ว'):active?'● เวลากำลังเดิน':'⏸ เวลาหยุดอยู่'}</small>`;
+   left.innerHTML=`${playerLabelHTML(id,r,false)}<small>${d.timedOut?' หมดเวลา':answeredPlayer?(d.correct?' ตอบถูกแล้ว':' ตอบผิดแล้ว'):active?'● เวลากำลังเดิน':' เวลาหยุดอยู่'}</small>`;
    const counter=document.createElement('strong');counter.dataset.timerOf=id;
    counter.textContent=msClock(remainingWhoMs(r,id));
    card.append(left,counter);timerList.append(card);
@@ -1600,15 +1600,15 @@ function renderWho(r){
   el.className=`friend-card ${answeredPlayer?'done':''}`;
   el.innerHTML=`<div class="friend-name"><small>ชื่อผู้เล่น</small>${playerLabelHTML(id,r,false)}</div>
    <div class="friend-answer"><small>คำของเพื่อน</small><strong>${esc(r.roles?.[id]||'—')}</strong></div>
-   <span class="friend-status">${answeredPlayer?(d.timedOut?'⌛ หมดเวลา':d.correct?'✓ ตอบถูก':'✕ ตอบผิด'):'● ยังมีสิทธิ์ทาย'}</span>`;
+   <span class="friend-status">${answeredPlayer?(d.timedOut?' หมดเวลา':d.correct?' ตอบถูก':' ตอบผิด'):'● ยังมีสิทธิ์ทาย'}</span>`;
   others.append(el);
  });
  const mine=r.attempts?.[myId]===0,details=r.guessDetails?.[myId]||{};
  $('guessInputs').hidden=mine;
- $('guessHeading').textContent=mine?(details.timedOut?'⌛ เวลาของคุณหมดแล้ว':details.correct?'🎉 คุณตอบถูกแล้ว!':'✕ คุณตอบผิดแล้ว'):(final?'🎯 โอกาสสุดท้าย! ตอบภายใน 2 นาที':'🎯 ทายคำของคุณ (1 ครั้ง)');
+ $('guessHeading').textContent=mine?(details.timedOut?' เวลาของคุณหมดแล้ว':details.correct?' คุณตอบถูกแล้ว!':' คุณตอบผิดแล้ว'):(final?' โอกาสสุดท้าย! ตอบภายใน 2 นาที':' ทายคำของคุณ (1 ครั้ง)');
  const reveal=$('answerReveal');
  reveal.hidden=!mine;
- reveal.innerHTML=mine?`<strong>${details.timedOut?'⌛ หมดเวลา':details.correct?'✓ คำตอบถูกต้อง':'✕ คำตอบไม่ถูกต้อง'}</strong>
+ reveal.innerHTML=mine?`<strong>${details.timedOut?' หมดเวลา':details.correct?' คำตอบถูกต้อง':' คำตอบไม่ถูกต้อง'}</strong>
   <span>คำที่ถูก: <b>${esc(details.correctAnswer||r.roles?.[myId]||'—')}</b></span>
   <span>คำที่คุณตอบ: <b>${esc(details.answer||'ไม่ได้ตอบ')}</b></span>`:'';
 }
@@ -1618,11 +1618,11 @@ function renderVotes(r){
  const eligible=Object.keys(players).filter(id=>!aware||id!==r.spyId);
  const votesReceived=eligible.filter(id=>!!r.votes?.[id]).length;
  const total=eligible.length,choices=r.tieCandidates||Object.keys(players);
- $('voteHeading').textContent=youAreSpy?'🕵️ Spy ทายคำของคนปกติ':r.tieCandidates?'🗳️ โหวตรอบตัดสิน':'🗳️ ใครคือ Spy?';
+ $('voteHeading').textContent=youAreSpy?' Spy ทายคำของคนปกติ':r.tieCandidates?' โหวตรอบตัดสิน':' ใครคือ Spy?';
  $('voteTimer').textContent=formatLeft(r.voteDeadline);
  $('voteNote').textContent=aware
   ?youAreSpy?'คุณไม่มีสิทธิ์โหวต ให้ทายคำของคนปกติแทน (โบนัส +1 ถ้าถูก)':`เลือกคนที่คิดว่าเป็น Spy · โหวตแล้ว ${votesReceived}/${total} คน`
-  :mine?`✓ คุณโหวตแล้ว · ${votesReceived}/${total} คน`:`โหวตและทายคำให้ทัน 2 นาที · ${votesReceived}/${total} คนโหวตแล้ว`;
+  :mine?` คุณโหวตแล้ว · ${votesReceived}/${total} คน`:`โหวตและทายคำให้ทัน 2 นาที · ${votesReceived}/${total} คนโหวตแล้ว`;
  renderGameStats('voteProgress',[
   {label:'รูปแบบ',value:spyVariantTitle(r.spyVariant)},
   {label:'โหวตแล้ว',value:`${votesReceived} / ${total} คน`},
@@ -1645,14 +1645,14 @@ function renderVotes(r){
   return;
  }
  if(mine){
-  $('voteChoices').innerHTML='<p class="notice">✓ บันทึกโหวตแล้ว รอเพื่อนหรือหมดเวลา</p>';
+  $('voteChoices').innerHTML='<p class="notice"> บันทึกโหวตแล้ว รอเพื่อนหรือหมดเวลา</p>';
   return;
  }
  if(!choices.includes(chosenVote))chosenVote='';
  choices.filter(id=>id!==myId&&players[id]).forEach(id=>{
   const button=document.createElement('button');
   button.className=`vote-choice ${id===chosenVote?'selected':''}`;
-  button.innerHTML=`${playerLabelHTML(id,r)}<b>${id===chosenVote?'✓ เลือกแล้ว':'เลือก →'}</b>`;
+  button.innerHTML=`${playerLabelHTML(id,r)}<b>${id===chosenVote?' เลือกแล้ว':'เลือก →'}</b>`;
   button.onclick=()=>{chosenVote=id;chosenWord='';renderVotes(r);};
   $('voteChoices').append(button);
  });
@@ -1676,14 +1676,14 @@ function renderResults(r){
  const target=$('resultContent');target.replaceChildren();
  const spy=r.gameMode==='spyfall',res=r.result||{};
  const hero=document.createElement('section');hero.className='result-hero';
- hero.innerHTML=`<h2>${spy?(res.caught?'🎉 คนปกติจับสายลับได้!':'🕵️ สายลับชนะ!'):'🎊 เกม Who Am I จบแล้ว!'}</h2>
+ hero.innerHTML=`<h2>${spy?(res.caught?' คนปกติจับสายลับได้!':' สายลับชนะ!'):' เกม Who Am I จบแล้ว!'}</h2>
  <p>${spy?`สายลับคือ ${esc(players[r.spyId]?.name||'—')} · ${isAwareSpy(r)?'Spy รู้ตัวตนและไม่ได้รับคำลับ':'คำลับสายลับ: '+esc(r.roles?.[r.spyId]||'—')}`:
  r.gameMode==='whoami_rounds'?'ตอบถูกในรอบเดียวกันได้คะแนนเท่ากัน':'คนตอบถูกก่อนจะได้คะแนนมากกว่า'}</p>`;
  target.append(hero);
  if(spy){
   const section=document.createElement('section');section.className='result-section';
   const other=Object.keys(r.roles||{}).find(id=>id!==r.spyId);
-  section.innerHTML=`<h3>🕵️ เฉลย Spyfall</h3>
+  section.innerHTML=`<h3> เฉลย Spyfall</h3>
    <div class="summary-grid">
    <div class="summary-fact"><small>หมวด / กลุ่มคำ</small><strong>${esc(res.groupLabel||groupLabel(packFor(r),r.currentGroup))}</strong></div>
    <div class="summary-fact"><small>คำของคนปกติ</small><strong>${esc(r.roles?.[other]||'—')}</strong></div>
@@ -1701,7 +1701,7 @@ function renderResults(r){
    const summary=document.createElement('div');summary.className='spy-vote-summary';
    summary.innerHTML=`<div><small>คำที่ Spy ทาย</small><strong>${esc(res.spyGuess||'ไม่ได้ตอบ')}</strong></div>
     <div><small>คำที่คนปกติได้รับ</small><strong>${esc(res.correctWord||r.spyCommonWord||'—')}</strong></div>
-    <p>${res.spyGuessCorrect?'✅ Spy ทายถูก +1 คะแนน':'❌ Spy ทายผิดหรือไม่ได้ทาย'} · ${res.caught?'คนปกติจับ Spy ได้ ทุกคนคนละ +1 คะแนน':'Spy รอดจากการโหวต +1 คะแนน'}</p>`;
+    <p>${res.spyGuessCorrect?' Spy ทายถูก +1 คะแนน':' Spy ทายผิดหรือไม่ได้ทาย'} · ${res.caught?'คนปกติจับ Spy ได้ ทุกคนคนละ +1 คะแนน':'Spy รอดจากการโหวต +1 คะแนน'}</p>`;
    section.append(summary);
   }
   target.append(section);
@@ -1710,7 +1710,7 @@ function renderResults(r){
    const round=Number(String(name).replace(/\D/g,''))||1,counts={};
    Object.values(votes||{}).forEach(ballot=>{if(ballot?.targetId)counts[ballot.targetId]=(counts[ballot.targetId]||0)+1;});
    const group=document.createElement('section');group.className='result-section';
-   group.innerHTML=`<h3>🗳️ ผลโหวตรอบ ${round}</h3>`;
+   group.innerHTML=`<h3> ผลโหวตรอบ ${round}</h3>`;
    const tally=document.createElement('div');tally.className='vote-tally-list';
    const ordered=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
    ordered.forEach(([id,n])=>{
@@ -1731,12 +1731,12 @@ function renderResults(r){
   });
  }else{
   const section=document.createElement('section');section.className='result-section';
-  section.innerHTML='<h3>📖 เฉลยคำตอบของผู้เล่นทุกคน</h3>';
+  section.innerHTML='<h3> เฉลยคำตอบของผู้เล่นทุกคน</h3>';
   const list=document.createElement('div');list.className='summary-answer-list';
   ids.forEach(id=>{
    const d=r.guessDetails?.[id]||{},correct=d.correctAnswer||r.roles?.[id]||'—';
    const answer=d.answer||(d.correct?'ข้อมูลคำตอบเดิม':'ไม่ได้ตอบ');
-   const status=d.timedOut?'⌛ หมดเวลา':d.correct?'✓ ตอบถูก':d.answer?'✕ ตอบผิด':'— ไม่ได้ตอบ';
+   const status=d.timedOut?' หมดเวลา':d.correct?' ตอบถูก':d.answer?' ตอบผิด':'— ไม่ได้ตอบ';
    const row=document.createElement('article');row.className=`summary-answer-card ${d.correct?'correct':''}`;
    row.innerHTML=`<div class="summary-answer-top">${playerLabelHTML(id,r,false)}<span class="summary-status">${status}</span></div>
     <div class="summary-answer-grid">
@@ -1748,11 +1748,11 @@ function renderResults(r){
   section.append(list);target.append(section);
  }
  const board=document.createElement('section');board.className='result-section';
- board.innerHTML='<h3>🏆 ตารางคะแนนสะสมหลังจบเกม</h3>';
+ board.innerHTML='<h3> ตารางคะแนนสะสมหลังจบเกม</h3>';
  ids.forEach((id,i)=>{
   const d=spy?res.awards?.[id]:r.guessDetails?.[id],points=spy?d?.total||0:d?.points||0;
   const row=document.createElement('div');row.className='result-row';
-  row.innerHTML=`<div class="result-summary-player"><span class="score-medal">${['🥇','🥈','🥉'][i]||i+1}</span>${playerLabelHTML(id,r,false)}</div>
+  row.innerHTML=`<div class="result-summary-player"><span class="score-medal">${String(i+1)}</span>${playerLabelHTML(id,r,false)}</div>
    <div class="result-summary-score"><b>+${points}</b><small>${spy?'ผลโหวต +'+(d?.base||0)+' · ทายคำ +'+(d?.bonus||0)+' · ':''}รวม ${scores[id]||0} คะแนน</small></div>`;
   board.append(row);
  });
@@ -1907,11 +1907,11 @@ $('skipSpyBtn').onclick=async()=>{
 };
 
 // ===== Who Am I answer and scoring =====
-$('guessInput').addEventListener('input',()=>{chosenGuess='';$('guessSelected').textContent='ยังไม่ได้เลือกคำตอบ';const box=$('guessSuggestions');box.replaceChildren();const q=norm($('guessInput').value),r=roomState;if(!q||!r||r.gameMode==='spyfall'){box.hidden=true;return;}wordsOf(packFor(r)).filter(w=>norm(w).includes(q)).slice(0,15).forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{chosenGuess=w;$('guessInput').value=w;$('guessSelected').textContent=`✓ เลือก ${w}`;box.hidden=true;};box.append(b);});box.hidden=!box.children.length;});
+$('guessInput').addEventListener('input',()=>{chosenGuess='';$('guessSelected').textContent='ยังไม่ได้เลือกคำตอบ';const box=$('guessSuggestions');box.replaceChildren();const q=norm($('guessInput').value),r=roomState;if(!q||!r||r.gameMode==='spyfall'){box.hidden=true;return;}wordsOf(packFor(r)).filter(w=>norm(w).includes(q)).slice(0,15).forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{chosenGuess=w;$('guessInput').value=w;$('guessSelected').textContent=` เลือก ${w}`;box.hidden=true;};box.append(b);});box.hidden=!box.children.length;});
 $('guessBtn').onclick=async()=>{if(!roomId||!roomState||roomState.gameMode==='spyfall')return;const option=wordsOf(packFor(roomState)).find(w=>norm(w)===norm(chosenGuess||$('guessInput').value));if(!option){toast('เลือกคำตอบจากหมวดที่กำหนดก่อน','error');return;}if(!await confirmBox('ยืนยันคำตอบ?',`ตอบ “${option}” ได้เพียงครั้งเดียว`,'ส่งคำตอบ'))return;$('guessBtn').disabled=true;try{const res=await getRef().transaction(r=>{if(!r||!['playing','final_guess'].includes(r.status)||r.gameMode==='spyfall'||!r.players?.[myId]||r.attempts?.[myId]!==1)return;if(r.status==='final_guess'&&serverNow()>=r.finalDeadline)return;if(r.status==='playing'&&r.gameMode==='whoami_time'){
  if(remainingWhoMs(r,myId)<=0)return;
  if(currentWhoSpeaker(r)===myId){r.whoTimeRemaining||={};r.whoTimeRemaining[myId]=remainingWhoMs(r,myId);}
-}const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,Object.keys(r.players).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(r.status==='playing'&&(r.gameMode==='whoami_rounds'||r.gameMode==='whoami_time'))removeWhoAnsweredPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?`🎉 ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
+}const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,Object.keys(r.players).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(r.status==='playing'&&(r.gameMode==='whoami_rounds'||r.gameMode==='whoami_time'))removeWhoAnsweredPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(Object.keys(r.players).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?` ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
 
 // ===== Spyfall voting =====
 $('voteWord').onchange=e=>chosenWord=e.target.value;
