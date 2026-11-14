@@ -81,7 +81,7 @@
 <div id="modeOptions" class="mode-grid">
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
-<button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Insider ยังไม่เปิดให้เล่น"><strong>Insider</strong><small>Wait for update</small></button>
+<button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>จับคนรู้คำตอบ · 4+ คน</small></button>
 <button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Avalon ยังไม่เปิดให้เล่น"><strong>Avalon</strong><small>Wait for update</small></button>
 <button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Steal cheese ยังไม่เปิดให้เล่น"><strong>Steal cheese</strong><small>Wait for update</small></button>
 </div>
@@ -97,11 +97,11 @@
 <button class="format-choice" data-who-format="whoami_rounds"> เล่นเป็นรอบ</button>
 </div>
 </div>
-<div id="createDetails" hidden>
-<h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div>
-<h3 class="step"><b>04</b> <span id="durationLabel">จำนวนรอบ</span></h3>
+<p id="insiderCreateHint" class="notice" hidden>Master ตั้งคำเอง · 4+ คน · คิดคำ 1 นาที · ทาย 5 นาที · คนละ 5 คำตอบ</p><div id="createDetails" hidden>
+<div id="categoryCreateSection"><h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
+<div id="durationCreateSection"><h3 class="step"><b>04</b> <span id="durationLabel">จำนวนรอบ</span></h3>
 <div class="stepper"><button id="minusBtn" aria-label="ลด">−</button><input id="durationInput" type="number" min="1" max="99" value="2"><button id="plusBtn" aria-label="เพิ่ม">+</button></div>
-<p id="durationHelp" class="muted hint"></p>
+<p id="durationHelp" class="muted hint"></p></div>
 </div>
 <div class="actions"><button id="createBackBtn" class="btn outline">← ย้อนกลับ</button><button id="createConfirmBtn" class="btn primary" disabled>สร้างห้อง →</button></div>
 </section>
@@ -166,6 +166,18 @@
  <div class="finish-match-prompt"><div><strong>เล่นครบแล้วหรือยัง?</strong><p>ถ้าทุกคนพร้อมจบการแข่งขัน กดสรุปผลเพื่อดูอันดับและผู้ชนะจากคะแนนสะสมทุกตา</p></div></div>
  <button id="finishMatchBtn" type="button" class="btn finish-match-btn full"> จบเกม · สรุปคะแนนและผู้ชนะ</button>
 </div>
+</section>
+<section id="insiderScreen" class="panel page insider-page" hidden>
+<div class="section-head"><div><small>INSIDER · FIND THE ONE WHO KNOWS</small><h2>ใครคือ Insider?</h2></div></div>
+<div id="insiderProgress" class="game-stats"></div>
+<div class="role-card insider-role"><div id="insiderAvatar" class="game-avatar tone-orange">🦊</div><small>บทบาทของคุณ</small><h2 id="insiderMyRole">—</h2><p id="insiderRoleHint"></p></div>
+<div class="timer-block"><span id="insiderTimerLabel">เวลาที่เหลือ</span><strong id="insiderTimer">01:00</strong></div>
+<p id="insiderStatus" class="notice"></p>
+<div id="insiderMasterPanel" class="guess-box" hidden><h3>Master · ตั้งโจทย์</h3><p class="muted hint">พิมพ์คำตอบอะไรก็ได้ ภายใน 1 นาที แล้วยืนยันเพื่อเริ่มเกมทันที</p><input id="insiderMasterWord" maxlength="100" autocomplete="off" placeholder="เช่น ดาวเสาร์, แตงโม"><button id="insiderMasterSubmit" class="btn primary full">ยืนยันโจทย์</button></div>
+<div id="insiderKnownPanel" class="guess-box" hidden><h3>คุณคือ Insider · คำตอบลับ</h3><p class="insider-secret-answer" id="insiderKnownWord"></p><p class="muted hint">อย่าให้คนอื่นรู้ว่าคุณมีคำตอบอยู่แล้ว</p></div>
+<div id="insiderGuessPanel" class="guess-box" hidden><h3>พิมพ์คำตอบของคุณ</h3><p id="insiderRemaining" class="muted hint">เหลือ 5 ครั้ง</p><input id="insiderGuessInput" maxlength="100" autocomplete="off" placeholder="พิมพ์คำตอบ"><button id="insiderGuessSubmit" class="btn primary full">ยืนยันคำตอบ</button><div id="insiderGuessHistory" class="insider-attempts"></div></div>
+<div id="insiderVotePanel" class="guess-box" hidden><h3>โหวตว่าใครคือ Insider</h3><p id="insiderVoteProgress" class="muted hint"></p><div id="insiderVoteChoices" class="vote-list"></div><button id="insiderVoteSubmit" class="btn primary full" disabled>ยืนยันโหวต</button></div>
+<div class="who-note-panel"><div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>สมุดโน้ตของฉัน</h3></div><span class="who-note-tag">เฉพาะคุณ</span></div><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div>
 </section>
 <section id="spyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div></div>
@@ -249,5 +261,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js"></script>
+<script src="insider.js"></script>
 </body>
 </html>
