@@ -82,8 +82,8 @@
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
-<button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Avalon ยังไม่เปิดให้เล่น"><strong>Avalon</strong><small>Wait for update</small></button>
 <button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Steal cheese ยังไม่เปิดให้เล่น"><strong>Steal cheese</strong><small>Wait for update</small></button>
+<button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Avalon ยังไม่เปิดให้เล่น"><strong>Avalon</strong><small>Wait for update</small></button>
 </div>
 <div id="spyFormatSection" class="mode-formats" hidden>
 <label>เลือกรูปแบบ Spy fall</label><div class="format-grid">
@@ -95,6 +95,7 @@
 <div class="format-grid">
 <button class="format-choice" data-who-format="whoami_time"> จับเวลาแยกแต่ละคน</button>
 <button class="format-choice" data-who-format="whoami_rounds"> เล่นเป็นรอบ</button>
+<button class="format-choice" data-who-format="whoami_custom">Customize By Player</button>
 </div>
 </div>
 <div id="createDetails" hidden>
@@ -154,7 +155,7 @@
 <div id="lobbyFormatPanel" class="lobby-category" hidden>
 <label for="lobbyFormatSelect">รูปแบบ Who Am I</label>
 <div class="lobby-format-row">
-<select id="lobbyFormatSelect"><option value="whoami_time"> จับเวลาแยกแต่ละคน</option><option value="whoami_rounds"> เล่นเป็นรอบ</option></select>
+<select id="lobbyFormatSelect"><option value="whoami_time"> จับเวลาแยกแต่ละคน</option><option value="whoami_rounds"> เล่นเป็นรอบ</option><option value="whoami_custom">Customize By Player</option></select>
 <input id="lobbySettingInput" type="number" min="1" max="99" value="2" aria-label="จำนวนนาทีต่อคนหรือจำนวนรอบ">
 <button id="lobbyChangeFormatBtn" type="button" class="btn soft">บันทึก</button>
 </div>
@@ -192,10 +193,28 @@
 <h3 class="section-gap" id="spyGroupName">คำในกลุ่ม</h3><div id="spyWords" class="word-grid"></div>
 <button id="skipSpyBtn" class="btn outline full section-gap" hidden> ข้ามไปโหวต</button>
 </section>
+<section id="whoCustomScreen" class="panel page who-custom-page" hidden>
+ <div class="section-head"><div><small>WHO AM I · CUSTOMIZE BY PLAYER</small><h2>คิดคำให้เพื่อน</h2></div></div>
+ <div id="whoCustomProgress" class="game-stats"></div>
+ <div class="timer-block"><span>เวลาตั้งคำให้เพื่อน</span><strong id="whoCustomTimer">01:00</strong></div>
+ <div class="who-custom-write-card">
+  <small class="eyebrow">YOUR RANDOM ASSIGNMENT</small>
+  <h3>ตั้งคำตอบให้ <span id="whoCustomTarget">เพื่อนของคุณ</span></h3>
+  <p class="muted">ระบบสุ่มให้คุณคิดคำให้เพื่อน 1 คนโดยไม่ใช่ตัวเอง · คิดคำอะไรก็ได้ (ไม่ต้องเลือกหมวด)</p>
+  <div id="whoCustomEntry">
+   <label for="whoCustomWordInput">คำตอบที่เพื่อนต้องทาย</label>
+   <input id="whoCustomWordInput" type="text" maxlength="100" autocomplete="off" placeholder="พิมพ์คำตอบที่เพื่อนต้องทาย">
+   <button id="whoCustomSubmitBtn" class="btn primary full" type="button">ยืนยันคำให้เพื่อน</button>
+  </div>
+  <p id="whoCustomSubmittedNote" class="notice" hidden>ส่งคำให้เพื่อนเรียบร้อยแล้ว รอผู้เล่นที่เหลือ</p>
+  <p id="whoCustomConfirmCount" class="muted hint">ยืนยันแล้ว 0 / 0 คน</p>
+  <p class="muted hint">หากครบ 1 นาที ระบบจะเติมคำสำรองให้คนที่ยังไม่ยืนยันและเริ่มรอบโดยอัตโนมัติ</p>
+ </div>
+</section>
 <section id="whoScreen" class="panel page" hidden>
 <div class="section-head"><div><small>WHO AM I? · GUESS YOUR WORD</small><h2>ฉันคือใคร?</h2></div></div>
 <div id="whoProgress" class="game-stats"></div>
-<div class="role-card purple"><div id="whoMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำของคุณถูกซ่อนไว้</small><h2>YOU ARE ?</h2><p>ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
+<div class="role-card purple"><div id="whoMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำของคุณถูกซ่อนไว้</small><h2>YOU ARE ?</h2><p id="whoRoleHint">ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
 <div id="whoTimerBlock" class="timer-block" hidden><span id="whoTimerLabel">เวลาที่เหลือ</span><strong id="whoTimer">00:00</strong></div>
 <div id="playerTimerPanel" class="player-timer-panel" hidden><h3> เวลาคงเหลือของแต่ละคน</h3><div id="playerTimerList" class="player-timer-grid"></div><p class="muted hint">เวลาลดเฉพาะตอนถึงตาของคนนั้น และหยุดเมื่อผ่านเทิร์น</p></div>
 <div id="whoTurnBlock" class="turn-panel" hidden><small id="whoRound"></small><h3 id="whoSpeaker"></h3><button id="whoDoneBtn" class="btn primary full" hidden> ถามจบแล้ว</button></div>
@@ -208,7 +227,7 @@
  <textarea id="whoNoteInput" rows="5" maxlength="3000" placeholder="เช่น: แก๊งนี้ถามถึงตัวละครเกม / เพื่อนบอกว่าเป็นสายโจมตี..."></textarea>
  <div class="who-note-footer"><span> เห็นเฉพาะเบราว์เซอร์นี้</span><span id="whoNoteCount">0 / 3000</span></div>
  </div>
- <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full"> ยืนยันคำตอบ</button></div></div>
+ <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full"> ยืนยันคำตอบ</button><div id="whoCustomGuessHistory" class="who-custom-guesses" hidden></div></div></div>
 
 </section>
 <section id="voteScreen" class="panel page" hidden>
@@ -266,5 +285,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js"></script>
 <script src="insider.js"></script>
+<script src="whoami_custom.js"></script>
 </body>
 </html>
