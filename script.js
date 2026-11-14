@@ -3178,7 +3178,7 @@ async function runAutomatic(){
    if(x.status==='final_guess'&&(done||serverNow()>=x.finalDeadline)){
      if(x.gameMode==='whoami_custom'){
       if(serverNow()>=Number(x.finalDeadline||0)){
-       for(const id of Object.keys(x.players||{}))if(Number(x.attempts?.[id]||0)>0){
+       for(const id of gameParticipantIds(x))if(Number(x.attempts?.[id]||0)>0){
         x.attempts[id]=0;x.guessDetails||={};x.guessDetails[id]={correct:false,points:0,round:Number(x.totalRounds)||1,answer:'',correctAnswer:x.roles?.[id]||'',timedOut:true};
        }
       }
