@@ -837,6 +837,1050 @@ function addFamiliarWords(categories){
  return creditSongTitles(categories);
 }
 addFamiliarWords(builtinCategories);
+// New popular categories (V25): shared by Spyfall and both Who Am I modes.
+const NEW_PARTY_CATEGORIES_V25={
+  "cartoon_characters": {
+    "name": "ตัวละครการ์ตูนยอดฮิต",
+    "groups": {
+      "โดราเอมอน": [
+        "โดราเอมอน",
+        "โนบิตะ",
+        "ชิซูกะ",
+        "ไจแอนท์",
+        "ซึเนโอะ",
+        "โดเรมี",
+        "เดคิสุงิ",
+        "คุณแม่โนบิตะ",
+        "คุณพ่อโนบิตะ",
+        "คุณครูของโนบิตะ"
+      ],
+      "ชินจัง": [
+        "ชินจัง",
+        "ฮิมาวาริ",
+        "มิเซะ",
+        "ฮิโรชิ",
+        "ชิโร่",
+        "คาซามะ",
+        "เนเน่",
+        "โบจัง",
+        "มาซาโอะ",
+        "คุณครูโยชินางะ",
+        "คุณครูมัตสึซากะ"
+      ],
+      "โปเกมอน": [
+        "พิคาชู",
+        "ซาโตชิ",
+        "มุซาชิ",
+        "โคจิโร่",
+        "เนียส",
+        "อีวุย",
+        "ลิซาร์ดอน",
+        "ฟุชิกิดาเนะ",
+        "เซนิกาเมะ",
+        "คาบิกอน",
+        "มิวทู",
+        "ลูคาริโอ",
+        "เก็งกา",
+        "โคดัก",
+        "ปุริน",
+        "โคอิคิง"
+      ],
+      "ดิสนีย์และพิกซาร์": [
+        "มิกกี้เมาส์",
+        "มินนี่เมาส์",
+        "โดนัลด์ดั๊ก",
+        "กู๊ฟฟี่",
+        "วินนี่เดอะพูห์",
+        "ทิกเกอร์",
+        "สติทช์",
+        "ลิโล",
+        "เอลซ่า",
+        "อันนา",
+        "โอลาฟ",
+        "ราพันเซล",
+        "ซิมบ้า",
+        "ทิมอน",
+        "พุมบ้า",
+        "วู้ดดี้",
+        "บัซ ไลท์เยียร์",
+        "นีโม่",
+        "ดอรี่",
+        "ไมค์ วาซาวสกี้",
+        "ซัลลีย์"
+      ],
+      "วันพีซ": [
+        "ลูฟี่",
+        "โซโร",
+        "นามิ",
+        "ซันจิ",
+        "อุซป",
+        "ช็อปเปอร์",
+        "โรบิน",
+        "แฟรงกี้",
+        "บรู๊ค",
+        "จินเบ",
+        "แชงคูส",
+        "เอซ",
+        "ซาโบ",
+        "บากี้"
+      ],
+      "นารูโตะ": [
+        "นารูโตะ",
+        "ซาสึเกะ",
+        "ซากุระ",
+        "คาคาชิ",
+        "ฮินาตะ",
+        "อิทาจิ",
+        "กาอาระ",
+        "ชิกามารุ",
+        "ร็อคลี",
+        "จิไรยะ",
+        "สึนาเดะ",
+        "โอโรจิมารุ"
+      ]
+    }
+  },
+  "occupations": {
+    "name": "อาชีพ",
+    "groups": {
+      "การแพทย์และสุขภาพ": [
+        "หมอ",
+        "พยาบาล",
+        "ทันตแพทย์",
+        "เภสัชกร",
+        "สัตวแพทย์",
+        "นักกายภาพบำบัด",
+        "นักจิตวิทยา",
+        "นักโภชนาการ",
+        "เจ้าหน้าที่กู้ชีพ",
+        "นักเทคนิคการแพทย์",
+        "หมอนวด"
+      ],
+      "บริการสาธารณะ": [
+        "ตำรวจ",
+        "ทหาร",
+        "นักดับเพลิง",
+        "นักบิน",
+        "พนักงานต้อนรับบนเครื่องบิน",
+        "ไปรษณีย์",
+        "พนักงานเก็บขยะ",
+        "เจ้าหน้าที่รักษาความปลอดภัย",
+        "เจ้าหน้าที่กู้ภัย",
+        "นักการทูต",
+        "นายกเทศมนตรี"
+      ],
+      "การศึกษาและวิทยาศาสตร์": [
+        "ครู",
+        "อาจารย์มหาวิทยาลัย",
+        "ครูอนุบาล",
+        "ติวเตอร์",
+        "นักวิทยาศาสตร์",
+        "นักวิจัย",
+        "นักดาราศาสตร์",
+        "วิศวกร",
+        "โปรแกรมเมอร์",
+        "สถาปนิก",
+        "นักสำรวจ",
+        "นักธรณีวิทยา"
+      ],
+      "อาหารและงานบริการ": [
+        "เชฟ",
+        "พ่อครัว",
+        "แม่ครัว",
+        "พนักงานเสิร์ฟ",
+        "บาริสต้า",
+        "คนขายกาแฟ",
+        "พ่อค้า",
+        "แม่ค้า",
+        "ช่างตัดผม",
+        "ช่างเสริมสวย",
+        "ช่างแต่งหน้า",
+        "พนักงานโรงแรม",
+        "มัคคุเทศก์",
+        "พนักงานแคชเชียร์",
+        "คนขับแท็กซี่"
+      ],
+      "ศิลปะและสื่อ": [
+        "นักร้อง",
+        "นักแสดง",
+        "นักเต้น",
+        "นักเขียน",
+        "นักวาดภาพ",
+        "ช่างภาพ",
+        "นักข่าว",
+        "พิธีกร",
+        "ดีเจ",
+        "ยูทูบเบอร์",
+        "สตรีมเมอร์",
+        "อินฟลูเอนเซอร์",
+        "นักออกแบบกราฟิก",
+        "นักตัดต่อวิดีโอ",
+        "นักพากย์"
+      ],
+      "ช่างและธุรกิจ": [
+        "ช่างไฟฟ้า",
+        "ช่างประปา",
+        "ช่างยนต์",
+        "ช่างไม้",
+        "ช่างเชื่อม",
+        "ชาวนา",
+        "เกษตรกร",
+        "ชาวประมง",
+        "นักธุรกิจ",
+        "นักบัญชี",
+        "ทนายความ",
+        "พนักงานธนาคาร",
+        "พนักงานส่งอาหาร"
+      ]
+    }
+  },
+  "movies_series": {
+    "name": "ภาพยนตร์และซีรีส์",
+    "groups": {
+      "หนังซูเปอร์ฮีโร่": [
+        "Avengers: Endgame",
+        "Avengers: Infinity War",
+        "Iron Man",
+        "Captain America: The First Avenger",
+        "Thor: Ragnarok",
+        "Spider-Man: No Way Home",
+        "Black Panther",
+        "Doctor Strange",
+        "Ant-Man",
+        "Guardians of the Galaxy",
+        "Deadpool",
+        "The Batman",
+        "The Dark Knight",
+        "Wonder Woman",
+        "Aquaman"
+      ],
+      "หนังดิสนีย์และแอนิเมชัน": [
+        "Frozen",
+        "Frozen II",
+        "Toy Story",
+        "Finding Nemo",
+        "Inside Out",
+        "The Lion King",
+        "Moana",
+        "Zootopia",
+        "Coco",
+        "Encanto",
+        "Tangled",
+        "Big Hero 6",
+        "Shrek",
+        "Kung Fu Panda",
+        "How to Train Your Dragon",
+        "The Incredibles",
+        "Up",
+        "Ratatouille"
+      ],
+      "หนังดังต่างประเทศ": [
+        "Harry Potter and the Philosopher's Stone",
+        "Home Alone",
+        "Titanic",
+        "Avatar",
+        "Jurassic Park",
+        "Jumanji",
+        "Fast & Furious",
+        "Transformers",
+        "The Hunger Games",
+        "The Lord of the Rings",
+        "Star Wars",
+        "The Matrix",
+        "John Wick",
+        "Interstellar",
+        "Barbie",
+        "Oppenheimer"
+      ],
+      "ภาพยนตร์ไทย": [
+        "พี่มาก..พระโขนง",
+        "กวน มึน โฮ",
+        "สิ่งเล็กเล็กที่เรียกว่า...รัก",
+        "แฟนฉัน",
+        "รถไฟฟ้า มาหานะเธอ",
+        "ไอฟาย..แต๊งกิ้ว..เลิฟยู้",
+        "ATM เออรัก..เออเร่อ",
+        "บุปผาราตรี",
+        "องค์บาก",
+        "ต้มยำกุ้ง",
+        "หลวงพี่เท่ง",
+        "สัปเหร่อ",
+        "ธี่หยด",
+        "ฉลาดเกมส์โกง"
+      ],
+      "ซีรีส์เกาหลีที่คนรู้จัก": [
+        "Squid Game",
+        "Crash Landing on You",
+        "True Beauty",
+        "Vincenzo",
+        "Descendants of the Sun",
+        "Goblin",
+        "All of Us Are Dead",
+        "Extraordinary Attorney Woo",
+        "The Glory",
+        "Kingdom",
+        "Business Proposal",
+        "Itaewon Class"
+      ],
+      "ละครและซีรีส์ไทย": [
+        "บุพเพสันนิวาส",
+        "พรหมลิขิต",
+        "ทองเอก หมอยา ท่าโฉลง",
+        "กรงกรรม",
+        "เมีย 2018",
+        "ฮอร์โมนส์ วัยว้าวุ่น",
+        "รักฉุดใจนายฉุกเฉิน",
+        "เด็กใหม่",
+        "เพราะเราคู่กัน",
+        "คั่นกู",
+        "รักแห่งสยาม",
+        "บ้านนี้มีรัก"
+      ]
+    }
+  },
+  "popular_brands": {
+    "name": "แบรนด์ยอดนิยม",
+    "groups": {
+      "เทคโนโลยีและมือถือ": [
+        "Apple",
+        "Samsung",
+        "OPPO",
+        "vivo",
+        "Xiaomi",
+        "Huawei",
+        "Nokia",
+        "Sony",
+        "Microsoft",
+        "Google",
+        "ASUS",
+        "Acer",
+        "Lenovo",
+        "Dell",
+        "HP",
+        "Nintendo"
+      ],
+      "ร้านอาหารและเครื่องดื่ม": [
+        "KFC",
+        "McDonald's",
+        "Burger King",
+        "Pizza Hut",
+        "Domino's Pizza",
+        "Starbucks",
+        "Cafe Amazon",
+        "ชาตรามือ",
+        "สุกี้ตี๋น้อย",
+        "MK",
+        "Swensen's",
+        "Dairy Queen",
+        "After You",
+        "The Pizza Company",
+        "Bonchon"
+      ],
+      "เสื้อผ้าและรองเท้า": [
+        "Nike",
+        "Adidas",
+        "Puma",
+        "New Balance",
+        "Converse",
+        "Vans",
+        "Crocs",
+        "Skechers",
+        "Uniqlo",
+        "H&M",
+        "Zara",
+        "Levi's",
+        "GUCCI",
+        "Louis Vuitton",
+        "The North Face",
+        "Lacoste"
+      ],
+      "รถยนต์และมอเตอร์ไซค์": [
+        "Toyota",
+        "Honda",
+        "Isuzu",
+        "Ford",
+        "Nissan",
+        "Mazda",
+        "Mitsubishi",
+        "Suzuki",
+        "BMW",
+        "Mercedes-Benz",
+        "Tesla",
+        "BYD",
+        "Volvo",
+        "Yamaha",
+        "Kawasaki",
+        "Lamborghini"
+      ],
+      "ร้านค้าและซูเปอร์มาร์เก็ต": [
+        "7-Eleven",
+        "Lotus's",
+        "Big C",
+        "Tops",
+        "Makro",
+        "เซ็นทรัล",
+        "โรบินสัน",
+        "HomePro",
+        "ไทวัสดุ",
+        "IKEA",
+        "มินิบิ๊กซี",
+        "วัตสัน",
+        "บู๊ทส์"
+      ],
+      "เครื่องสำอางและความงาม": [
+        "Maybelline",
+        "L'Oréal",
+        "NIVEA",
+        "Garnier",
+        "Vaseline",
+        "Olay",
+        "Sunsilk",
+        "Dove",
+        "Mistine",
+        "Cute Press",
+        "Srichand",
+        "Oriental Princess"
+      ]
+    }
+  },
+  "popular_games": {
+    "name": "เกมยอดนิยม",
+    "groups": {
+      "เกมมือถือยอดนิยม": [
+        "ROV",
+        "Free Fire",
+        "PUBG Mobile",
+        "Mobile Legends",
+        "Genshin Impact",
+        "Honkai: Star Rail",
+        "Cookie Run: Kingdom",
+        "Pokémon GO",
+        "Subway Surfers",
+        "Temple Run",
+        "Candy Crush Saga",
+        "Clash of Clans",
+        "Clash Royale",
+        "Brawl Stars",
+        "Among Us",
+        "Hay Day"
+      ],
+      "เกม PC และออนไลน์": [
+        "Minecraft",
+        "Roblox",
+        "Valorant",
+        "Fortnite",
+        "League of Legends",
+        "Dota 2",
+        "Counter-Strike 2",
+        "GTA V",
+        "The Sims 4",
+        "Phasmophobia",
+        "Dead by Daylight",
+        "Apex Legends",
+        "Fall Guys",
+        "Rust",
+        "Overwatch 2",
+        "Rocket League"
+      ],
+      "เกมคอนโซลและผจญภัย": [
+        "The Legend of Zelda",
+        "Super Mario Odyssey",
+        "Mario Kart",
+        "Animal Crossing",
+        "God of War",
+        "Spider-Man",
+        "Pokémon Scarlet",
+        "Kirby",
+        "Sonic the Hedgehog",
+        "Red Dead Redemption 2",
+        "Elden Ring",
+        "Hogwarts Legacy",
+        "It Takes Two",
+        "Little Nightmares"
+      ],
+      "เกมเล่นกับเพื่อน": [
+        "UNO!",
+        "Human: Fall Flat",
+        "Overcooked!",
+        "Gang Beasts",
+        "PICO PARK",
+        "Goose Goose Duck",
+        "Lethal Company",
+        "Party Animals",
+        "PlateUp!",
+        "Moving Out",
+        "Keep Talking and Nobody Explodes",
+        "Jackbox Party Pack"
+      ],
+      "เกมคลาสสิก": [
+        "Tetris",
+        "Pac-Man",
+        "Plants vs. Zombies",
+        "Fruit Ninja",
+        "Angry Birds",
+        "Flappy Bird",
+        "Snake",
+        "Bomberman",
+        "Street Fighter",
+        "Tekken",
+        "Mortal Kombat",
+        "Contra",
+        "Super Mario Bros."
+      ],
+      "เกมใน Roblox": [
+        "Brookhaven RP",
+        "Adopt Me!",
+        "Blox Fruits",
+        "Dress to Impress",
+        "Tower of Hell",
+        "Murder Mystery 2",
+        "DOORS",
+        "Fisch",
+        "Pet Simulator"
+      ]
+    }
+  },
+  "vehicles": {
+    "name": "ยานพาหนะ",
+    "groups": {
+      "รถส่วนตัวและยานพาหนะบนถนน": [
+        "รถยนต์",
+        "รถกระบะ",
+        "รถเก๋ง",
+        "รถ SUV",
+        "รถสปอร์ต",
+        "รถเปิดประทุน",
+        "รถจักรยานยนต์",
+        "มอเตอร์ไซค์บิ๊กไบค์",
+        "จักรยาน",
+        "จักรยานไฟฟ้า",
+        "รถสามล้อ",
+        "รถตุ๊กตุ๊ก",
+        "สกูตเตอร์ไฟฟ้า",
+        "รถบ้าน"
+      ],
+      "ขนส่งสาธารณะ": [
+        "รถเมล์",
+        "รถตู้",
+        "รถแท็กซี่",
+        "รถไฟ",
+        "รถไฟฟ้า BTS",
+        "รถไฟฟ้า MRT",
+        "รถไฟความเร็วสูง",
+        "รถสองแถว",
+        "รถทัวร์",
+        "รถมินิบัส",
+        "รถรับส่งนักเรียน",
+        "รถไฟใต้ดิน"
+      ],
+      "ยานพาหนะทางน้ำ": [
+        "เรือพาย",
+        "เรือหางยาว",
+        "เรือสปีดโบ๊ต",
+        "เรือสำราญ",
+        "เรือเฟอร์รี่",
+        "เรือดำน้ำ",
+        "เรือยอชต์",
+        "เจ็ตสกี",
+        "เรือประมง",
+        "เรือบรรทุกสินค้า",
+        "เรือคายัก",
+        "เรือแคนู",
+        "แพยาง"
+      ],
+      "ยานพาหนะทางอากาศ": [
+        "เครื่องบินโดยสาร",
+        "เครื่องบินรบ",
+        "เฮลิคอปเตอร์",
+        "เครื่องบินส่วนตัว",
+        "เครื่องบินกระดาษ",
+        "โดรน",
+        "บอลลูนลมร้อน",
+        "เครื่องร่อน",
+        "เครื่องบินใบพัด",
+        "เครื่องบินขนส่ง",
+        "ยานอวกาศ",
+        "จรวด"
+      ],
+      "รถใช้งานเฉพาะทาง": [
+        "รถพยาบาล",
+        "รถดับเพลิง",
+        "รถตำรวจ",
+        "รถขยะ",
+        "รถไถ",
+        "รถเครน",
+        "รถบรรทุก",
+        "รถปูน",
+        "รถขุดดิน",
+        "รถตักดิน",
+        "รถส่งพัสดุ",
+        "รถขนเงิน",
+        "รถกู้ภัย",
+        "รถบรรทุกน้ำ"
+      ]
+    }
+  },
+  "childhood_snacks": {
+    "name": "ขนมและของกินวัยเด็ก",
+    "groups": {
+      "ขนมซองและขนมกรุบกรอบ": [
+        "เลย์",
+        "เทสโต",
+        "ปาร์ตี้",
+        "ฮานามิ",
+        "ตะวัน",
+        "แจ็กซ์",
+        "โดริโทส",
+        "ทวิสตี้",
+        "ชิโตส",
+        "ข้าวเกรียบกุ้ง",
+        "สาหร่ายเถ้าแก่น้อย",
+        "ปลาหมึกเบนโตะ",
+        "ขนมปังแท่งปีโป้",
+        "ปาปริก้า"
+      ],
+      "คุกกี้และขนมอบ": [
+        "โอรีโอ",
+        "ป๊อกกี้",
+        "โคอะลามาร์ช",
+        "ฟันโอ",
+        "โรลเลอร์โคสเตอร์",
+        "ทิวลี่",
+        "คิทแคท",
+        "ช็อกโกพาย",
+        "เวเฟอร์",
+        "ขนมปังไส้สังขยา",
+        "โดนัท",
+        "คุกกี้เนย",
+        "ขนมปังกรอบ",
+        "ครัวซองต์"
+      ],
+      "ลูกอมและหมากฝรั่ง": [
+        "เมนทอส",
+        "ฮอลส์",
+        "คลอเร็ท",
+        "ลูกอมโอเล่",
+        "จูปาจุ๊ปส์",
+        "ไฮชิว",
+        "สกิตเทิลส์",
+        "เยลลี่ฮาริโบ",
+        "เยลลี่รูปหมี",
+        "ปีโป้",
+        "หมากฝรั่งบิ๊กบลูม",
+        "หมากฝรั่งซูกัส",
+        "ลูกอมมะขาม",
+        "ลูกอมรสนม"
+      ],
+      "ของกินหน้าโรงเรียน": [
+        "ไส้กรอกแดงทอด",
+        "ลูกชิ้นทอด",
+        "ลูกชิ้นปิ้ง",
+        "โตเกียว",
+        "ขนมถังแตก",
+        "ขนมครก",
+        "วาฟเฟิล",
+        "ขนมเบื้อง",
+        "ขนมปังปิ้ง",
+        "สายไหม",
+        "น้ำแข็งไส",
+        "เกล็ดหิมะ",
+        "ลูกชิ้นระเบิด",
+        "เฟรนช์ฟรายส์"
+      ],
+      "ไอศกรีมและของหวาน": [
+        "ไอติมแท่ง",
+        "ไอติมโคน",
+        "ไอติมหลอด",
+        "ไอติมกะทิ",
+        "ไอศกรีมวอลล์",
+        "ไอศกรีมแม็กนั่ม",
+        "คอร์เนตโต",
+        "ไอศกรีมแซนด์วิช",
+        "น้ำแข็งกด",
+        "เฉาก๊วย",
+        "ลอดช่อง",
+        "เต้าฮวย",
+        "กล้วยบวชชี"
+      ]
+    }
+  },
+  "memes_slang": {
+    "name": "มีมและคำฮิต",
+    "groups": {
+      "คำฮิตภาษาไทย": [
+        "ตัวตึง",
+        "ของแทร่",
+        "ช็อตฟีล",
+        "ใจฟู",
+        "เอ็นดู",
+        "มงลง",
+        "ชีเสิร์ฟ",
+        "ต๊าช",
+        "จึ้ง",
+        "ปังมาก",
+        "ตัวแม่",
+        "ขิง",
+        "อ่อม",
+        "บ้ง",
+        "คอนเทนต์",
+        "นัมเบอร์วัน",
+        "ตุยเย่",
+        "สวบ"
+      ],
+      "ภาษาชาวเน็ต": [
+        "POV",
+        "FOMO",
+        "NPC",
+        "สปอยล์",
+        "มีม",
+        "ไวรัล",
+        "ติดเทรนด์",
+        "อวย",
+        "แซะ",
+        "อวยยศ",
+        "โดนแกง",
+        "แกงหม้อใหญ่",
+        "ลั่น",
+        "มีพิรุธ",
+        "คนละเรื่องเดียวกัน",
+        "หยุมหัว",
+        "หลุดขำ",
+        "แอบส่อง"
+      ],
+      "ตัวละครและภาพมีม": [
+        "Doge",
+        "Cheems",
+        "Grumpy Cat",
+        "แมวร้องไห้",
+        "แมวเต้น",
+        "แมวส้ม",
+        "ผู้ชายชี้ผีเสื้อ",
+        "ผู้ชายหันไปมองสาว",
+        "This Is Fine",
+        "Distracted Boyfriend",
+        "Pepe the Frog",
+        "Trollface",
+        "Wojak",
+        "Skibidi Toilet",
+        "GigaChad",
+        "Pop Cat"
+      ],
+      "คำฮิตจากเกม": [
+        "GG",
+        "EZ",
+        "AFK",
+        "Noob",
+        "Pro player",
+        "Carry",
+        "Nerf",
+        "Buff",
+        "Rank",
+        "MVP",
+        "One shot",
+        "Clutch",
+        "Sus",
+        "Impostor",
+        "Camp",
+        "GGWP",
+        "Meta",
+        "Lag"
+      ],
+      "ประโยคมีมที่คุ้นเคย": [
+        "เดี๋ยวคุยกับใครก่อน",
+        "ก็ว่าอยู่",
+        "อิหยังวะ",
+        "อะไรก็เกิดขึ้นได้",
+        "เอาเรื่อง",
+        "สุดจัดปลัดบอก",
+        "ไม่ไหวบอกไหว",
+        "คิดแล้วคิดอีก",
+        "โคตรจะตึง",
+        "กลั้นขำไม่ไหว",
+        "เก่งมากแม่",
+        "เชื่อเขาเลย",
+        "ฉันจะเป็นลม",
+        "เรื่องนี้ต้องมีคนรับผิดชอบ"
+      ]
+    }
+  },
+  "famous_people": {
+    "name": "คนดังและศิลปิน",
+    "groups": {
+      "นักร้องไทย": [
+        "เบิร์ด ธงไชย",
+        "ตูน Bodyslam",
+        "ปาล์มมี่",
+        "บิวกิ้น",
+        "พีพี กฤษฏ์",
+        "นนท์ ธนนท์",
+        "ก้อง ห้วยไร่",
+        "ลำไย ไหทองคำ",
+        "หญิงลี ศรีจุมพล",
+        "โจอี้ ภูวศิษฐ์",
+        "อิ้งค์ วรันธร",
+        "ป๊อบ ปองกูล",
+        "โต๋ ศักดิ์สิทธิ์",
+        "ป๊ายปาย โอริโอ้",
+        "ตั๊กแตน ชลดา",
+        "แสตมป์ อภิวัชร์",
+        "เก่ง ธชย"
+      ],
+      "นักแสดงไทย": [
+        "ณเดชน์ คูกิมิยะ",
+        "ญาญ่า อุรัสยา",
+        "มาริโอ้ เมาเร่อ",
+        "ใหม่ ดาวิกา",
+        "ใบเฟิร์น พิมพ์ชนก",
+        "เจมส์ จิรายุ",
+        "อั้ม พัชราภา",
+        "ชมพู่ อารยา",
+        "เบลล่า ราณี",
+        "โป๊ป ธนวรรธน์",
+        "นุ่น วรนุช",
+        "พี่ติ๊ก เจษฎาภรณ์",
+        "บอย ปกรณ์",
+        "ต่อ ธนภพ",
+        "ไบร์ท วชิรวิชญ์"
+      ],
+      "ศิลปินและนักร้องต่างประเทศ": [
+        "Taylor Swift",
+        "Ed Sheeran",
+        "Ariana Grande",
+        "Justin Bieber",
+        "Bruno Mars",
+        "Billie Eilish",
+        "Beyoncé",
+        "Rihanna",
+        "Lady Gaga",
+        "The Weeknd",
+        "Adele",
+        "Michael Jackson",
+        "Elvis Presley",
+        "Shakira",
+        "Dua Lipa",
+        "Lisa",
+        "Jennie",
+        "Jungkook",
+        "Rosé"
+      ],
+      "ยูทูบเบอร์และครีเอเตอร์": [
+        "MrBeast",
+        "PewDiePie",
+        "IShowSpeed",
+        "Mark Rober",
+        "Zach King",
+        "9arm",
+        "พี่เอก Heartrocker",
+        "พี่อู๋จุน",
+        "พี่เก๋ไก๋",
+        "คิวเท โอปป้า",
+        "My Mate Nate",
+        "SPD",
+        "ปอนด์ PONDPONDLIVE",
+        "Bie The Ska",
+        "อุ้มอิ้ม"
+      ],
+      "นักกีฬาชื่อดัง": [
+        "Cristiano Ronaldo",
+        "Lionel Messi",
+        "Neymar",
+        "Kylian Mbappé",
+        "David Beckham",
+        "Michael Jordan",
+        "LeBron James",
+        "Stephen Curry",
+        "Roger Federer",
+        "Rafael Nadal",
+        "Novak Djokovic",
+        "Serena Williams",
+        "Usain Bolt",
+        "บัวขาว บัญชาเมฆ",
+        "ชนาธิป สรงกระสินธ์",
+        "วิว กุลวุฒิ"
+      ]
+    }
+  },
+  "sports": {
+    "name": "กีฬา",
+    "groups": {
+      "กีฬาประเภทลูกบอล": [
+        "ฟุตบอล",
+        "ฟุตซอล",
+        "บาสเกตบอล",
+        "วอลเลย์บอล",
+        "วอลเลย์บอลชายหาด",
+        "แฮนด์บอล",
+        "เบสบอล",
+        "ซอฟต์บอล",
+        "รักบี้",
+        "อเมริกันฟุตบอล",
+        "ฮอกกี้",
+        "โปโลน้ำ",
+        "ดอดจ์บอล",
+        "โบว์ลิ่ง",
+        "กอล์ฟ"
+      ],
+      "กีฬาใช้ไม้และแร็กเกต": [
+        "แบดมินตัน",
+        "เทนนิส",
+        "ปิงปอง",
+        "สควอช",
+        "พิกเคิลบอล",
+        "เทนนิสชายหาด",
+        "คริกเก็ต",
+        "สนุกเกอร์",
+        "บิลเลียด",
+        "ปาเป้า",
+        "เบสบอลตีลูก",
+        "มินิกอล์ฟ"
+      ],
+      "กีฬาต่อสู้": [
+        "มวยไทย",
+        "มวยสากล",
+        "เทควันโด",
+        "คาราเต้",
+        "ยูโด",
+        "ไอคิโด",
+        "มวยปล้ำ",
+        "ฟันดาบ",
+        "คิกบ็อกซิ่ง",
+        "กังฟู",
+        "MMA",
+        "บราซิลเลียนยิวยิตสู"
+      ],
+      "กีฬาทางน้ำ": [
+        "ว่ายน้ำ",
+        "ดำน้ำ",
+        "กระโดดน้ำ",
+        "เซิร์ฟบอร์ด",
+        "พายเรือคายัก",
+        "พายเรือแคนู",
+        "เรือใบ",
+        "เจ็ตสกี",
+        "สกีน้ำ",
+        "วินด์เซิร์ฟ",
+        "แพดเดิลบอร์ด",
+        "กรรเชียงเรือ"
+      ],
+      "กรีฑาและกีฬากลางแจ้ง": [
+        "วิ่ง 100 เมตร",
+        "วิ่งมาราธอน",
+        "วิ่งผลัด",
+        "กระโดดสูง",
+        "กระโดดไกล",
+        "ขว้างจักร",
+        "พุ่งแหลน",
+        "ทุ่มน้ำหนัก",
+        "ยิงธนู",
+        "ยิงปืน",
+        "ปีนหน้าผา",
+        "ปั่นจักรยาน",
+        "ไตรกีฬา",
+        "ยิมนาสติก",
+        "สเก็ตบอร์ด"
+      ],
+      "กีฬาฤดูหนาว": [
+        "สกี",
+        "สโนว์บอร์ด",
+        "ฮอกกี้น้ำแข็ง",
+        "สเก็ตน้ำแข็ง",
+        "ฟิกเกอร์สเก็ต",
+        "เคอร์ลิง",
+        "สกีกระโดดไกล",
+        "บอบสเลด"
+      ]
+    }
+  }
+};
+Object.assign(builtinCategories,NEW_PARTY_CATEGORIES_V25);
+
+// V25 Thai song extension: title and artist are stored together for clue/guess cards.
+const ADDITIONAL_THAI_SONGS_V25={
+  "เพลงฮิตช่วงปี 2024–2025": [
+    "นครดารา — YOUNGOHM",
+    "ที่คั่นหนังสือ (Sometimes) — BOWKYLION feat. NONT TANONT",
+    "บทสรุปสุดท้าย — Z9",
+    "เจิดจรัส — YOUNGOHM",
+    "ซ่อน(ไม่)หา — Jeff Satur",
+    "ไม่เปลี่ยนเลย (Best Luck) — fellow fellow",
+    "ดาวหางฮัลเลย์ — fellow fellow",
+    "รถไฟบนฟ้า — D Gerrard",
+    "จำนน — NONT TANONT"
+  ],
+  "เพลงป๊อปไทยร้องตามได้": [
+    "ลงใจ — BOWKYLION",
+    "คิด(แต่ไม่)ถึง — Tilly Birds",
+    "ฝันถึงแฟนเก่า — Three Man Down",
+    "ดีใจด้วยนะ — INK WARUNTORN",
+    "สายตาหลอกกันไม่ได้ (Eyes Don't Lie) — INK WARUNTORN",
+    "ยินดีที่ไม่รู้จัก — 25hours",
+    "ไม่เคย — 25hours",
+    "ทำได้เพียง — 25hours",
+    "มันคงเป็นความรัก — STAMP",
+    "แค่เธอ — Jeff Satur",
+    "ทะเลสีดำ — Lula feat. ต้าร์ Paradox",
+    "คนมีเสน่ห์ — ป้าง นครินทร์",
+    "ภูมิแพ้กรุงเทพ — ป้าง นครินทร์ feat. ตั๊กแตน ชลดา",
+    "รักติดไซเรน — ไอซ์ พาริส, แพรวา ณิชาภัทร",
+    "แค่ได้คิดถึง — ญารินดา",
+    "ถ้าเขาจะรัก (ยืนเฉยๆเขาก็รัก) — First Anuwat"
+  ],
+  "เพลงร็อกไทยยอดนิยม": [
+    "เชือกวิเศษ — LABANOON",
+    "ผ่าน — Slot Machine",
+    "เคลิ้ม — Slot Machine",
+    "น้ำลาย — Silly Fools",
+    "จิ๊จ๊ะ — Silly Fools",
+    "ขี้หึง — Silly Fools",
+    "อกหัก — Bodyslam",
+    "ความเชื่อ — Bodyslam",
+    "ยาพิษ — Bodyslam",
+    "คิดฮอด — Bodyslam feat. ศิริพร อำไพพงษ์",
+    "สักวันฉันจะดีพอ — Bodyslam",
+    "เจ็บที่ต้องรู้ — The Mousses",
+    "เธอ — COCKTAIL",
+    "โปรดเถิดรัก — COCKTAIL",
+    "รักเธอทั้งหมดของหัวใจ — Pause",
+    "ขัดใจ — COLORPiTCH"
+  ],
+  "เพลงดังติดหูและไวรัล": [
+    "ดวงเดือน — โจอี้ ภูวศิษฐ์",
+    "ขวัญเอยขวัญมา — PALMY",
+    "กล่องสุ่ม — Zom Marie",
+    "คุกกี้เสี่ยงทาย — BNK48",
+    "โดดดิด่ง — BNK48",
+    "คำแพง — แซ็ค ชุมแพ",
+    "รักต้องเปิด (แน่นอก) — 3.2.1 feat. ใบเตย อาร์สยาม",
+    "วอน — THE TOYS",
+    "ก่อนฤดูฝน — THE TOYS",
+    "หน้าหนาวที่แล้ว — THE TOYS",
+    "เล่าสู่กันฟัง — เบิร์ด ธงไชย",
+    "คู่กัด — เบิร์ด ธงไชย",
+    "รักแรกพบ — Tattoo Colour",
+    "ฤดูร้อน — Paradox",
+    "อ้าว — Atom Chanakan",
+    "ตามตะวัน — NUM KALA feat. แอ๊ด คาราบาว",
+    "ห้ามตั๋ว — มีนตรา อินทิรา feat. OG-ANIC"
+  ]
+};
+function addThaiSongsV25(categories){
+ const songPack=categories?.thai_songs;
+ if(!songPack||!songPack.groups||typeof songPack.groups!=='object')return 0;
+ const used=new Set(Object.values(songPack.groups).flatMap(a=>Array.isArray(a)?a:[]).map(s=>String(s).split(' — ')[0].trim().toLocaleLowerCase()));
+ let added=0;
+ for(const [group,list] of Object.entries(ADDITIONAL_THAI_SONGS_V25)){
+  const values=Array.isArray(songPack.groups[group])?[...songPack.groups[group]]:[];
+  for(const value of list){
+   const title=value.split(' — ')[0].trim().toLocaleLowerCase();
+   if(!title||used.has(title))continue;
+   used.add(title);values.push(value);added++;
+  }
+  // Only add a new subgroup if it contains new entries or existed already.
+  if(values.length)songPack.groups[group]=values;
+ }
+ return added;
+}
+addThaiSongsV25(builtinCategories);
 function defaultCategories(){const c=copyPack(builtinCategories);Object.values(c).forEach(x=>x.enabledModes=[...MODES]);return c;}
 function isRemovedCategory(key,value){
  const id=String(key||'').toLowerCase(),name=String(value?.name||'').toLowerCase();
@@ -873,6 +1917,48 @@ function migrateSharedSongArtists(){
   console.warn('Song artist update could not sync; check Firebase write permissions',err);
  });
 }
+// V25 shared-library migration: add missing defaults; keep user modifications.
+let partyContentV25Started=false,partyContentV25Finished=false;
+function migrateNewPartyContentV25(){
+ if(!sharedCategoryReady||partyContentV25Started||partyContentV25Finished)return;
+ partyContentV25Started=true;
+ sharedCategoryRef.transaction(raw=>{
+  if(typeof raw!=='string')return;
+  let doc;try{doc=JSON.parse(raw);}catch{return;}
+  if(!doc?.categories||typeof doc.categories!=='object'||Array.isArray(doc.categories))return;
+  const rev=doc.contentRevisions||{};
+  const needCategories=!rev.newPartyCategoriesV25,needSongs=!rev.extraThaiSongsV25;
+  if(!needCategories&&!needSongs)return;
+  const categories={...doc.categories},history=Array.isArray(doc.history)?doc.history.slice():[],now=Date.now();
+  if(needCategories){
+   for(const [key,pack] of Object.entries(NEW_PARTY_CATEGORIES_V25)){
+    if(Object.prototype.hasOwnProperty.call(categories,key))continue;
+    categories[key]={name:pack.name,groups:copyPack(pack.groups),enabledModes:[...MODES]};
+    history.push({id:'builtin_v25_'+key,at:now,by:'ระบบอัปเดตเกม',action:'create',
+     categoryKey:key,categoryName:pack.name,
+     details:[`เพิ่มหมวดเริ่มต้น ${Object.keys(pack.groups).length} กลุ่ม ${wordsOf(pack).length} คำ`]});
+   }
+  }
+  if(needSongs&&categories.thai_songs?.groups){
+   const songs={...categories.thai_songs,groups:copyPack(categories.thai_songs.groups)};
+   const added=addThaiSongsV25({thai_songs:songs});
+   if(added){
+    categories.thai_songs=songs;
+    history.push({id:'builtin_v25_songs',at:now,by:'ระบบอัปเดตเกม',action:'edit',
+     categoryKey:'thai_songs',categoryName:songs.name,
+     details:[`เพิ่มเพลงไทยพร้อมศิลปิน ${added} เพลง แบ่งเป็น 4 กลุ่มย่อย`]});
+   }
+  }
+  return JSON.stringify({...doc,version:1,updatedAt:now,categories,history:history.slice(-100),
+   contentRevisions:{...rev,...(needCategories?{newPartyCategoriesV25:now}:{}),...(needSongs?{extraThaiSongsV25:now}:{})}});
+ },undefined,false).then(result=>{
+  partyContentV25Finished=true;
+  if(result.committed)console.info('V25 categories and Thai songs synced to Firebase');
+ }).catch(err=>{
+  console.error('V25 category sync failed',err);
+  managerSyncStatus('อัปเดต 10 หมวดและเพลงใน Firebase ไม่สำเร็จ กรุณาตรวจสอบสิทธิ์เขียนข้อมูล','error');
+ }).finally(()=>{partyContentV25Started=false;});
+}
 let library=defaultCategories();
 let categoryHistory=[],sharedCategoryReady=false,sharedCategoryBootstrapping=false,managerDirty=false;
 const sharedCategoryRef=db.ref('sharedCategoryLibraryV1');
@@ -908,6 +1994,7 @@ function applySharedCategoryDocument(raw){
  renderCategoryChoices();
  migrateSharedFamiliarWords();
  migrateSharedSongArtists();
+ migrateNewPartyContentV25();
  const view=$('managerView');
  if(view&&!view.hidden){
   if(!managerDirty&&!editNew){
