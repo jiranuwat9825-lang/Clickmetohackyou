@@ -280,14 +280,14 @@
   border-radius:14px;color:#ebf4ff;font-size:12px;font-weight:800;
   transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
 }
-.avatar-filter::after{content:"⌄";font-size:16px;line-height:1;color:#97b1df;transition:transform .16s ease}
+.avatar-filter::after{content:none;display:none}
 .avatar-filter.selected{
   background:linear-gradient(125deg,#245b7c,#2a3f74);
   border:1.5px solid #6ce4ff;border-bottom-width:3px;
   box-shadow:0 4px 0 rgba(0,56,88,.6),0 0 0 2px rgba(83,205,249,.16),0 9px 20px rgba(8,42,80,.3);
   color:#fff
 }
-.avatar-filter.selected::after{content:"⌄";color:#a4f7ff;font-weight:900}
+.avatar-filter.selected::after{content:none;display:none}
 .avatar-filter:hover{transform:translateY(-2px);border-color:#99d6ff;box-shadow:0 6px 0 rgba(1,6,19,.45),0 12px 22px rgba(11,77,117,.32)}
 .avatar-filter:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(1,6,19,.5)}
 .avatar-filter:focus-visible{outline:3px solid #e5beff;outline-offset:4px}
