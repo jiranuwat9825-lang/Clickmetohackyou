@@ -85,9 +85,10 @@ function renderWhoCustomGuessHistory(r){
  if(r.gameMode!=='whoami_custom')return;
  const guesses=r.whoCustomGuesses?.[myId]||[];
  guesses.forEach((g,i)=>{
-  const line=document.createElement('div');line.className='who-custom-guess-item '+(g.correct===null?'pending':g.correct?'correct':'incorrect');
+  const awaiting=g.status==='pending'||g.correct==null;
+  const line=document.createElement('div');line.className='who-custom-guess-item '+(awaiting?'pending':g.correct?'correct':'incorrect');
   const answer=document.createElement('span');answer.textContent='คำตอบของคุณ: '+g.answer;
-  const verdict=document.createElement('b');verdict.textContent=g.correct===null?'⏳ รอตรวจ':g.correct?'✓ ถูกต้อง':'✕ ไม่ถูกต้อง';
+  const verdict=document.createElement('b');verdict.textContent=awaiting?'⏳ รอตรวจ':g.correct?'✓ ถูกต้อง':'✕ ไม่ถูกต้อง';
   line.append(answer,verdict);box.append(line);
  });
 }
@@ -185,7 +186,7 @@ async function whoCustomGuess(){
    const round=r.status==='final_guess'?(Number(r.totalRounds)||1):(Number(r.currentRound)||1);
    r.whoCustomPending||={};
    r.whoCustomPending[myId]={writerId,answer,round,submittedAt:serverNow()};
-   r.whoCustomGuesses||={};r.whoCustomGuesses[myId]=[{answer,correct:null,round}];
+   r.whoCustomGuesses||={};r.whoCustomGuesses[myId]=[{answer,status:'pending',round}];
    r.attempts[myId]=0;
    if(r.status==='playing')removeWhoAnsweredPlayer(r,myId);
    whoCustomCompleteIfReady(r);
