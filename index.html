@@ -75,7 +75,7 @@
 <label>รูปแบบ Spyfall</label><div class="format-grid">
 <button class="format-choice" data-spy-format="secret">🎭 คำลับต่างกัน (แบบเดิม)</button>
 <button class="format-choice" data-spy-format="aware">🕵️ Spy รู้ตัวตน (ไม่มีคำลับ)</button></div>
-<p class="muted hint">จับ Spy ถูก: คนปกติ +2 ทุกคน / Spy รอด: +2 / Spy ทายคำถูก: +1</p>
+<p id="spyRulesHint" class="muted hint">จับ Spy ถูก: คนปกติคนละ +1 / Spy รอด: +2 / ทายคำอีกฝ่ายถูก: +1</p>
 </div>
 <div id="whoFormatSection" class="mode-formats" hidden>
 <label>เลือกรูปแบบ Who Am I</label>
@@ -175,7 +175,7 @@
 <div id="voteProgress" class="game-stats"></div>
 <div class="timer-block danger-timer"><span>⏳ เหลือเวลาลงคะแนน</span><strong id="voteTimer">02:00</strong></div>
 <p id="voteNote" class="muted"></p><div id="voteChoices" class="vote-list"></div>
-<div id="voteAnswer" class="guess-box" hidden><label for="voteWord">คำของคนที่คุณโหวต (ไม่บังคับ)</label><select id="voteWord"></select><p class="muted hint">หากทายถูกตามเงื่อนไข ได้โบนัส +1</p><button id="voteSubmitBtn" class="btn primary full">✓ ยืนยันโหวตและคำทาย</button></div>
+<div id="voteAnswer" class="guess-box" hidden><label for="voteWord">ทายคำของฝ่ายตรงข้าม (ไม่บังคับ)</label><select id="voteWord"></select><p class="muted hint">คนปกติทายคำของ Spy / Spy ทายคำร่วมของคนปกติ · ทายถูกได้โบนัส +1 เฉพาะคนนั้น โดยไม่จำเป็นต้องโหวตถูก</p><button id="voteSubmitBtn" class="btn primary full">✓ ยืนยันโหวตและคำทาย</button></div>
 <button id="awareVoteSubmitBtn" class="btn primary full" hidden>✓ ยืนยันโหวตหา Spy</button>
 <div id="spyGuessPanel" class="guess-box" hidden>
 <h3>🕵️ คุณเป็น Spy — ทายคำของคนปกติ</h3>

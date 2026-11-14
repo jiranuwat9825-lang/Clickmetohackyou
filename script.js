@@ -1011,6 +1011,9 @@ function renderModeChoices(){
  document.querySelectorAll('#modeOptions [data-mode]').forEach(b=>{const on=b.dataset.mode==='whoami'?selectedMode.startsWith('whoami'):selectedMode==='spyfall';b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
  $('whoFormatSection').hidden=!selectedMode.startsWith('whoami');
  $('spyFormatSection').hidden=selectedMode!=='spyfall';
+ $('spyRulesHint').textContent=selectedSpyVariant==='aware'
+  ?'จับ Spy ถูก: คนปกติคนละ +1 / Spy รอด: +1 / Spy ทายคำถูก: +1 (เฉพาะ Spy เท่านั้นที่ทายคำ)'
+  :'จับ Spy ถูก: คนปกติคนละ +1 / Spy รอด: +2 / คนที่ทายคำฝ่ายตรงข้ามถูกได้โบนัส +1 (ไม่บังคับ)';
  document.querySelectorAll('[data-spy-format]').forEach(b=>{
   const active=b.dataset.spyFormat===selectedSpyVariant;
   b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
@@ -1491,11 +1494,18 @@ function renderResults(r){
    <div class="summary-fact"><small>สายลับ</small><strong>${esc(players[r.spyId]?.name||'—')}</strong></div>
    <div class="summary-fact"><small>ผลโหวต</small><strong>${res.tied?'เสมอ':esc(players[res.pickedId]?.name||'ไม่มีผู้ถูกเลือก')}</strong></div>
    </div>`;
+  if(!isAwareSpy(r)){
+   const extra=document.createElement('div');extra.className='spy-vote-summary';
+   extra.innerHTML=`<div><small>คำที่ Spy ได้</small><strong>${esc(r.roles?.[r.spyId]||'—')}</strong></div>
+    <div><small>คำที่คนปกติได้</small><strong>${esc(normalSpyWord(r)||'—')}</strong></div>
+    <p>คำตอบของฝ่ายตรงข้ามที่ทายถูกได้โบนัสคนละ +1 แม้ไม่ได้โหวตถูก</p>`;
+   section.append(extra);
+  }
   if(isAwareSpy(r)){
    const summary=document.createElement('div');summary.className='spy-vote-summary';
    summary.innerHTML=`<div><small>คำที่ Spy ทาย</small><strong>${esc(res.spyGuess||'ไม่ได้ตอบ')}</strong></div>
     <div><small>คำที่คนปกติได้รับ</small><strong>${esc(res.correctWord||r.spyCommonWord||'—')}</strong></div>
-    <p>${res.spyGuessCorrect?'✅ Spy ทายถูก +1 คะแนน':'❌ Spy ทายผิดหรือไม่ได้ทาย'} · ${res.caught?'คนปกติจับ Spy ได้ ทุกคนคนละ +1 คะแนน':'Spy รอดจากการโหวต +2 คะแนน'}</p>`;
+    <p>${res.spyGuessCorrect?'✅ Spy ทายถูก +1 คะแนน':'❌ Spy ทายผิดหรือไม่ได้ทาย'} · ${res.caught?'คนปกติจับ Spy ได้ ทุกคนคนละ +1 คะแนน':'Spy รอดจากการโหวต +1 คะแนน'}</p>`;
    section.append(summary);
   }
   target.append(section);
@@ -1518,7 +1528,7 @@ function renderResults(r){
     const row=document.createElement('div');row.className='vote-record';
     row.innerHTML=`<strong>${esc(players[id]?.name||'ผู้เล่น')}</strong>
      <span>โหวต: ${esc(players[ballot.targetId]?.name||'—')}</span>
-     <small>${isAwareSpy(r)?'โหมดนี้คนปกติไม่ต้องทายคำ':'ทายคำ: '+esc(ballot.guessWord||'ไม่ได้ทาย')}</small>`;
+     <small>${isAwareSpy(r)?'โหมดนี้คนปกติไม่ต้องทายคำ':'ทายคำฝ่ายตรงข้าม: '+esc(ballot.guessWord||'ไม่ได้ทาย')}</small>`;
     list.append(row);
    });
    group.append(list);target.append(group);
@@ -1547,7 +1557,7 @@ function renderResults(r){
   const d=spy?res.awards?.[id]:r.guessDetails?.[id],points=spy?d?.total||0:d?.points||0;
   const row=document.createElement('div');row.className='result-row';
   row.innerHTML=`<div class="result-summary-player"><span class="score-medal">${['🥇','🥈','🥉'][i]||i+1}</span>${playerLabelHTML(id,r,false)}</div>
-   <div class="result-summary-score"><b>+${points}</b><small>${spy&&isAwareSpy(r)?'ผลโหวต +'+(d?.base||0)+' · ทายคำ +'+(d?.bonus||0)+' · ':''}รวม ${scores[id]||0} คะแนน</small></div>`;
+   <div class="result-summary-score"><b>+${points}</b><small>${spy?'ผลโหวต +'+(d?.base||0)+' · ทายคำ +'+(d?.bonus||0)+' · ':''}รวม ${scores[id]||0} คะแนน</small></div>`;
   board.append(row);
  });
  target.append(board);
@@ -1758,7 +1768,7 @@ function resolveVotes(r){
   const guessCorrect=!!guess&&norm(guess)===norm(correctWord);
   ids.forEach(id=>{
    const spy=id===r.spyId;
-   const base=spy?(caught?0:2):(caught?1:0);
+   const base=spy?(caught?0:1):(caught?1:0);
    const bonus=spy&&guessCorrect?1:0;
    awards[id]={base,bonus,total:base+bonus};
    r.scores||={};r.scores[id]=(r.scores[id]||0)+base+bonus;
@@ -1766,12 +1776,20 @@ function resolveVotes(r){
   r.result={pickedId,caught,tied,awards,votesByRound:copyPack(r.voteHistory),voteCounts:counts,
    groupLabel:groupLabel(packFor(r),r.currentGroup),correctWord,spyGuess:guess,spyGuessCorrect:guessCorrect};
  }else{
+  const spyWord=r.roles?.[r.spyId]||'',commonWord=normalSpyWord(r);
+  const latestGuesses={};
+  Object.values(r.voteHistory).forEach(roundBallots=>{
+   Object.entries(roundBallots||{}).forEach(([id,v])=>{
+    if(v?.guessWord)latestGuesses[id]=v.guessWord;
+   });
+  });
   ids.forEach(id=>{
-   const b=ballots[id]||{},spy=id===r.spyId;
-   const guessed=!!b.guessWord&&!!r.roles?.[b.targetId]&&norm(b.guessWord)===norm(r.roles[b.targetId]);
+   const spy=id===r.spyId,guessWord=latestGuesses[id]||'';
+   const correctOppositeWord=spy?commonWord:spyWord;
+   const guessed=!!guessWord&&!!correctOppositeWord&&norm(guessWord)===norm(correctOppositeWord);
    const base=spy?(caught?0:2):(caught?1:0);
-   const bonus=guessed&&(spy||b.targetId===r.spyId)?1:0;
-   awards[id]={base,bonus,total:base+bonus};
+   const bonus=guessed?1:0;
+   awards[id]={base,bonus,total:base+bonus,guessWord,correctOppositeWord};
    r.scores||={};r.scores[id]=(r.scores[id]||0)+base+bonus;
   });
   r.result={pickedId,caught,tied,awards,votesByRound:copyPack(r.voteHistory),
