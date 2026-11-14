@@ -2578,7 +2578,7 @@ function refreshWhoNoteCounter(){
 }
 function syncWhoNotes(r){
  if(!r||r.gameMode==='spyfall')return;
- const key=whoNoteKey(r),active=r.status==='playing'||r.status==='final_guess';
+ const key=whoNoteKey(r),active=['playing','final_guess','whoami_review'].includes(r.status);
  if(!active){
   try{sessionStorage.removeItem(key);}catch{}
   $('whoNoteInput').value='';activeWhoNoteKey='';refreshWhoNoteCounter();
@@ -2594,7 +2594,7 @@ $('whoNoteInput').addEventListener('input',()=>{
  try{sessionStorage.setItem(activeWhoNoteKey,$('whoNoteInput').value);}catch(e){console.warn('Who Am I note could not be saved locally',e);}
  refreshWhoNoteCounter();
 });
-function renderRoom(r){const players=r.players||{},ids=Object.keys(players),status=r.status;syncWhoNotes(r);insiderSyncNotes(r);$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomMeta').textContent=r.gameMode==='whoami_custom'?`Who Am I · Customize By Player · ${r.settingValue||2} รอบ · 2 คำตอบ`:r.gameMode==='insider'?'Insider · 4+ คน · ตั้งคำ 1 นาที · ทาย 5 นาที':`${modeTitle(r.gameMode)} · ${(r.status==='lobby'?library[r.category]:null)?.name||packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาทีต่อคน':'รอบ'}${r.gameMode==='spyfall'?' · '+spyVariantTitle(r.spyVariant):''}`;renderScores(r);$('deleteRoomBtn').hidden=!(isHost&&status==='lobby');showScreen(({lobby:'lobbyScreen',playing:r.gameMode==='insider'?'insiderScreen':r.gameMode==='spyfall'?'spyScreen':'whoScreen',insider_prepare:'insiderScreen',insider_voting:'insiderScreen',whoami_prepare:'whoCustomScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen',finished:'grandFinalScreen'})[status]||'lobbyScreen');
+function renderRoom(r){const players=r.players||{},ids=Object.keys(players),status=r.status;syncWhoNotes(r);insiderSyncNotes(r);$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomMeta').textContent=r.gameMode==='whoami_custom'?`Who Am I · Customize By Player · ${r.settingValue||2} รอบ · 1 คำตอบ`:r.gameMode==='insider'?'Insider · 4+ คน · ตั้งคำ 1 นาที · ทาย 5 นาที':`${modeTitle(r.gameMode)} · ${(r.status==='lobby'?library[r.category]:null)?.name||packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาทีต่อคน':'รอบ'}${r.gameMode==='spyfall'?' · '+spyVariantTitle(r.spyVariant):''}`;renderScores(r);$('deleteRoomBtn').hidden=!(isHost&&status==='lobby');showScreen(({lobby:'lobbyScreen',playing:r.gameMode==='insider'?'insiderScreen':r.gameMode==='spyfall'?'spyScreen':'whoScreen',insider_prepare:'insiderScreen',insider_voting:'insiderScreen',whoami_prepare:'whoCustomScreen',whoami_review:'whoScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen',finished:'grandFinalScreen'})[status]||'lobbyScreen');
  if(status==='lobby'){
   renderLobbyCategory(r);
   renderLobbyFormat(r);
@@ -2613,7 +2613,7 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
  }else if(status==='whoami_prepare'&&r.gameMode==='whoami_custom')renderWhoCustomPrepare(r);
   else if(r.gameMode==='insider'&&['insider_prepare','playing','insider_voting'].includes(status))renderInsider(r);
   else if(status==='playing'&&r.gameMode==='spyfall')renderSpy(r);
- else if(status==='playing'||status==='final_guess')renderWho(r);
+ else if(status==='playing'||status==='final_guess'||status==='whoami_review')renderWho(r);
  else if(status==='voting')renderVotes(r);
  else if(status==='results')renderResults(r);
  else if(status==='finished')renderGrandFinal(r);
@@ -2668,7 +2668,7 @@ function resetWhoGuessInput(){
  suggestions.hidden=true;
 }
 function renderWho(r){
- const final=r.status==='final_guess',timed=r.gameMode==='whoami_time',custom=r.gameMode==='whoami_custom',
+ const final=r.status==='final_guess',review=r.status==='whoami_review',timed=r.gameMode==='whoami_time',custom=r.gameMode==='whoami_custom',
   idx=r.currentTurnIndex||0,speaker=currentWhoSpeaker(r),players=r.players||{};
  const token=r.status==='playing'?`${roomId}:${r.gamesPlayed||0}:${r.currentRound||1}:${speaker||''}`:'';
  if(token!==lastWhoTurnToken){
@@ -2676,11 +2676,11 @@ function renderWho(r){
   lastWhoTurnToken=token;
  }
  setGameAvatar('whoMyAvatar');
- $('whoRoleHint').textContent=custom?'คำของคุณถูกเพื่อนสุ่มตั้งให้ ถามคำถามแล้วทายได้ทั้งหมด 2 ครั้ง':'ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว';
+ $('whoRoleHint').textContent=custom?'คำของคุณถูกเพื่อนสุ่มตั้งให้ มีสิทธิ์ตอบ 1 ครั้ง และคนตั้งคำจะเป็นผู้ตรวจ':'ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว';
  $('guessSelected').hidden=custom;
  $('guessInput').placeholder=custom?'พิมพ์คำตอบได้อิสระ ไม่ต้องเลือกจากรายการ':'พิมพ์เพื่อค้นหาคำ';
- if(custom)renderWhoCustomGuessHistory(r);else $('whoCustomGuessHistory').hidden=true;
- $('whoTurnBlock').hidden=final;
+ if(custom){renderWhoCustomGuessHistory(r);renderWhoCustomJudgePanel(r);}else{$('whoCustomGuessHistory').hidden=true;$('whoCustomJudgePanel').hidden=true;$('whoCustomAwaiting').hidden=true;}
+ $('whoTurnBlock').hidden=final||review;
  $('whoTimerBlock').hidden=!timed&&!final;
  $('playerTimerPanel').hidden=!timed;
  $('whoTimerLabel').textContent=final?' ช่วงตอบสุดท้าย (2 นาที)':` เวลาที่เหลือของ ${players[speaker]?.name||'ผู้เล่น'}`;
@@ -2694,9 +2694,9 @@ function renderWho(r){
  renderOrder($('whoOrder'),r,!final);
  const answered=Object.values(r.attempts||{}).filter(v=>v===0).length;
  renderGameStats('whoProgress',[
-  {label:'รูปแบบ',value:final?'ตอบช่วงสุดท้าย':timed?'จับเวลาแยกคน':custom?'Customize By Player':'เล่นเป็นรอบ'},
+  {label:'รูปแบบ',value:review?'รอการตรวจคำตอบ':final?'ตอบช่วงสุดท้าย':timed?'จับเวลาแยกคน':custom?'Customize By Player':'เล่นเป็นรอบ'},
   {label:'ตอบแล้ว / หมดสิทธิ์',value:`${answered} / ${Object.keys(players).length} คน`},
-  {label:timed?'กำลังถาม':final?'เวลาคงเหลือ':'ลำดับเทิร์น',value:timed?(players[speaker]?.name||'—'):final?formatLeft(r.finalDeadline):`${idx+1} / ${(r.turnOrder||[]).length}`}
+  {label:timed?'กำลังถาม':review?'คำตอบรอตรวจ':final?'เวลาคงเหลือ':'ลำดับเทิร์น',value:timed?(players[speaker]?.name||'—'):review?String(Object.keys(r.whoCustomPending||{}).length):final?formatLeft(r.finalDeadline):`${idx+1} / ${(r.turnOrder||[]).length}`}
  ]);
  const timerList=$('playerTimerList');
  timerList.replaceChildren();
@@ -2721,17 +2721,17 @@ function renderWho(r){
   el.className=`friend-card ${answeredPlayer?'done':''}`;
   el.innerHTML=`<div class="friend-name"><small>ชื่อผู้เล่น</small>${playerLabelHTML(id,r,false)}</div>
    <div class="friend-answer"><small>คำของเพื่อน</small><strong>${esc(r.roles?.[id]||'—')}</strong></div>
-   <span class="friend-status">${answeredPlayer?(d.timedOut?' หมดเวลา':d.correct?' ตอบถูก':' ตอบผิด'):'● ยังมีสิทธิ์ทาย'}</span>`;
+   <span class="friend-status">${custom&&r.whoCustomPending?.[id]?'⏳ รอตรวจคำตอบ':answeredPlayer?(d.timedOut?' หมดเวลา':d.correct?' ตอบถูก':' ตอบผิด'):'● ยังมีสิทธิ์ทาย'}</span>`;
   others.append(el);
  });
- const mine=r.attempts?.[myId]===0,details=r.guessDetails?.[myId]||{};
+ const mine=r.attempts?.[myId]===0,details=r.guessDetails?.[myId]||{},waitingForJudge=custom&&!!r.whoCustomPending?.[myId];
  const myTimeOver=timed&&remainingWhoMs(r,myId)<=0;
- $('guessInputs').hidden=mine;
- $('guessBtn').disabled=mine||myTimeOver;
- $('guessHeading').textContent=mine?(details.timedOut?' เวลาของคุณหมดแล้ว':details.correct?' คุณตอบถูกแล้ว!':' คุณตอบผิดแล้ว'):(myTimeOver?'เวลาของคุณหมดแล้ว กำลังสรุปผล':custom?'ทายคำของคุณ · เหลือ '+(Number(r.attempts?.[myId])||0)+' / 2 ครั้ง':final?'โอกาสสุดท้าย! ตอบภายใน 2 นาที':'ทายคำของคุณ (1 ครั้ง)');
+ $('guessInputs').hidden=mine||review;
+ $('guessBtn').disabled=mine||review||myTimeOver;
+ $('guessHeading').textContent=waitingForJudge?'⏳ ส่งคำตอบแล้ว · รอคนตั้งคำตรวจ':review?'รอผลการตรวจคำตอบ':mine?(details.timedOut?' เวลาของคุณหมดแล้ว':details.correct?' คุณตอบถูกแล้ว!':' คุณตอบผิดแล้ว'):(myTimeOver?'เวลาของคุณหมดแล้ว กำลังสรุปผล':custom?'ทายคำของคุณ (1 ครั้ง)':final?'โอกาสสุดท้าย! ตอบภายใน 2 นาที':'ทายคำของคุณ (1 ครั้ง)');
  const reveal=$('answerReveal');
- reveal.hidden=!mine;
- reveal.innerHTML=mine?`<strong>${details.timedOut?' หมดเวลา':details.correct?' คำตอบถูกต้อง':' คำตอบไม่ถูกต้อง'}</strong>
+ reveal.hidden=!mine||waitingForJudge||(!Object.keys(details).length&&custom);
+ reveal.innerHTML=mine&&!waitingForJudge&&(!custom||Object.keys(details).length)?`<strong>${details.timedOut?' หมดเวลา':details.correct?' คำตอบถูกต้อง':' คำตอบไม่ถูกต้อง'}</strong>
   <span>คำที่ถูก: <b>${esc(details.correctAnswer||r.roles?.[myId]||'—')}</b></span>
   <span>คำที่คุณตอบ: <b>${esc(details.answer||'ไม่ได้ตอบ')}</b></span>`:'';
 }
@@ -2888,7 +2888,7 @@ function renderResults(r){
 // ===== Game start, turns and final response windows =====
 function toFinalGuess(r){
  const ids=Object.keys(r.players||{}),pending=ids.some(id=>r.attempts?.[id]!==0);
- if(!pending){r.status='results';r.finalDeadline=null;return;}
+ if(!pending){r.status=r.gameMode==='whoami_custom'&&whoCustomHasPending(r)?'whoami_review':'results';r.finalDeadline=null;return;}
  r.status='final_guess';r.finalDeadline=serverNow()+FINAL_MS;
 }
 function toVoting(r){r.status='voting';r.votes={};r.voteHistory={};r.spyGuess=null;r.voteRound=1;r.tieCandidates=null;r.voteDeadline=serverNow()+FINAL_MS;}
@@ -3138,6 +3138,7 @@ function resolveVotes(r){
 async function runAutomatic(){
  if(autoBusy||!roomId||!roomState||leaving)return;
  if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_prepare'){await whoCustomAuto();return;}
+ if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_review')return;
  if(roomState.gameMode==='insider'){await insiderAuto();return;}
  const r=roomState,ids=Object.keys(r.players||{}),allAnswered=ids.length>0&&ids.every(id=>r.attempts?.[id]===0),allVoted=spyVotesComplete(r);
  const timed=r.status==='playing'&&r.gameMode==='whoami_time',speaker=currentWhoSpeaker(r);
@@ -3174,7 +3175,18 @@ async function runAutomatic(){
      advanceRound(x);return x;
     }
    }
-   if(x.status==='final_guess'&&(done||serverNow()>=x.finalDeadline)){x.status='results';return x;}
+   if(x.status==='final_guess'&&(done||serverNow()>=x.finalDeadline)){
+     if(x.gameMode==='whoami_custom'){
+      if(serverNow()>=Number(x.finalDeadline||0)){
+       for(const id of Object.keys(x.players||{}))if(Number(x.attempts?.[id]||0)>0){
+        x.attempts[id]=0;x.guessDetails||={};x.guessDetails[id]={correct:false,points:0,round:Number(x.totalRounds)||1,answer:'',correctAnswer:x.roles?.[id]||'',timedOut:true};
+       }
+      }
+      whoCustomCompleteIfReady(x);
+      return x;
+     }
+     x.status='results';return x;
+    }
    if(x.status==='voting'&&(serverNow()>=x.voteDeadline||spyVotesComplete(x))){resolveVotes(x);return x;}
   },undefined,false);
  }catch(e){error(e);}finally{autoBusy=false;}
@@ -3201,7 +3213,7 @@ setInterval(()=>{
 },1000);
 
 // ===== Summary and return to lobby =====
-$('nextGameBtn').onclick=async()=>{if(!isHost||!roomId||!await confirmBox('กลับล็อบบี้?','ทุกคนจะกลับไปรอเริ่มเกมรอบใหม่ และคะแนนสะสมยังอยู่','กลับล็อบบี้'))return;try{const res=await getRef().transaction(r=>{if(!r||r.hostId!==myId||r.status!=='results')return;r.status='lobby';r.whoCustomAssignments={};r.whoCustomWords={};r.whoCustomSubmitted={};r.whoCustomAutoWords={};r.whoCustomGuesses={};r.whoCustomDeadline=null;r.insiderMasterId=null;r.insiderId=null;r.insiderAnswer=null;r.insiderDeadline=null;r.insiderGuessDeadline=null;r.insiderAttempts={};r.insiderVotes={};r.insiderGuesses={};r.insiderGuessFeed=[];r.insiderWinner=null;r.insiderResolved=false;r.gamePlayers=null;r.roles=null;r.spyId=null;r.spyCommonWord=null;r.spyGuess=null;r.currentGroup=null;r.turnOrder=[];r.currentRound=1;r.currentTurnIndex=0;r.attempts={};r.guessedCorrectly={};r.guessDetails={};r.correctOrder=[];r.playDeadline=null;r.finalDeadline=null;r.turnStartedAt=null;r.whoTimeRemaining={};r.voteDeadline=null;r.votes={};r.voteHistory={};r.voteRound=0;r.tieCandidates=null;r.result=null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(res.committed){chosenGuess='';chosenWord='';chosenVote='';chosenSpyGuess='';$('guessInput').value='';toast('กลับล็อบบี้แล้ว','success');}}catch(e){error(e);}};
+$('nextGameBtn').onclick=async()=>{if(!isHost||!roomId||!await confirmBox('กลับล็อบบี้?','ทุกคนจะกลับไปรอเริ่มเกมรอบใหม่ และคะแนนสะสมยังอยู่','กลับล็อบบี้'))return;try{const res=await getRef().transaction(r=>{if(!r||r.hostId!==myId||r.status!=='results')return;r.status='lobby';r.whoCustomAssignments={};r.whoCustomWords={};r.whoCustomSubmitted={};r.whoCustomAutoWords={};r.whoCustomGuesses={};r.whoCustomPending={};r.whoCustomReviews={};r.whoCustomDeadline=null;r.insiderMasterId=null;r.insiderId=null;r.insiderAnswer=null;r.insiderDeadline=null;r.insiderGuessDeadline=null;r.insiderAttempts={};r.insiderVotes={};r.insiderGuesses={};r.insiderGuessFeed=[];r.insiderWinner=null;r.insiderResolved=false;r.gamePlayers=null;r.roles=null;r.spyId=null;r.spyCommonWord=null;r.spyGuess=null;r.currentGroup=null;r.turnOrder=[];r.currentRound=1;r.currentTurnIndex=0;r.attempts={};r.guessedCorrectly={};r.guessDetails={};r.correctOrder=[];r.playDeadline=null;r.finalDeadline=null;r.turnStartedAt=null;r.whoTimeRemaining={};r.voteDeadline=null;r.votes={};r.voteHistory={};r.voteRound=0;r.tieCandidates=null;r.result=null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(res.committed){chosenGuess='';chosenWord='';chosenVote='';chosenSpyGuess='';$('guessInput').value='';toast('กลับล็อบบี้แล้ว','success');}}catch(e){error(e);}};
 
 // Restore remembered room only after the player confirms the prefilled name.
 if(roomId){$('roomCode').textContent=roomId;$('roomTitle').textContent=`ห้อง ${roomId}`;$('leaveBtn').hidden=false;showOnly('homeView');}else showOnly('homeView');
