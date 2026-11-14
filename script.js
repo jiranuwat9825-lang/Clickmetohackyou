@@ -2199,7 +2199,7 @@ $('openCreateBtn').onclick=()=>{if(!ensureName())return;selectedMode='';selected
 $('createBackBtn').onclick=()=>showOnly('homeView');
 function chooseMode(mode){
  selectedMode=mode;selectedCategory='';$('durationInput').value=mode==='whoami_time'?3:2;
- $('categoryCreateSection').hidden=mode==='insider';$('durationCreateSection').hidden=mode==='insider';$('insiderCreateHint').hidden=mode!=='insider';
+ $('categoryCreateSection').hidden=mode==='insider';$('durationCreateSection').hidden=mode==='insider';
  $('createDetails').hidden=false;
  $('durationLabel').textContent=mode==='whoami_time'?'นาทีต่อผู้เล่น':mode==='whoami_rounds'?'จำนวนรอบถาม':'จำนวนรอบพูด';
  $('durationHelp').textContent=mode==='whoami_time'?'เวลานับเฉพาะตอนถึงตาและหยุดเมื่อกดผ่านเทิร์น':mode==='whoami_rounds'?'จบรอบจะมีเวลา 2 นาทีให้คนที่ยังไม่ตอบ': 'ครบเทิร์นแล้วจะโหวต';
