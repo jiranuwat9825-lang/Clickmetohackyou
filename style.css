@@ -182,3 +182,14 @@
 .lobby-category-controls .btn{white-space:nowrap}
 .lobby-category #lobbyCategoryHint{margin:9px 0 0}
 @media(max-width:520px){.lobby-category-controls{grid-template-columns:1fr}.lobby-category-controls .btn{width:100%}}
+
+/* V14: Avatar categories and shared-category status */
+.avatar-filter-bar{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 5px}
+.avatar-filter{min-height:38px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:#d9e3fb;background:#0f1b31;font-size:11px;font-weight:700;white-space:nowrap}
+.avatar-filter.selected{border-color:var(--cyan);background:#294b66;color:#b4efff}
+.avatar-picker{max-height:350px;overflow-y:auto;overscroll-behavior:contain;padding:5px 4px 8px;scrollbar-width:thin}
+.avatar-option small{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.manager-sync-status{margin:12px 0 0;padding:11px 13px;border:1px solid rgba(99,219,255,.3);border-radius:11px;background:#14304750;color:#b8eaff;font-size:12px}
+.manager-sync-status[data-state="error"]{border-color:#ff96ac70;background:#531b2d55;color:#ffb4c6}
+.manager-sync-status[data-state="ready"]{border-color:#5fe7b56e;background:#224b4050;color:#aff8d7}
+@media(max-width:650px){.avatar-filter-bar{gap:7px}.avatar-filter{padding:7px 10px;font-size:10px}.avatar-picker{max-height:320px}}

@@ -30,13 +30,96 @@ let selectedMode='',selectedCategory='',chosenVote='',chosenGuess='',chosenWord=
 let isHost=false,subscribedRef=null,roomCallback=null,leaving=false,sweepBusy=false,autoBusy=false,reconnectBusy=false,lastTouch=0,managerReturn='homeView',editKey=null,editNew=false,editDraft=null;
 sessionStorage.setItem('pg_tab_id',myId);db.ref('.info/serverTimeOffset').on('value',s=>serverOffset=Number(s.val())||0);
 const AVATARS=[
-{id:'fox',name:'จิ้งจอก',emoji:'🦊',tone:'orange'},{id:'cat',name:'แมว',emoji:'🐱',tone:'pink'},{id:'panda',name:'แพนด้า',emoji:'🐼',tone:'mono'},{id:'tiger',name:'เสือ',emoji:'🐯',tone:'gold'},{id:'rabbit',name:'กระต่าย',emoji:'🐰',tone:'rose'},{id:'frog',name:'กบ',emoji:'🐸',tone:'green'},{id:'koala',name:'โคอาลา',emoji:'🐨',tone:'gray'},{id:'bear',name:'หมี',emoji:'🐻',tone:'brown'},{id:'monkey',name:'ลิง',emoji:'🐵',tone:'yellow'},{id:'penguin',name:'เพนกวิน',emoji:'🐧',tone:'blue'},{id:'owl',name:'นกฮูก',emoji:'🦉',tone:'purple'},{id:'unicorn',name:'ยูนิคอร์น',emoji:'🦄',tone:'rose'},{id:'dragon',name:'มังกร',emoji:'🐲',tone:'green'},{id:'alien',name:'เอเลียน',emoji:'👾',tone:'violet'},{id:'robot',name:'หุ่นยนต์',emoji:'🤖',tone:'blue'},{id:'octopus',name:'หมึกยักษ์',emoji:'🐙',tone:'coral'},{id:'shark',name:'ฉลาม',emoji:'🦈',tone:'cyan'},{id:'chick',name:'ลูกเจี๊ยบ',emoji:'🐥',tone:'yellow'}];
+{id:"fox",name:"จิ้งจอก",emoji:"🦊",tone:"orange",group:"animals"},
+{id:"cat",name:"แมว",emoji:"🐱",tone:"pink",group:"animals"},
+{id:"panda",name:"แพนด้า",emoji:"🐼",tone:"mono",group:"animals"},
+{id:"tiger",name:"เสือ",emoji:"🐯",tone:"gold",group:"animals"},
+{id:"rabbit",name:"กระต่าย",emoji:"🐰",tone:"rose",group:"animals"},
+{id:"frog",name:"กบเขียว",emoji:"🐸",tone:"green",group:"animals"},
+{id:"koala",name:"โคอาลา",emoji:"🐨",tone:"gray",group:"animals"},
+{id:"bear",name:"หมี",emoji:"🐻",tone:"brown",group:"animals"},
+{id:"monkey",name:"ลิง",emoji:"🐵",tone:"yellow",group:"animals"},
+{id:"penguin",name:"เพนกวิน",emoji:"🐧",tone:"blue",group:"animals"},
+{id:"owl",name:"นกฮูก",emoji:"🦉",tone:"purple",group:"animals"},
+{id:"unicorn",name:"ยูนิคอร์น",emoji:"🦄",tone:"rose",group:"fantasy"},
+{id:"dragon",name:"มังกร",emoji:"🐲",tone:"green",group:"fantasy"},
+{id:"alien",name:"เอเลี่ยนพิกเซล",emoji:"👾",tone:"violet",group:"cool"},
+{id:"robot",name:"หุ่นยนต์",emoji:"🤖",tone:"blue",group:"cool"},
+{id:"octopus",name:"หมึกยักษ์",emoji:"🐙",tone:"coral",group:"animals"},
+{id:"shark",name:"ฉลาม",emoji:"🦈",tone:"cyan",group:"cool"},
+{id:"chick",name:"ลูกเจี๊ยบ",emoji:"🐥",tone:"yellow",group:"animals"},
+{id:"otter",name:"นากทะเล",emoji:"🦦",tone:"brown",group:"animals"},
+{id:"seal",name:"แมวน้ำ",emoji:"🦭",tone:"gray",group:"animals"},
+{id:"raccoon",name:"แร็กคูน",emoji:"🦝",tone:"gray",group:"animals"},
+{id:"sloth",name:"สลอธ",emoji:"🦥",tone:"gold",group:"animals"},
+{id:"hedgehog",name:"เม่นน้อย",emoji:"🦔",tone:"brown",group:"animals"},
+{id:"beaver",name:"บีเวอร์",emoji:"🦫",tone:"brown",group:"animals"},
+{id:"black_cat",name:"แมวดำ",emoji:"🐈‍⬛",tone:"violet",group:"animals"},
+{id:"wolf",name:"หมาป่า",emoji:"🐺",tone:"gray",group:"cool"},
+{id:"bat",name:"ค้างคาว",emoji:"🦇",tone:"purple",group:"cool"},
+{id:"eagle",name:"อินทรี",emoji:"🦅",tone:"gold",group:"cool"},
+{id:"crocodile",name:"จระเข้",emoji:"🐊",tone:"green",group:"cool"},
+{id:"dino",name:"ไดโนเสาร์",emoji:"🦖",tone:"green",group:"cool"},
+{id:"whale",name:"วาฬ",emoji:"🐳",tone:"cyan",group:"animals"},
+{id:"flamingo",name:"ฟลามิงโก",emoji:"🦩",tone:"rose",group:"animals"},
+{id:"butterfly",name:"ผีเสื้อ",emoji:"🦋",tone:"blue",group:"fantasy"},
+{id:"ghost",name:"ผีน้อย",emoji:"👻",tone:"mono",group:"fantasy"},
+{id:"pumpkin",name:"ฟักทองจอมซน",emoji:"🎃",tone:"orange",group:"fantasy"},
+{id:"ninja",name:"นินจา",emoji:"🥷",tone:"gray",group:"cool"},
+{id:"wizard",name:"พ่อมด",emoji:"🧙",tone:"purple",group:"fantasy"},
+{id:"vampire",name:"แวมไพร์",emoji:"🧛",tone:"rose",group:"fantasy"},
+{id:"space",name:"นักบินอวกาศ",emoji:"🧑‍🚀",tone:"blue",group:"cool"},
+{id:"superhero",name:"ฮีโร่",emoji:"🦸",tone:"gold",group:"cool"},
+{id:"fairy",name:"ภูตน้อย",emoji:"🧚",tone:"pink",group:"fantasy"},
+{id:"zombie",name:"ซอมบี้",emoji:"🧟",tone:"green",group:"fantasy"},
+{id:"alien2",name:"เอเลี่ยน",emoji:"👽",tone:"cyan",group:"cool"},
+{id:"skull",name:"กะโหลก",emoji:"💀",tone:"mono",group:"cool"},
+{id:"king",name:"ราชา",emoji:"🤴",tone:"gold",group:"fantasy"},
+{id:"teddy",name:"ตุ๊กตาหมี",emoji:"🧸",tone:"brown",group:"fantasy"},
+{id:"squid",name:"หมึกน้อย",emoji:"🦑",tone:"coral",group:"animals"},
+{id:"dragon2",name:"มังกรบิน",emoji:"🐉",tone:"green",group:"fantasy"}
+];
 const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
 if(!AVATARS.some(a=>a.id===myAvatar)){myAvatar='fox';try{localStorage.setItem('party_game_avatar_v1',myAvatar);}catch(e){}}
 const avatarMarkup=(player,cls='avatar-inline')=>{const a=avatarById(player?.avatar||'fox');return `<span class="avatar-token tone-${a.tone} ${cls}" title="${esc(a.name)}">${a.emoji}</span>`;};
 const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
 function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const a=avatarById(avatarId);el.textContent=a.emoji;el.className=`game-avatar tone-${a.tone}`;}
-function renderAvatarPicker(){if(!$('avatarPicker'))return;const grid=$('avatarPicker');grid.replaceChildren();AVATARS.forEach(a=>{const b=document.createElement('button');b.type='button';b.className=`avatar-option ${myAvatar===a.id?'selected':''}`;b.dataset.avatar=a.id;b.setAttribute('aria-pressed',String(myAvatar===a.id));b.innerHTML=`<span class="avatar-token tone-${a.tone}">${a.emoji}</span><small>${esc(a.name)}</small>`;b.onclick=()=>{myAvatar=a.id;localStorage.setItem('party_game_avatar_v1',myAvatar);renderAvatarPicker();toast(`เลือกตัวละคร ${a.name} แล้ว`,'success');};grid.append(b);});const a=avatarById(myAvatar);$('avatarPreview').textContent=a.emoji;$('avatarPreview').className=`avatar-preview tone-${a.tone}`;$('avatarSelectedLabel').textContent=`ตัวละครของคุณ: ${a.name}`;$('profileAvatar').textContent=a.emoji;$('profileAvatar').className=`panel-emoji avatar-profile tone-${a.tone}`;}
+let avatarFilter='all';
+const AVATAR_FILTERS=[
+ {id:'all',label:'ทั้งหมด'},
+ {id:'animals',label:'🐾 สัตว์น่ารัก'},
+ {id:'cool',label:'⚡ สายเท่'},
+ {id:'fantasy',label:'✨ แฟนตาซี'}
+];
+function renderAvatarPicker(){
+ const grid=$('avatarPicker'),filters=$('avatarFilterBar');
+ if(!grid||!filters)return;
+ filters.replaceChildren();
+ AVATAR_FILTERS.forEach(filter=>{
+  const b=document.createElement('button');
+  b.type='button';b.className=`avatar-filter ${avatarFilter===filter.id?'selected':''}`;
+  b.textContent=filter.label;b.setAttribute('aria-pressed',String(avatarFilter===filter.id));
+  b.onclick=()=>{avatarFilter=filter.id;renderAvatarPicker();};
+  filters.append(b);
+ });
+ grid.replaceChildren();
+ AVATARS.filter(a=>avatarFilter==='all'||a.group===avatarFilter).forEach(a=>{
+  const b=document.createElement('button');b.type='button';
+  b.className=`avatar-option ${myAvatar===a.id?'selected':''}`;
+  b.dataset.avatar=a.id;b.setAttribute('aria-pressed',String(myAvatar===a.id));
+  b.innerHTML=`<span class="avatar-token tone-${a.tone}">${a.emoji}</span><small>${esc(a.name)}</small>`;
+  b.onclick=()=>{
+   myAvatar=a.id;localStorage.setItem('party_game_avatar_v1',myAvatar);
+   renderAvatarPicker();toast(`เลือกตัวละคร ${a.name} แล้ว`,'success');
+   if(roomId&&roomState?.players?.[myId])getRef().child(`players/${myId}/avatar`).set(myAvatar).catch(error);
+  };
+  grid.append(b);
+ });
+ const chosen=avatarById(myAvatar);
+ $('avatarPreview').textContent=chosen.emoji;$('avatarPreview').className=`avatar-preview tone-${chosen.tone}`;
+ $('avatarSelectedLabel').textContent=`ตัวละครของคุณ: ${chosen.name} · เลือกได้ ${AVATARS.length} แบบ`;
+ $('profileAvatar').textContent=chosen.emoji;$('profileAvatar').className=`panel-emoji avatar-profile tone-${chosen.tone}`;
+}
 const builtinCategories ={
   "rov": {
     "name": "ROV · ฮีโร่ 130 รายการ / แยกตามเลนหลัก",
@@ -725,80 +808,86 @@ function isRemovedCategory(key,value){
  const id=String(key||'').toLowerCase(),name=String(value?.name||'').toLowerCase();
  return id==='blue_lock'||id==='demon_slayer'||name.includes('blue lock')||name.includes('demon slayer');
 }
-let deletedCategoryKeys = new Set();
-function loadCategories(){
- const base=defaultCategories();
- const sources=[];
- const storageKeys=[...LEGACY_CATEGORIES_KEYS,CATEGORIES_KEY];
- for(const storageKey of storageKeys){
-  try{
-   const raw=localStorage.getItem(storageKey);
-   if(!raw)continue;
-   const parsed=JSON.parse(raw);
-   const categories=parsed?.categories&&typeof parsed.categories==='object'?parsed.categories:parsed;
-   if(categories&&typeof categories==='object'&&!Array.isArray(categories)){
-    sources.push({categories,deleted:Array.isArray(parsed?.deleted)?parsed.deleted.map(String):[]});
-   }
-  }catch(e){console.warn('Category migration',storageKey,e);}
+let library=defaultCategories();
+let sharedCategoryReady=false,sharedCategoryBootstrapping=false,managerDirty=false;
+const sharedCategoryRef=db.ref('sharedCategoryLibraryV1');
+function parseSharedCategoryDocument(raw){
+ if(typeof raw!=='string')throw new Error('ข้อมูลหมวดส่วนกลางไม่ใช่ JSON string');
+ const document=JSON.parse(raw);
+ if(!document||typeof document!=='object'||!document.categories||typeof document.categories!=='object'||Array.isArray(document.categories))throw new Error('รูปแบบหมวดส่วนกลางไม่ถูกต้อง');
+ const result={};
+ for(const [key,pack] of Object.entries(document.categories)){
+  if(!/^[a-zA-Z0-9_-]{1,65}$/.test(key)||!pack||typeof pack.name!=='string'||!pack.groups||typeof pack.groups!=='object')continue;
+  const groups={};
+  for(const [label,words] of Object.entries(pack.groups)){
+   if(!label.trim()||!Array.isArray(words))continue;
+   groups[label]=[...new Set(words.filter(w=>typeof w==='string'&&w.trim()).map(w=>w.trim()))];
+  }
+  result[key]={name:pack.name,groups,enabledModes:Array.isArray(pack.enabledModes)?pack.enabledModes.filter(m=>MODES.includes(m)):[...MODES]};
  }
- for(const source of sources){
-  Object.entries(source.categories).forEach(([key,value])=>{
-   if(!/^[\w-]{1,50}$/.test(key)||!value||typeof value.name!=='string'||!value.groups||typeof value.groups!=='object'||isRemovedCategory(key,value))return;
-   const groups={};
-   Object.entries(value.groups).forEach(([groupName,words])=>{
-    if(!Array.isArray(words))return;
-    const n=String(groupName).trim().toLowerCase();
-    if(key==='general_items'&&(n==='อาหาร'||n==='สัตว์'||n==='animals'||n==='animal'||n.includes('food')))return;
-    const cleaned=[...new Set(words.map(w=>String(w).trim()).filter(Boolean))];
-    if(cleaned.length)groups[groupName]=cleaned;
-   });
-   if(!Object.keys(groups).length)return;
-   const validModes=Array.isArray(value.enabledModes)
-    ? value.enabledModes.filter(mode=>MODES.includes(mode))
-    : [...MODES];
-   // Legacy packs can contain obsolete mode IDs or an empty mode list.
-   const enabledModes=validModes.length?validModes:[...MODES];
-   base[key]={...value,name:value.name.trim(),groups,enabledModes};
-   deletedCategoryKeys.delete(key);
-  });
-  // Deletions in newer storage versions override older category copies.
-  source.deleted.forEach(key=>deletedCategoryKeys.add(key));
- }
- Object.entries(base).forEach(([key,value])=>{if(isRemovedCategory(key,value))delete base[key];});
- deletedCategoryKeys.forEach(key=>delete base[key]);
- // Keep ROV and VALORANT ready to play after importing old browser data.
- ['rov','valorant'].forEach(key=>{
-  const fallback=builtinCategories[key];
-  let pack=base[key];
-  if(!pack||!pack.groups||!Object.keys(pack.groups).length)pack=copyPack(fallback);
-  if(!supportsMode(pack,'spyfall'))pack.groups=copyPack(fallback.groups);
-  pack.enabledModes=[...MODES];
-  base[key]=pack;
-  deletedCategoryKeys.delete(key);
- });
- if(base.general_items){
-  base.general_items.groups=Object.fromEntries(Object.entries(base.general_items.groups||{}).filter(([groupName])=>{
-   const n=String(groupName).trim().toLowerCase();
-   return n!=='อาหาร'&&n!=='สัตว์'&&n!=='animals'&&n!=='animal'&&!n.includes('food');
-  }));
- }
- try{
-  const payload=JSON.stringify({version:6,categories:base,deleted:[...deletedCategoryKeys]});
-  localStorage.setItem(CATEGORIES_KEY,payload);
-  if(localStorage.getItem(CATEGORIES_KEY)!==payload)throw new Error('ตรวจสอบข้อมูลหลังบันทึกไม่ผ่าน');
- }catch(e){console.warn('Category migration save failed',e);}
- return base;
+ return result;
 }
-let library=loadCategories();
-const saveCategories=()=>{
- const payload=JSON.stringify({version:6,categories:library,deleted:[...deletedCategoryKeys]});
- localStorage.setItem(CATEGORIES_KEY,payload);
- const saved=localStorage.getItem(CATEGORIES_KEY);
- if(saved!==payload)throw new Error('เบราว์เซอร์ไม่สามารถยืนยันการบันทึกหมวดหมู่ได้');
- const verified=JSON.parse(saved);
- if(!verified?.categories||!Array.isArray(verified.deleted))throw new Error('รูปแบบข้อมูลที่บันทึกไม่ถูกต้อง');
- return true;
-};
+function managerSyncStatus(message,state='loading'){
+ const el=$('managerSyncStatus');if(!el)return;
+ el.textContent=message;el.dataset.state=state;
+}
+function applySharedCategoryDocument(raw){
+ const incoming=parseSharedCategoryDocument(raw);
+ library=incoming;sharedCategoryReady=true;
+ managerSyncStatus('● ซิงก์กับ Firebase แล้ว · การแก้ไขจะมีผลกับผู้เล่นทุกคน','ready');
+ renderCategoryChoices();
+ const view=$('managerView');
+ if(view&&!view.hidden){
+  if(!managerDirty&&!editNew){
+   if(editKey&&library[editKey])chooseCategory(editKey);
+   else if(Object.keys(library).length)chooseCategory(Object.keys(library)[0]);
+   else{editDraft=null;editKey=null;renderManager();}
+  }
+ }
+ if(roomState?.status==='lobby')renderRoom(roomState);
+}
+async function mutateSharedCategory(key,pack,create=false){
+ if(!sharedCategoryReady)throw new Error('ยังไม่ได้เชื่อมต่อข้อมูลหมวดส่วนกลาง');
+ const result=await sharedCategoryRef.transaction(raw=>{
+  if(typeof raw!=='string')return;
+  let document;
+  try{document=JSON.parse(raw);}catch{return;}
+  if(!document?.categories||typeof document.categories!=='object')return;
+  const categories={...document.categories};
+  if(create&&Object.keys(categories).length>=100)return;
+  if(!create&&!Object.prototype.hasOwnProperty.call(categories,key))return;
+  if(pack===null)delete categories[key];
+  else categories[key]=pack;
+  return JSON.stringify({version:1,updatedAt:Date.now(),categories});
+ },undefined,false);
+ if(!result.committed)throw new Error('บันทึกไม่สำเร็จ ข้อมูลอาจถูกแก้ไขจากเครื่องอื่น กรุณาลองอีกครั้ง');
+ applySharedCategoryDocument(result.snapshot.val());
+ return result;
+}
+sharedCategoryRef.on('value',snap=>{
+ const raw=snap.val();
+ if(raw===null){
+  sharedCategoryReady=false;
+  managerSyncStatus('กำลังสร้างคลังหมวดคำส่วนกลางครั้งแรก…');
+  if(!sharedCategoryBootstrapping){
+   sharedCategoryBootstrapping=true;
+   sharedCategoryRef.transaction(value=>{
+    if(value!==null)return;
+    return JSON.stringify({version:1,updatedAt:Date.now(),categories:defaultCategories()});
+   },undefined,false).catch(err=>{
+    console.error('Shared category bootstrap failed',err);
+    managerSyncStatus('เชื่อมต่อไม่ได้: Firebase ยังไม่อนุญาตให้เขียน sharedCategoryLibraryV1','error');
+   }).finally(()=>sharedCategoryBootstrapping=false);
+  }
+  return;
+ }
+ try{applySharedCategoryDocument(raw);}
+ catch(err){console.error('Invalid shared categories',err);sharedCategoryReady=false;managerSyncStatus('ข้อมูลหมวดส่วนกลางอ่านไม่ได้ กรุณาตรวจสอบ Firebase','error');}
+},err=>{
+ sharedCategoryReady=false;
+ console.error('Cannot subscribe to shared categories',err);
+ managerSyncStatus('Firebase Rules ไม่อนุญาตให้อ่าน sharedCategoryLibraryV1 · ต้องเปิดสิทธิ์ส่วนนี้ก่อนใช้งาน','error');
+});
 const packFor=r=>{
  const candidates=[r?.categoryPack,library[r?.category],builtinCategories[r?.category]];
  return candidates.find(pack=>supportsMode(pack,r?.gameMode))||candidates.find(pack=>wordsOf(pack).length)||builtinCategories.rov;
@@ -849,18 +938,116 @@ $('modeOptions').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)retur
 function renderCategoryChoices(){const target=$('categoryOptions');target.replaceChildren();const entries=Object.entries(library).filter(([,c])=>enabledFor(c).includes(selectedMode)&&supportsMode(c,selectedMode));if(!entries.some(([id])=>id===selectedCategory))selectedCategory='';entries.forEach(([key,c])=>{const b=document.createElement('button');b.className=`choice ${selectedCategory===key?'selected':''}`;b.type='button';b.innerHTML=`<strong>${esc(c.name)}</strong><small>${wordsOf(c).length} คำ</small>`;b.onclick=()=>{selectedCategory=key;renderCategoryChoices();};target.append(b);});if(!entries.length)target.innerHTML='<p class="muted">ไม่มีหมวดที่เปิดให้ใช้กับโหมดนี้</p>';$('createConfirmBtn').disabled=!selectedMode||!selectedCategory;}
 $('minusBtn').onclick=()=>{$('durationInput').value=Math.max(1,Number($('durationInput').value||2)-1);};$('plusBtn').onclick=()=>{$('durationInput').value=Math.min(99,Number($('durationInput').value||2)+1);};
 
-// ===== Category manager (saved locally in this browser) =====
-$('openManagerBtn').onclick=()=>openManager('homeView');$('managerBackBtn').onclick=()=>{showOnly(managerReturn);if(managerReturn==='createView')renderCategoryChoices();};
-function openManager(from){managerReturn=from;showOnly('managerView');if(!editDraft&&Object.keys(library).length)chooseCategory(Object.keys(library)[0]);renderManager();}
-function chooseCategory(key){if(!library[key])return;editKey=key;editNew=false;const p=copyPack(library[key]);editDraft={name:p.name,enabledModes:[...enabledFor(p)],groups:Object.entries(p.groups).map(([name,words])=>({name,words:[...words]}))};renderManager();}
-function renderManager(){const target=$('managerList');target.replaceChildren();Object.entries(library).forEach(([key,c])=>{const b=document.createElement('button');b.className=`manager-item ${!editNew&&key===editKey?'selected':''}`;b.textContent=c.name;const s=document.createElement('small');s.textContent=`${wordsOf(c).length} คำ`;b.append(s);b.onclick=()=>chooseCategory(key);target.append(b);});$('managerEditor').hidden=!editDraft;$('managerEmpty').hidden=!!editDraft;if(!editDraft)return;$('editCategoryName').value=editDraft.name;document.querySelectorAll('#enabledModes input').forEach(c=>c.checked=editDraft.enabledModes.includes(c.value));$('deleteCategoryBtn').disabled=editNew;renderGroups();}
-$('editCategoryName').oninput=()=>{if(editDraft)editDraft.name=$('editCategoryName').value;};$('enabledModes').onchange=()=>{if(editDraft)editDraft.enabledModes=[...document.querySelectorAll('#enabledModes input:checked')].map(x=>x.value);};
+// ===== Shared Firebase category manager =====
+$('openManagerBtn').onclick=()=>openManager('homeView');
+$('managerBackBtn').onclick=()=>{showOnly(managerReturn);if(managerReturn==='createView')renderCategoryChoices();};
+function openManager(from){
+ managerReturn=from;showOnly('managerView');
+ if(!editDraft&&Object.keys(library).length)chooseCategory(Object.keys(library)[0]);
+ else renderManager();
+ if(!sharedCategoryReady)managerSyncStatus('กำลังเชื่อมต่อ Firebase หรือยังไม่มีสิทธิ์เข้าถึงคลังส่วนกลาง','error');
+}
+function chooseCategory(key){
+ if(!library[key])return;
+ editKey=key;editNew=false;managerDirty=false;
+ const p=copyPack(library[key]);
+ editDraft={name:p.name,enabledModes:[...enabledFor(p)],groups:Object.entries(p.groups).map(([name,words])=>({name,words:[...words]}))};
+ renderManager();
+}
+function renderManager(){
+ const target=$('managerList');target.replaceChildren();
+ Object.entries(library).forEach(([key,c])=>{
+  const b=document.createElement('button');
+  b.className=`manager-item ${!editNew&&key===editKey?'selected':''}`;
+  b.textContent=c.name;
+  const s=document.createElement('small');s.textContent=`${wordsOf(c).length} คำ`;
+  b.append(s);b.onclick=()=>chooseCategory(key);target.append(b);
+ });
+ $('managerEditor').hidden=!editDraft;
+ $('managerEmpty').hidden=!!editDraft;
+ $('newCategoryBtn').disabled=!sharedCategoryReady;
+ if(!editDraft)return;
+ $('editCategoryName').value=editDraft.name;
+ document.querySelectorAll('#enabledModes input').forEach(c=>c.checked=editDraft.enabledModes.includes(c.value));
+ $('deleteCategoryBtn').disabled=editNew||!sharedCategoryReady;
+ $('saveCategoryBtn').disabled=!sharedCategoryReady;
+ renderGroups();
+}
+$('editCategoryName').oninput=()=>{if(editDraft){editDraft.name=$('editCategoryName').value;managerDirty=true;}};
+$('enabledModes').onchange=()=>{if(editDraft){editDraft.enabledModes=[...document.querySelectorAll('#enabledModes input:checked')].map(x=>x.value);managerDirty=true;}};
 function parseWords(t){return [...new Set(String(t).split(/[\n,，]+/).map(x=>x.trim()).filter(Boolean))];}
-function renderGroups(){const target=$('groupEditors');target.replaceChildren();editDraft.groups.forEach((g,i)=>{const box=document.createElement('div');box.className='group-edit';const head=document.createElement('div');head.className='head';const name=document.createElement('input');name.value=g.name;name.placeholder='ชื่อกลุ่ม';name.maxLength=45;name.oninput=()=>g.name=name.value;const del=document.createElement('button');del.className='btn danger small';del.textContent='ลบ';del.onclick=()=>{editDraft.groups.splice(i,1);renderGroups();};head.append(name,del);const input=document.createElement('textarea');input.value=g.words.join('\n');input.placeholder='พิมพ์คำละ 1 บรรทัด';const count=document.createElement('small');count.textContent=`${g.words.length} คำ`;input.oninput=()=>{g.words=parseWords(input.value);count.textContent=`${g.words.length} คำ`;};box.append(head,input,count);target.append(box);});}
-$('newCategoryBtn').onclick=()=>{editKey=null;editNew=true;editDraft={name:'',enabledModes:[...MODES],groups:[{name:'กลุ่มแรก',words:[]}]};renderManager();$('editCategoryName').focus();};
-$('addGroupBtn').onclick=()=>{if(!editDraft)return;if(editDraft.groups.length>=20){toast('สูงสุด 20 กลุ่มต่อหมวด','error');return;}editDraft.groups.push({name:`กลุ่ม ${editDraft.groups.length+1}`,words:[]});renderGroups();};
-$('saveCategoryBtn').onclick=()=>{if(!editDraft)return;const name=editDraft.name.trim();if(name.length<2||name.length>40){toast('ชื่อหมวดต้องยาว 2–40 ตัว','error');return;}if(!editDraft.enabledModes.length){toast('เลือกโหมดเกมอย่างน้อย 1 โหมด','error');return;}const groups={};for(const g of editDraft.groups){const n=g.name.trim();if(!n||groups[n]||g.words.length>150||g.words.some(w=>w.length>60)){toast('ตรวจสอบชื่อกลุ่ม คำซ้ำ หรือจำนวนคำ','error');return;}if(g.words.length)groups[n]=[...new Set(g.words)];}if(!Object.keys(groups).length){toast('เพิ่มคำอย่างน้อยหนึ่งคำ','error');return;}if(editDraft.enabledModes.includes('spyfall')&&!Object.values(groups).some(g=>g.length>=2)){toast('Spyfall ต้องมีกลุ่มที่มีอย่างน้อยสองคำ','error');return;}if(editNew&&Object.keys(library).length>=100){toast('สูงสุด 100 หมวด','error');return;}const key=editNew?`custom_${Date.now().toString(36)}`:editKey;library[key]={name,groups,enabledModes:[...editDraft.enabledModes]};deletedCategoryKeys.delete(key);try{saveCategories();chooseCategory(key);renderCategoryChoices();toast('บันทึกหมวดลงเบราว์เซอร์แล้ว รีเฟรชก็ยังอยู่','success');}catch(e){toast(`บันทึกหมวดไม่สำเร็จ: ${e.message||'พื้นที่จัดเก็บไม่พร้อม'}`,'error');console.error(e);}};
-$('deleteCategoryBtn').onclick=async()=>{if(!editKey||!await confirmBox('ลบหมวดนี้?',`ลบ ${library[editKey].name} และบันทึกการลบไว้ แม้รีเฟรชหน้าเว็บ`,'ลบ'))return;const removedKey=editKey;delete library[removedKey];deletedCategoryKeys.add(removedKey);try{saveCategories();editDraft=null;editKey=null;const first=Object.keys(library)[0];if(first)chooseCategory(first);else renderManager();renderCategoryChoices();toast('ลบหมวดและบันทึกแล้ว','success');}catch(e){toast(`บันทึกการลบไม่สำเร็จ: ${e.message||''}`,'error');console.error(e);}};
+function renderGroups(){
+ const target=$('groupEditors');target.replaceChildren();
+ editDraft.groups.forEach((g,i)=>{
+  const box=document.createElement('div');box.className='group-edit';
+  const head=document.createElement('div');head.className='head';
+  const name=document.createElement('input');name.value=g.name;name.placeholder='ชื่อกลุ่ม';name.maxLength=45;
+  name.oninput=()=>{g.name=name.value;managerDirty=true;};
+  const del=document.createElement('button');del.className='btn danger small';del.textContent='ลบ';
+  del.onclick=()=>{editDraft.groups.splice(i,1);managerDirty=true;renderGroups();};
+  head.append(name,del);
+  const input=document.createElement('textarea');input.value=g.words.join('\n');input.placeholder='พิมพ์คำละ 1 บรรทัด';
+  const count=document.createElement('small');count.textContent=`${g.words.length} คำ`;
+  input.oninput=()=>{g.words=parseWords(input.value);count.textContent=`${g.words.length} คำ`;managerDirty=true;};
+  box.append(head,input,count);target.append(box);
+ });
+}
+$('newCategoryBtn').onclick=()=>{
+ if(!sharedCategoryReady){toast('ยังไม่ได้เชื่อมต่อ Firebase ส่วนกลาง','error');return;}
+ editKey=null;editNew=true;managerDirty=true;
+ editDraft={name:'',enabledModes:[...MODES],groups:[{name:'กลุ่มแรก',words:[]}]};
+ renderManager();$('editCategoryName').focus();
+};
+$('addGroupBtn').onclick=()=>{
+ if(!editDraft)return;
+ if(editDraft.groups.length>=20){toast('สูงสุด 20 กลุ่มต่อหมวด','error');return;}
+ editDraft.groups.push({name:`กลุ่ม ${editDraft.groups.length+1}`,words:[]});
+ managerDirty=true;renderGroups();
+};
+$('saveCategoryBtn').onclick=async()=>{
+ if(!editDraft||!sharedCategoryReady){toast('ต้องเชื่อมต่อ Firebase ส่วนกลางก่อนบันทึก','error');return;}
+ const name=editDraft.name.trim();
+ if(name.length<2||name.length>40){toast('ชื่อหมวดต้องยาว 2–40 ตัว','error');return;}
+ if(!editDraft.enabledModes.length){toast('เลือกโหมดเกมอย่างน้อย 1 โหมด','error');return;}
+ const groups={};
+ for(const g of editDraft.groups){
+  const n=g.name.trim();
+  if(!n||Object.prototype.hasOwnProperty.call(groups,n)||g.words.length>150||g.words.some(w=>w.length>60)){
+   toast('ตรวจสอบชื่อกลุ่ม คำซ้ำ หรือจำนวนคำ','error');return;
+  }
+  if(g.words.length)groups[n]=[...new Set(g.words)];
+ }
+ if(!Object.keys(groups).length){toast('เพิ่มคำอย่างน้อยหนึ่งคำ','error');return;}
+ if(editDraft.enabledModes.includes('spyfall')&&!Object.values(groups).some(g=>g.length>=2)){
+  toast('Spyfall ต้องมีกลุ่มที่มีอย่างน้อยสองคำ','error');return;
+ }
+ const key=editNew?`custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`:editKey;
+ const pack={name,groups,enabledModes:[...editDraft.enabledModes]},wasNew=editNew;
+ const button=$('saveCategoryBtn');button.disabled=true;
+ try{
+  await mutateSharedCategory(key,pack,wasNew);
+  managerDirty=false;chooseCategory(key);
+  toast('✓ บันทึกหมวดลง Firebase แล้ว ทุกคนเห็นข้อมูลใหม่ทันที','success');
+ }catch(e){
+  console.error('Shared category save failed',e);
+  toast(`บันทึกส่วนกลางไม่สำเร็จ: ${e.message||'ตรวจสอบ Firebase Rules'}`,'error');
+ }finally{button.disabled=!sharedCategoryReady;}
+};
+$('deleteCategoryBtn').onclick=async()=>{
+ if(!editKey||!sharedCategoryReady)return;
+ if(!await confirmBox('ลบหมวดส่วนกลาง?',`ลบ “${library[editKey]?.name||editKey}” ออกจากทุกเครื่องที่ใช้เว็บไซต์นี้`,'ลบให้ทุกคน'))return;
+ const key=editKey,button=$('deleteCategoryBtn');button.disabled=true;
+ try{
+  await mutateSharedCategory(key,null,false);
+  editDraft=null;editKey=null;editNew=false;managerDirty=false;
+  const first=Object.keys(library)[0];
+  if(first)chooseCategory(first);else renderManager();
+  toast('ลบหมวดจาก Firebase ส่วนกลางแล้ว','success');
+ }catch(e){
+  console.error('Shared category delete failed',e);
+  toast(`ลบส่วนกลางไม่สำเร็จ: ${e.message||'ตรวจสอบ Firebase Rules'}`,'error');
+ }finally{button.disabled=!sharedCategoryReady||editNew;}
+};
 
 
 // ===== Room lifecycle =====
@@ -936,7 +1123,7 @@ $('deleteRoomBtn').onclick=closeRoom;$('closeAfterBtn').onclick=closeRoom;
 
 // ===== Game rendering =====
 function renderLobbyCategory(r){
- const select=$('lobbyCategorySelect'),button=$('lobbyChangeCategoryBtn'),pack=packFor(r),currentKey=String(r.category||'');
+ const select=$('lobbyCategorySelect'),button=$('lobbyChangeCategoryBtn'),pack=library[r.category]||packFor(r),currentKey=String(r.category||'');
  const entries=Object.entries(library)
   .filter(([,candidate])=>enabledFor(candidate).includes(r.gameMode)&&supportsMode(candidate,r.gameMode))
   .sort((a,b)=>String(a[1].name||'').localeCompare(String(b[1].name||''),'th'));
@@ -975,7 +1162,7 @@ $('lobbyChangeCategoryBtn').onclick=async()=>{
  }catch(e){error(e);}
  finally{button.disabled=false;}
 };
-function renderRoom(r){const players=r.players||{},ids=Object.keys(players),status=r.status;$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomMeta').textContent=`${modeTitle(r.gameMode)} · ${packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาที':'รอบ'}`;renderScores(r);showScreen(({lobby:'lobbyScreen',playing:r.gameMode==='spyfall'?'spyScreen':'whoScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen'})[status]||'lobbyScreen');
+function renderRoom(r){const players=r.players||{},ids=Object.keys(players),status=r.status;$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomMeta').textContent=`${modeTitle(r.gameMode)} · ${(r.status==='lobby'?library[r.category]:null)?.name||packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาที':'รอบ'}`;renderScores(r);showScreen(({lobby:'lobbyScreen',playing:r.gameMode==='spyfall'?'spyScreen':'whoScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen'})[status]||'lobbyScreen');
  if(status==='lobby'){
   renderLobbyCategory(r);
   $('hostLine').innerHTML=`👑 หัวหน้าห้อง: ${playerLabelHTML(r.hostId,r)} · ${ids.length} คน`;
@@ -1094,8 +1281,9 @@ $('startBtn').onclick=async()=>{
    if(!r||r.status!=='lobby'||r.hostId!==myId)return;
    const ids=Object.keys(r.players||{}),min=r.gameMode==='spyfall'?3:2;
    if(ids.length<min){failMessage=`โหมดนี้ต้องมีผู้เล่นอย่างน้อย ${min} คน`;return;}
-   const pack=packFor(r);
-   if(!supportsMode(pack,r.gameMode)){failMessage='หมวดคำนี้ไม่มีข้อมูลที่พร้อมเล่น กรุณาเลือกหมวดใหม่';return;}
+   const pack=library[r.category]||packFor(r);
+   if(!supportsMode(pack,r.gameMode)||!enabledFor(pack).includes(r.gameMode)){failMessage='หมวดคำนี้ไม่มีข้อมูลที่พร้อมเล่น กรุณาเลือกหมวดใหม่';return;}
+   r.categoryPack=firebaseSafePack(pack);
    const roles={},attempts={};let group='',spy=null;
    if(r.gameMode==='spyfall'){
     const eligibleGroups=Object.entries(pack.groups||{}).filter(([,words])=>Array.isArray(words)&&new Set(words.filter(w=>typeof w==='string'&&w.trim())).size>=2);

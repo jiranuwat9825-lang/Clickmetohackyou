@@ -33,6 +33,7 @@
 <div><small>CHOOSE YOUR AVATAR</small><h2>เลือกตัวละครประจำตัว</h2><p>เลือกมาสคอตแทนตัวคุณ แล้วเพื่อนจะเห็นตัวละครนี้หน้าชื่อในเกม</p></div>
 <div id="avatarPreview" class="avatar-preview tone-orange" aria-label="ตัวละครที่เลือก">🦊</div>
 </div>
+<div id="avatarFilterBar" class="avatar-filter-bar" role="group" aria-label="ประเภทตัวละคร"></div>
 <div id="avatarPicker" class="avatar-picker" role="group" aria-label="เลือกตัวละคร"></div>
 <p id="avatarSelectedLabel" class="avatar-selected-label">ตัวละครของคุณ: จิ้งจอก</p>
 </div>
@@ -81,7 +82,9 @@
 </section>
 <section id="managerView" class="panel page" hidden>
 <div class="section-head"><div><small>CONTENT STUDIO</small><h2>จัดการหมวดหมู่เกม</h2></div><span class="panel-emoji">📚</span></div>
-<p class="muted">เพิ่ม ลบ แก้ไขหมวดและคำ พร้อมเลือกโหมดที่ใช้ได้ (บันทึกลงเบราว์เซอร์นี้ และคงอยู่หลังรีเฟรชหน้าเว็บ)</p>
+<p class="muted">เพิ่ม แก้ไข และลบหมวดคำส่วนกลาง เมื่อกดบันทึก ทุกคนจะได้รับข้อมูลเดียวกันผ่าน Firebase</p>
+<p id="managerSyncStatus" class="manager-sync-status" role="status">กำลังโหลดหมวดคำจาก Firebase…</p>
+<p class="muted hint">การแก้ไขมีผลกับทุกคนที่เข้าเว็บไซต์ ไม่ใช่เฉพาะเบราว์เซอร์ของคุณ</p>
 <div class="manager-layout">
 <aside class="manager-side"><div id="managerList" class="manager-list"></div><button id="newCategoryBtn" class="btn soft full">＋ หมวดใหม่</button></aside>
 <div id="managerEditor" class="manager-editor" hidden>
