@@ -14,7 +14,7 @@
 <div class="shell">
 <header class="topbar">
 <div class="brand"><span class="logo">✦</span><div><b>PARTY<span>GAME</span></b><small>PLAY TOGETHER</small></div></div>
-<div class="top-actions"><span class="online">● MULTIPLAYER</span><button id="leaveBtn" class="btn outline small" hidden>ออกจากห้อง</button></div>
+<div class="top-actions"><span class="online">● MULTIPLAYER</span></div>
 </header>
 <main>
 <section id="homeView" class="home-layout">
@@ -69,8 +69,14 @@
 <h3 class="step"><b>02</b> เลือกโหมดเกม</h3>
 <div id="modeOptions" class="mode-grid">
 <button class="choice mode" data-mode="spyfall"><span>🕵️</span><strong>Spyfall</strong><small>จับสายลับ</small></button>
-<button class="choice mode" data-mode="whoami_time"><span>⏱️</span><strong>Who Am I</strong><small>จับเวลา</small></button>
-<button class="choice mode" data-mode="whoami_rounds"><span>❓</span><strong>Who Am I</strong><small>นับรอบ</small></button>
+<button class="choice mode" data-mode="whoami"><span>❔</span><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
+</div>
+<div id="whoFormatSection" class="mode-formats" hidden>
+<label>เลือกรูปแบบ Who Am I</label>
+<div class="format-grid">
+<button class="format-choice" data-who-format="whoami_time">⏱ จับเวลาแยกแต่ละคน</button>
+<button class="format-choice" data-who-format="whoami_rounds">🔁 เล่นเป็นรอบ</button>
+</div>
 </div>
 <div id="createDetails" hidden>
 <h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div>
@@ -104,7 +110,7 @@
 <div class="actions"><button id="managerBackBtn" class="btn outline">← กลับ</button></div>
 </section>
 <section id="roomView" hidden>
-<div class="panel room-banner"><div><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอกเลขห้อง</button></div></div>
+<div class="panel room-banner"><div class="room-heading"><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-banner-right"><div class="room-banner-buttons"><button id="leaveBtn" class="btn outline small" hidden>↩ ออกจากห้อง</button><button id="deleteRoomBtn" class="btn danger small" hidden>ลบห้อง</button></div><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div><button id="copyRoomBtn" class="btn soft small">⧉ คัดลอกเลขห้อง</button></div></div></div>
 <div class="game-layout"><div>
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div><span class="panel-emoji">🚀</span></div>
@@ -118,8 +124,17 @@
  </div>
  <p id="lobbyCategoryHint" class="muted"></p>
 </div>
+<div id="lobbyFormatPanel" class="lobby-category" hidden>
+<label for="lobbyFormatSelect">รูปแบบ Who Am I</label>
+<div class="lobby-format-row">
+<select id="lobbyFormatSelect"><option value="whoami_time">⏱ จับเวลาแยกแต่ละคน</option><option value="whoami_rounds">🔁 เล่นเป็นรอบ</option></select>
+<input id="lobbySettingInput" type="number" min="1" max="99" value="2" aria-label="จำนวนนาทีต่อคนหรือจำนวนรอบ">
+<button id="lobbyChangeFormatBtn" type="button" class="btn soft">บันทึก</button>
+</div>
+<p id="lobbyFormatHint" class="muted hint"></p>
+</div>
 <p id="lobbyNotice" class="notice">รอหัวหน้าห้องกดเริ่ม</p>
-<button id="startBtn" class="btn primary full" hidden>▶ เริ่มเกม</button><button id="deleteRoomBtn" class="btn danger full" hidden>ลบห้อง</button>
+<button id="startBtn" class="btn primary full" hidden>▶ เริ่มเกม</button>
 </section>
 <section id="spyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div><span class="panel-emoji">🕵️</span></div>
@@ -135,11 +150,12 @@
 <div id="whoProgress" class="game-stats"></div>
 <div class="role-card purple"><div id="whoMyAvatar" class="game-avatar tone-orange">🦊</div><small>คำของคุณถูกซ่อนไว้</small><h2>YOU ARE ?</h2><p>ถามคำถามจากเพื่อน แล้วเลือกคำตอบให้ถูกเพียงครั้งเดียว</p></div>
 <div id="whoTimerBlock" class="timer-block" hidden><span id="whoTimerLabel">เวลาที่เหลือ</span><strong id="whoTimer">00:00</strong></div>
+<div id="playerTimerPanel" class="player-timer-panel" hidden><h3>⏱ เวลาคงเหลือของแต่ละคน</h3><div id="playerTimerList" class="player-timer-grid"></div><p class="muted hint">เวลาลดเฉพาะตอนถึงตาของคนนั้น และหยุดเมื่อผ่านเทิร์น</p></div>
 <div id="whoTurnBlock" class="turn-panel" hidden><small id="whoRound"></small><h3 id="whoSpeaker"></h3><button id="whoDoneBtn" class="btn primary full" hidden>✓ ถามจบแล้ว</button></div>
 <h3>ลำดับการถาม</h3><div id="whoOrder" class="chips"></div>
 <h3 class="section-gap">คำของเพื่อน</h3><div id="otherWords" class="word-grid"></div>
 <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full">🔒 ยืนยันคำตอบ</button></div></div>
-<button id="skipWhoBtn" class="btn outline full section-gap" hidden>⏭ จบเกมก่อนเวลา</button>
+
 </section>
 <section id="voteScreen" class="panel page" hidden>
 <div class="section-head"><div><small>FINAL VOTE · MAKE YOUR CALL</small><h2 id="voteHeading">โหวตหา Spy</h2></div><span class="panel-emoji">🗳️</span></div>
