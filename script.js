@@ -3140,7 +3140,7 @@ async function runAutomatic(){
  if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_prepare'){await whoCustomAuto();return;}
  if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_review')return;
  if(roomState.gameMode==='insider'){await insiderAuto();return;}
- const r=roomState,ids=Object.keys(r.players||{}),allAnswered=ids.length>0&&ids.every(id=>r.attempts?.[id]===0),allVoted=spyVotesComplete(r);
+ const r=roomState,ids=Object.keys(r.players||{}),allAnswered=r.gameMode==='whoami_custom'?whoCustomAllGuessesSubmitted(r):ids.length>0&&ids.every(id=>r.attempts?.[id]===0),allVoted=spyVotesComplete(r);
  const timed=r.status==='playing'&&r.gameMode==='whoami_time',speaker=currentWhoSpeaker(r);
  const timedDone=timed&&(allAnswered||!speaker||!r.players?.[speaker]||r.attempts?.[speaker]===0||remainingWhoMs(r,speaker)<=0);
  const missingSpeaker=r.status==='playing'&&!timed&&(!r.players?.[r.turnOrder?.[r.currentTurnIndex||0]]||(['whoami_rounds','whoami_custom'].includes(r.gameMode)&&r.attempts?.[r.turnOrder?.[r.currentTurnIndex||0]]===0));
@@ -3150,7 +3150,7 @@ async function runAutomatic(){
  try{
   await getRef().transaction(x=>{
    if(!x)return;
-   const ids=Object.keys(x.players||{}),done=ids.length>0&&ids.every(id=>x.attempts?.[id]===0);
+   const ids=Object.keys(x.players||{}),done=x.gameMode==='whoami_custom'?whoCustomAllGuessesSubmitted(x):ids.length>0&&ids.every(id=>x.attempts?.[id]===0);
    if(x.status==='playing'&&x.gameMode==='whoami_time'){
     if(done){endTimedGame(x);return x;}
     const active=currentWhoSpeaker(x);
