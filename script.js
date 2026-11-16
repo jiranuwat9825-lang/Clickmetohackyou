@@ -18,7 +18,7 @@ function gameParticipants(r){
 function everyoneWithScores(r){
  const ids=new Set([...Object.keys(r?.scores||{}),...Object.keys(r?.players||{})]);
  const known={...(r?.playerProfiles||{}),...(r?.gamePlayers||{}),...(r?.players||{})};
- return Object.fromEntries([...ids].map(id=>[id,known[id]||{name:'ผู้เล่นที่ออกจากห้อง',avatar:'fox'}]));
+ return Object.fromEntries([...ids].filter(id=>!r.kickedPlayers?.[id]).map(id=>[id,known[id]||{name:'ผู้เล่นที่ออกจากห้อง',avatar:'fox'}]));
 }
 function firebaseSafePack(pack){
  const groups={},groupLabels={};
@@ -2192,7 +2192,7 @@ function ensureName(){if(!nameConfirmed||!myName){toast('กรุณากร�
 // ===== Room list and automatic cleanup =====
 function inactive(r){const t=r?.lastActivityAt??r?.createdAt;return typeof t==='number'&&serverNow()-t>=IDLE_MS;}
 db.ref('rooms').on('value',s=>renderRoomList(s.val()||{}),error);
-function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย </p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=` ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';const canJoin=canRejoinRoom(r,myId);btn.textContent=r.kickedPlayers?.[myId]?'ถูกเตะออก':r.status==='lobby'?'เข้าร่วม':canJoin?'กลับเข้าห้อง':'กำลังเล่น';btn.disabled=!canJoin;btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
+function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย </p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=` ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';const canJoin=canRejoinRoom(r,myId,true);btn.textContent=r.status==='lobby'?(r.kickedPlayers?.[myId]?'กลับเข้าห้อง':'เข้าร่วม'):canJoin?'กลับเข้าห้อง':'กำลังเล่น';btn.disabled=!canJoin;btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
 async function removeInactive(id){await db.ref(`rooms/${id}`).transaction(r=>{if(r&&inactive(r))return null;},undefined,false);}
 async function sweep(){if(sweepBusy)return;sweepBusy=true;try{const s=await db.ref('rooms').once('value');for(const [id,r] of Object.entries(s.val()||{}))if(inactive(r))await removeInactive(id);}catch(e){console.warn('Idle cleanup',e);}finally{sweepBusy=false;}}
 setTimeout(sweep,1500);setInterval(sweep,30000);
@@ -2347,8 +2347,17 @@ function unsubscribe(){if(subscribedRef&&roomCallback)subscribedRef.off('value',
 function goHome(msg=''){unsubscribe();roomId='';roomState=null;isHost=false;leaving=false;sessionStorage.removeItem('pg_room_v6');$('leaveBtn').hidden=true;showOnly('homeView');if(msg)toast(msg);}
 function enterRoom(id){unsubscribe();roomId=id;leaving=false;lastTouch=serverNow();sessionStorage.setItem('pg_room_v6',id);$('roomTitle').textContent='กำลังโหลดห้อง…';$('roomCode').textContent=id;$('leaveBtn').hidden=false;showOnly('roomView');subscribe();}
 function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}if(r.kickedPlayers?.[myId]){ref.child(`players/${myId}`).onDisconnect().cancel().catch(error);goHome('คุณถูกหัวหน้าห้องเตะออกจากห้อง');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.keys(ps).length&&!ps[r.hostId])ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{});if(ids.length&&!x.players[x.hostId]){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
-function canRejoinRoom(r,id){
- return !!r&&!inactive(r)&&!r.kickedPlayers?.[id]&&(r.status==='lobby'||gameParticipantIds(r).includes(id));
+function canRejoinRoom(r,id,manual=false){
+ if(!r||inactive(r))return false;
+ if(r.kickedPlayers?.[id])return manual&&r.status==='lobby';
+ return r.status==='lobby'||gameParticipantIds(r).includes(id);
+}
+function applyManualRoomJoin(r,id,name,avatar){
+ if(!canRejoinRoom(r,id,true))return false;
+ if(r.kickedPlayers?.[id])delete r.kickedPlayers[id];
+ r.players||={};r.playerProfiles||={};r.scores||={};
+ r.players[id]={name,avatar};r.playerProfiles[id]={name,avatar};r.scores[id]??=0;
+ r.lastActivityAt=TIMESTAMP();return true;
 }
 function applyLobbyKick(r,hostId,targetId){
  if(!r||r.status!=='lobby'||r.hostId!==hostId||!r.players?.[hostId]||!targetId||targetId===hostId||!r.players?.[targetId])return false;
@@ -2364,7 +2373,7 @@ async function kickLobbyPlayer(targetId){
  const id=roomId,name=roomState.players[targetId]?.name||'ผู้เล่น';
  lobbyKickBusy=true;
  try{
-  if(!await confirmBox('เตะผู้เล่นออกจากห้อง?', 'นำ '+name+' ออกจากห้องนี้ ผู้เล่นจะไม่สามารถกลับเข้าห้องเดิมจากแท็บนี้ได้', 'เตะออก'))return;
+  if(!await confirmBox('เตะผู้เล่นออกจากห้อง?', 'นำ '+name+' ออกจากห้องและซ่อนชื่อจากตารางคะแนนชั่วคราว ผู้เล่นสามารถกดเข้าห้องใหม่ได้โดยคะแนนเดิมยังอยู่', 'เตะออก'))return;
   if(id!==roomId||leaving)return;
   const result=await getRef().transaction(r=>applyLobbyKick(r,myId,targetId)?r:undefined,undefined,false);
   toast(result.committed?'เตะ '+name+' ออกจากห้องแล้ว':'ไม่สามารถเตะผู้เล่นได้ ห้องอาจเริ่มเกมแล้วหรือสิทธิ์หัวหน้าห้องเปลี่ยน',result.committed?'success':'error');
@@ -2432,7 +2441,7 @@ $('createConfirmBtn').onclick=async()=>{
  }catch(e){error(e);}
  finally{button.disabled=false;button.textContent='สร้างห้อง →';renderCategoryChoices();}
 };
-async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>{if(!canRejoinRoom(r,myId))return;r.players||={};r.players[myId]={name:myName,avatar:myAvatar};r.playerProfiles||={};r.playerProfiles[myId]={name:myName,avatar:myAvatar};r.scores||={};r.scores[myId]??=0;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast(res.snapshot?.val()?.kickedPlayers?.[myId]?'คุณถูกเตะออกจากห้องนี้':'ห้องนี้เข้าร่วมไม่ได้แล้ว','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
+async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>applyManualRoomJoin(r,myId,myName,myAvatar)?r:undefined,undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast('ห้องนี้เข้าร่วมไม่ได้แล้ว กรุณารอ Lobby รอบถัดไป','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
 async function joinRoomByCode(){
  if(!ensureName())return;
  const code=$('joinRoomCodeInput').value.trim();
@@ -2820,9 +2829,38 @@ function renderWho(r){
   <span>คำที่คุณตอบ: <b>${esc(details.answer||'ไม่ได้ตอบ')}</b></span>`:'';
 }
 let lastSpyVoteToken='';
+function spySearchWords(r){
+ return [...new Set((packFor(r).groups?.[r.currentGroup]||[]).filter(w=>typeof w==='string'&&w.trim()))];
+}
+function spyExactWord(r,query){
+ const q=norm(query);
+ return q?spySearchWords(r).find(w=>norm(w)===q)||'':'';
+}
+function updateSpyWordSearch(inputId,showSuggestions=true){
+ const r=roomState,input=$(inputId),list=$(inputId+'Suggestions'),label=$(inputId+'Selected');
+ const optional=inputId==='voteWord',q=norm(input.value),active=r?.gameMode==='spyfall'&&r.status==='voting';
+ const chosen=active?spyExactWord(r,input.value):'';
+ if(optional)chosenWord=chosen;else chosenSpyGuess=chosen;
+ list.replaceChildren();
+ label.textContent=chosen?'เลือก '+chosen:optional&&!q?'ยังไม่ได้เลือกคำ (ไม่บังคับ)':q?'เลือกคำจากผลการค้นหา':'ยังไม่ได้เลือกคำ';
+ if(!active||!q||!showSuggestions||chosen){list.hidden=true;return;}
+ const matches=spySearchWords(r).filter(w=>norm(w).includes(q)).slice(0,15);
+ for(const word of matches){
+  const button=document.createElement('button');button.type='button';button.textContent=word;
+  button.onclick=()=>{input.value=word;updateSpyWordSearch(inputId,false);};
+  list.append(button);
+ }
+ if(!matches.length){const empty=document.createElement('p');empty.className='muted spy-search-empty';empty.textContent='ไม่พบคำในหมวดนี้';list.append(empty);}
+ list.hidden=false;
+}
+function resetSpyWordSearch(inputId){
+ $(inputId).value='';$(inputId+'Suggestions').replaceChildren();$(inputId+'Suggestions').hidden=true;
+ $(inputId+'Selected').textContent=inputId==='voteWord'?'ยังไม่ได้เลือกคำ (ไม่บังคับ)':'ยังไม่ได้เลือกคำ';
+ if(inputId==='voteWord')chosenWord='';else chosenSpyGuess='';
+}
 function renderVotes(r){
  const token=roomId+':'+(r.gamesPlayed||0)+':'+(r.voteRound||1);
- if(token!==lastSpyVoteToken){lastSpyVoteToken=token;chosenVote='';chosenWord='';}
+ if(token!==lastSpyVoteToken){lastSpyVoteToken=token;chosenVote='';resetSpyWordSearch('voteWord');resetSpyWordSearch('spyGuessWord');}
  const aware=isAwareSpy(r),youAreSpy=aware&&myId===r.spyId,players=gameParticipants(r);
  const ballots=spyValidBallots(r),mine=youAreSpy?r.spyGuess?.submitted:ballots[myId];
  const eligible=gameParticipantIds(r).filter(id=>r.players?.[id]&&(!aware||id!==r.spyId));
@@ -2846,11 +2884,7 @@ function renderVotes(r){
    $('spyGuessSubmittedNotice').hidden=false;
   }else{
    $('spyGuessPanel').hidden=false;
-   const selector=$('spyGuessWord');selector.replaceChildren();
-   const blank=document.createElement('option');blank.value='';blank.textContent='— เลือกคำของคนปกติ —';selector.append(blank);
-   const words=[...new Set(packFor(r).groups?.[r.currentGroup]||[])];
-   words.forEach(word=>{const option=document.createElement('option');option.value=word;option.textContent=word;selector.append(option);});
-   selector.value=words.includes(chosenSpyGuess)?chosenSpyGuess:'';
+   // Preserve the search draft and suggestions during room updates.
   }
   return;
  }
@@ -2858,12 +2892,12 @@ function renderVotes(r){
   $('voteChoices').innerHTML='<p class="notice"> บันทึกโหวตแล้ว รอเพื่อนหรือหมดเวลา</p>';
   return;
  }
- if(!choices.includes(chosenVote))chosenVote='';
+ if(!choices.includes(chosenVote)){chosenVote='';resetSpyWordSearch('voteWord');}
  choices.filter(id=>id!==myId&&players[id]).forEach(id=>{
   const button=document.createElement('button');
   button.className=`vote-choice ${id===chosenVote?'selected':''}`;
   button.innerHTML=`${playerLabelHTML(id,r)}${!r.players?.[id]?'<small class="vote-player-offline">ออกจากห้อง</small>':''}<b>${id===chosenVote?' เลือกแล้ว':'เลือก →'}</b>`;
-  button.onclick=()=>{chosenVote=id;chosenWord='';renderVotes(r);};
+  button.onclick=()=>{if(chosenVote!==id)resetSpyWordSearch('voteWord');chosenVote=id;renderVotes(roomState);};
   $('voteChoices').append(button);
  });
  if(aware){
@@ -2871,14 +2905,7 @@ function renderVotes(r){
   return;
  }
  $('voteAnswer').hidden=!chosenVote;
- if(chosenVote){
-  $('voteWord').replaceChildren();
-  const blank=document.createElement('option');blank.value='';blank.textContent='— ไม่ทายคำ —';$('voteWord').append(blank);
-  [...new Set(packFor(r).groups?.[r.currentGroup]||[])].forEach(word=>{
-   const option=document.createElement('option');option.value=word;option.textContent=word;$('voteWord').append(option);
-  });
-  $('voteWord').value=chosenWord;
- }
+ // Do not rebuild or overwrite the search field on incoming votes.
 }
 function addDetail(target,text){const el=document.createElement('p');el.className='result-details';el.textContent=text;target.append(el);}
 function renderResults(r){
@@ -3148,12 +3175,15 @@ $('guessBtn').onclick=async()=>{if(roomState?.gameMode==='whoami_custom'){await 
 }const correct=norm(option)===norm(r.roles?.[myId]);r.attempts[myId]=0;r.guessedCorrectly||={};r.guessedCorrectly[myId]=correct;const round=r.status==='final_guess'?(r.totalRounds||1):(r.currentRound||1);let points=0;if(correct){r.correctOrder||=[];points=r.gameMode==='whoami_time'?Math.max(1,gameParticipantIds(r).length-r.correctOrder.length):Math.max(1,(r.totalRounds||1)-round+1);r.correctOrder.push(myId);r.scores||={};r.scores[myId]=(r.scores[myId]||0)+points;}if(r.status==='playing'&&(r.gameMode==='whoami_rounds'||r.gameMode==='whoami_time'))removeWhoAnsweredPlayer(r,myId);r.guessDetails||={};r.guessDetails[myId]={correct,points,round,answer:option,correctAnswer:r.roles?.[myId]||''};if(gameParticipantIds(r).every(id=>r.attempts?.[id]===0))r.status='results';r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){toast('หมดเวลาหรือคุณส่งคำตอบไปแล้ว','error');return;}const info=res.snapshot.val(),d=info?.guessDetails?.[myId];toast(d?.correct?` ถูกต้อง +${d.points} คะแนน`:`ตอบผิด! คำที่ถูกคือ ${info?.roles?.[myId]||'—'}`,d?.correct?'success':'error');}catch(e){error(e);}finally{$('guessBtn').disabled=false;}};
 
 // ===== Spyfall voting =====
-$('voteWord').onchange=e=>chosenWord=e.target.value;
-$('spyGuessWord').onchange=e=>chosenSpyGuess=e.target.value;
+for(const id of ['voteWord','spyGuessWord']){
+ $(id).addEventListener('input',()=>updateSpyWordSearch(id));
+ $(id).addEventListener('keydown',e=>{if(e.key==='Escape')$(id+'Suggestions').hidden=true;});
+}
 async function submitSpyVote(){
  if(!roomId||!roomState||!chosenVote)return;
  const target=chosenVote,aware=isAwareSpy(roomState),round=Number(roomState.voteRound)||1,game=Number(roomState.gamesPlayed)||0;
- const word=aware?'':$('voteWord').value,button=aware?$('awareVoteSubmitBtn'):$('voteSubmitBtn');
+ const query=aware?'':$('voteWord').value.trim(),word=aware?'':spyExactWord(roomState,query),button=aware?$('awareVoteSubmitBtn'):$('voteSubmitBtn');
+ if(query&&!word){toast('เลือกคำจากผลการค้นหา หรือเว้นช่องว่างหากไม่ต้องการทาย','error');return;}
  button.disabled=true;
  try{
   const res=await getRef().transaction(r=>{
@@ -3171,7 +3201,7 @@ $('voteSubmitBtn').onclick=submitSpyVote;
 $('awareVoteSubmitBtn').onclick=submitSpyVote;
 $('spyGuessSubmitBtn').onclick=async()=>{
  if(!roomId||!roomState||!isAwareSpy(roomState)||myId!==roomState.spyId)return;
- const word=$('spyGuessWord').value,game=Number(roomState.gamesPlayed)||0;
+ const word=spyExactWord(roomState,$('spyGuessWord').value),game=Number(roomState.gamesPlayed)||0;
  if(!word){toast('กรุณาเลือกคำที่ต้องการทายก่อน','error');return;}
  const button=$('spyGuessSubmitBtn');button.disabled=true;
  try{
