@@ -713,3 +713,6 @@ body.landing-transitioning .shell{
 .lobby-kick-btn{margin-left:auto;flex:0 0 auto;min-height:34px;padding:6px 11px;border:1px solid rgba(255,116,148,.5);border-radius:9px;background:rgba(255,90,125,.09);color:#ffadbf;font-size:11px;font-weight:700;white-space:nowrap}
 .lobby-kick-btn:hover{background:rgba(255,90,125,.2)}
 @media(max-width:450px){.who-note-actions{flex-direction:column;align-items:flex-end}.who-note-header{gap:8px}.lobby-kick-btn{padding:6px 8px}}
+
+/* Inline word search for both Spyfall guessing paths */
+.spy-word-search{display:grid;gap:7px;min-width:0}.spy-word-search .suggestions{position:static;max-height:190px;width:100%;box-shadow:0 8px 20px #0004}.spy-word-search .hint{margin:0 0 8px}.spy-search-empty{padding:10px 12px;font-size:12px}

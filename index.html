@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/webp" href="assets/earthkung-logo.webp">
-<link rel="stylesheet" href="style.css?v=lobby-notes-20261116">
+<link rel="stylesheet" href="style.css?v=kick-rejoin-search-20261116">
 </head>
 <body>
 <section id="landingCover" class="landing-cover" aria-label="หน้าเปิดเกม Party Game">
@@ -244,13 +244,13 @@
 <div id="voteProgress" class="game-stats"></div>
 <div class="timer-block danger-timer"><span> เหลือเวลาลงคะแนน</span><strong id="voteTimer">02:00</strong></div>
 <p id="voteNote" class="muted"></p><div id="voteChoices" class="vote-list"></div>
-<div id="voteAnswer" class="guess-box" hidden><label for="voteWord">ทายคำของฝ่ายตรงข้าม (ไม่บังคับ)</label><select id="voteWord"></select><p class="muted hint">คนปกติทายคำของ Spy / Spy ทายคำร่วมของคนปกติ · ทายถูกได้โบนัส +1 เฉพาะคนนั้น โดยไม่จำเป็นต้องโหวตถูก</p><button id="voteSubmitBtn" class="btn primary full"> ยืนยันโหวตและคำทาย</button></div>
+<div id="voteAnswer" class="guess-box" hidden><label for="voteWord">ทายคำของฝ่ายตรงข้าม (ไม่บังคับ)</label><div class="spy-word-search"><input id="voteWord" type="text" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ หรือเว้นว่าง"><div id="voteWordSuggestions" class="suggestions" hidden></div><p id="voteWordSelected" class="muted hint" aria-live="polite">ยังไม่ได้เลือกคำ (ไม่บังคับ)</p></div><p class="muted hint">คนปกติทายคำของ Spy / Spy ทายคำร่วมของคนปกติ · ทายถูกได้โบนัส +1 เฉพาะคนนั้น โดยไม่จำเป็นต้องโหวตถูก</p><button id="voteSubmitBtn" class="btn primary full"> ยืนยันโหวตและคำทาย</button></div>
 <button id="awareVoteSubmitBtn" class="btn primary full" hidden> ยืนยันโหวตหา Spy</button>
 <div id="spyGuessPanel" class="guess-box" hidden>
 <h3> คุณเป็น Spy — ทายคำของคนปกติ</h3>
 <p class="muted hint">คุณไม่มีสิทธิ์โหวต แต่ทายคำถูกจะได้โบนัส +1 คะแนน</p>
 <label for="spyGuessWord">เลือกคำของคนปกติ</label>
-<select id="spyGuessWord"></select>
+<div class="spy-word-search"><input id="spyGuessWord" type="text" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="spyGuessWordSuggestions" class="suggestions" hidden></div><p id="spyGuessWordSelected" class="muted hint" aria-live="polite">ยังไม่ได้เลือกคำ</p></div>
 <button id="spyGuessSubmitBtn" class="btn primary full"> ยืนยันคำทาย</button></div>
 <p id="spyGuessSubmittedNotice" class="notice" hidden> ส่งคำทายแล้ว รอคนปกติโหวต</p>
 </section>
@@ -292,7 +292,7 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=lobby-notes-20261116"></script>
+<script src="script.js?v=kick-rejoin-search-20261116"></script>
 <script src="insider.js?v=stability-20261116"></script>
 <script src="whoami_custom.js?v=stability-20261116"></script>
 </body>
