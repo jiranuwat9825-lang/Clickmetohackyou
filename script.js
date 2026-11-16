@@ -2473,7 +2473,6 @@ $('joinRoomCodeBtn').onclick=joinRoomByCode;
 $('joinRoomCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoomByCode();});
 
 $('leaveBtn').onclick=async()=>{if(!roomId||!await confirmBox('ออกจากห้อง?','คุณจะออกจากเกมปัจจุบัน','ออกจากห้อง'))return;const ref=getRef();leaving=true;try{await ref.child(`players/${myId}`).onDisconnect().cancel();await ref.transaction(r=>{if(!r||!r.players?.[myId])return;delete r.players[myId];if(r.hostId===myId)r.hostId=Object.keys(r.players).find(id=>!r.players[id].bot)||null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);goHome('ออกจากห้องแล้ว');}catch(e){leaving=false;error(e);}};
-$('copyRoomBtn').onclick=async()=>{try{const code=roomState?.roomCode||roomId;await navigator.clipboard.writeText(code);toast(`คัดลอกเลขห้อง ${code} แล้ว`,'success');}catch{toast(`เลขห้องคือ ${roomState?.roomCode||roomId}`);}};
 async function closeRoom(){
  const id=roomId;
  if(!isHost||!id||!await confirmBox('ปิดห้อง?','ผู้เล่นทุกคนจะออกและคะแนนถูกลบ','ปิดห้อง'))return;

@@ -55,7 +55,7 @@ function avalonApply(r,id,action,value){
   a.ready||={};a.ready[id]=true;
   if(ids.every(p=>a.ready[p]===true)){a.king=Math.floor(Math.random()*ids.length);if(r.avalonAngel)a.angel=(a.king+1)%ids.length;r.status='avalon_team';}
  }else if(action==='team'){
-  if(r.status!=='avalon_team'||ids[a.king]!==id||!Array.isArray(value)||value.length!==AVALON_SIZES[a.mission-1]||new Set(value).size!==value.length||!value.every(p=>ids.includes(p)))return false;
+  if(r.status!=='avalon_team'||(r.avalonAngel&&!a.angelChecks?.['m'+a.mission])||ids[a.king]!==id||!Array.isArray(value)||value.length!==AVALON_SIZES[a.mission-1]||new Set(value).size!==value.length||!value.every(p=>ids.includes(p)))return false;
   a.team=[...value];a.approvals={};r.status='avalon_approve';
  }else if(action==='approve'){
   if(r.status!=='avalon_approve'||typeof value!=='boolean'||Object.hasOwn(a.approvals||{},id))return false;
@@ -66,7 +66,7 @@ function avalonApply(r,id,action,value){
   a.questVotes||={};a.questVotes[id]=value;
   if(a.team.every(p=>Object.hasOwn(a.questVotes,p)))avalonResolveQuest(r);
  }else if(action==='angel'){
-  if(!r.avalonAngel||!['avalon_team','avalon_approve','avalon_quest'].includes(r.status)||ids[a.angel]!==id||!ids.includes(value)||value===id||a.angelChecks?.['m'+a.mission])return false;
+  if(!r.avalonAngel||r.status!=='avalon_team'||ids[a.angel]!==id||!ids.includes(value)||value===id||a.angelChecks?.['m'+a.mission])return false;
   a.angelChecks||={};a.angelChecks['m'+a.mission]={by:id,target:value,side:avalonSide(r.roles[value])};
  }else if(action==='assassin'){
   if(r.status!=='avalon_assassin'||r.roles?.[id]!=='Assassin'||!ids.includes(value)||value===id)return false;
@@ -132,7 +132,7 @@ $('avalonLobbySave').onclick=async()=>{
 };
 let avalonUIKey='',avalonTeamSelection=new Set(),avalonBusy=false,avalonAngelSelection=null;
 function avalonPhaseKey(r){
- const a=r.avalon||{};return [roomId,r.gamesPlayed,r.status,a.mission,a.proposalNo,Object.keys(a.cards||{}).length].join(':');
+ const a=r.avalon||{};return [roomId,r.gamesPlayed,r.status,a.mission,a.proposalNo,Object.keys(a.cards||{}).length,a.angelChecks?.['m'+a.mission]?.by||''].join(':');
 }
 async function avalonSend(action,value){
  if(avalonBusy||!roomId||roomState?.gameMode!=='avalon')return;
@@ -159,19 +159,8 @@ function renderAvalon(r){
   const teamNames=team.map(name).join(' · ');
   card.innerHTML='<span class="avalon-vote-kicker">AVALON · '+subtitle+'</span><h2>'+title+'</h2><div class="avalon-vote-info"><small>ผู้จัดตั้งทีม · KING</small><strong>'+name(king)+'</strong></div><div class="avalon-vote-info"><small>ผู้เล่นในทีมภารกิจ</small><strong>'+teamNames+'</strong></div>';
   if(waitText){const p=document.createElement('p');p.className='avalon-vote-wait';p.textContent=waitText;card.append(p);}
-  else{const actions=document.createElement('div');actions.className='avalon-vote-actions';buttons.forEach(item=>{const b=document.createElement('button');b.type='button';b.className=item.className;b.textContent=item.label;b.disabled=avalonBusy||!mine;b.onclick=()=>confirmAvalonChoice('ยืนยันการโหวต?', 'คุณเลือก “'+item.label+'” ต้องการส่งคะแนนนี้หรือไม่?', 'ยืนยันโหวต',()=>avalonSend(item.action,item.value));actions.append(b);});card.append(actions);}
+  else{const actions=document.createElement('div');actions.className='avalon-vote-actions';buttons.forEach(item=>{const b=document.createElement('button');b.type='button';b.className=item.className;b.textContent=item.label;b.disabled=avalonBusy||!mine;b.onclick=()=>avalonSend(item.action,item.value);actions.append(b);});card.append(actions);}
   overlay.append(card);root.append(overlay);
- }
- function confirmAvalonChoice(title,message,yesLabel,onYes){
-  const overlay=document.createElement('div');overlay.className='avalon-vote-overlay avalon-confirm-overlay';
-  const card=document.createElement('section');card.className='avalon-vote-dialog avalon-confirm-dialog';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');
-  const kicker=document.createElement('span');kicker.className='avalon-vote-kicker';kicker.textContent='AVALON · CONFIRM';card.append(kicker);
-  const heading=document.createElement('h2');heading.textContent=title;card.append(heading);
-  const detail=document.createElement('p');detail.className='avalon-confirm-message';detail.textContent=message;card.append(detail);
-  const actions=document.createElement('div');actions.className='avalon-vote-actions';
-  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn outline';cancel.textContent='กลับไปแก้ไข';cancel.onclick=()=>overlay.remove();
-  const yes=document.createElement('button');yes.type='button';yes.className='btn primary';yes.textContent=yesLabel;yes.disabled=avalonBusy;yes.onclick=()=>{overlay.remove();onYes();};
-  actions.append(cancel,yes);card.append(actions);overlay.append(card);root.append(overlay);yes.focus();
  }
  function button(parent,label,action,value,disabled=false,cls='btn soft'){
   const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=label;b.disabled=disabled||avalonBusy||!mine;b.onclick=()=>avalonSend(action,value);parent.append(b);return b;
@@ -209,7 +198,7 @@ function renderAvalon(r){
    const approval=Object.hasOwn(a.approvals||{},p)?(a.approvals[p]?'<small class="avalon-player-vote yes">✓ ยินยอม</small>':'<small class="avalon-player-vote no">✕ ไม่ยินยอม</small>'):'';
    return '<p class="'+cls+'">'+(i+1)+'. '+name(p)+(p===king?' <b class="avalon-king">♛ KING</b>':'')+(p===angel?' <b class="avalon-angel">✦ ANGEL</b>':'')+approval+(!r.players?.[p]?' <small>หลุดการเชื่อมต่อ</small>':'')+'</p>';
   }).join('');order.append(list);
-  if(r.avalonAngel&&isAngel&&['avalon_team','avalon_approve','avalon_quest'].includes(r.status)){
+  if(r.avalonAngel&&isAngel&&r.status==='avalon_team'){
    const inspection=a.angelChecks?.['m'+a.mission];
    if(!inspection){const p=block('Angel · ตรวจฝ่าย 1 คน','<p>เลือกผู้เล่นหนึ่งคน แล้วกดยืนยันเพื่อเปิดผลตรวจฝ่าย ซึ่งเห็นได้เฉพาะคุณ</p>');
     const grid=document.createElement('div');grid.className='avalon-buttons';p.append(grid);
@@ -219,11 +208,16 @@ function renderAvalon(r){
    }
   }
   if(r.status==='avalon_team'){
-   const size=AVALON_SIZES[a.mission-1],panel=block('รอบ '+a.mission+' · แต่งตั้งทีม '+size+' คน','<p>'+(king===myId?'เลือกผู้เล่น '+size+' คน (เลือกตัวเองได้)':'รอ King '+name(king)+' เลือกทีม')+'</p>');
-   if(king===myId){
-    const grid=document.createElement('div');grid.className='avalon-buttons';panel.append(grid);
-    const confirm=document.createElement('button');confirm.type='button';confirm.className='btn primary full';confirm.textContent='ตรวจสอบและยืนยันทีม '+avalonTeamSelection.size+'/'+size;confirm.disabled=avalonBusy||avalonTeamSelection.size!==size;confirm.onclick=()=>confirmAvalonChoice('ยืนยันทีมภารกิจ?','ทีมที่คุณเลือก: '+[...avalonTeamSelection].map(name).join(' · ')+' ยืนยันส่งรายชื่อนี้หรือไม่?','ยืนยันทีม',()=>avalonSend('team',[...avalonTeamSelection]));
-    ids.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='btn soft'+(avalonTeamSelection.has(p)?' avalon-selected':'');b.textContent=players[p]?.name||'ผู้เล่น';b.disabled=avalonBusy;b.onclick=()=>{if(avalonTeamSelection.has(p))avalonTeamSelection.delete(p);else if(avalonTeamSelection.size<size)avalonTeamSelection.add(p);renderAvalon(r);};grid.append(b);});panel.append(confirm);
+   const inspection=a.angelChecks?.['m'+a.mission];
+   if(r.avalonAngel&&!inspection){
+    if(!isAngel)block('รอ Angel ตรวจสอบฝ่าย','<p>ต้องรอให้ Angel ตรวจสอบผู้เล่นหนึ่งคนก่อน King จึงจะจัดตั้งทีมภารกิจได้</p>');
+   }else{
+    const size=AVALON_SIZES[a.mission-1],panel=block('รอบ '+a.mission+' · แต่งตั้งทีม '+size+' คน','<p>'+(king===myId?'เลือกผู้เล่น '+size+' คน (เลือกตัวเองได้)':'รอ King '+name(king)+' เลือกทีม')+'</p>');
+    if(king===myId){
+     const grid=document.createElement('div');grid.className='avalon-buttons';panel.append(grid);
+     const confirm=document.createElement('button');confirm.type='button';confirm.className='btn primary full';confirm.textContent='ยืนยันจัดตั้งทีม '+avalonTeamSelection.size+'/'+size;confirm.disabled=avalonBusy||avalonTeamSelection.size!==size;confirm.onclick=()=>avalonSend('team',[...avalonTeamSelection]);
+     ids.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='btn soft'+(avalonTeamSelection.has(p)?' avalon-selected':'');b.textContent=players[p]?.name||'ผู้เล่น';b.disabled=avalonBusy;b.onclick=()=>{if(avalonTeamSelection.has(p))avalonTeamSelection.delete(p);else if(avalonTeamSelection.size<size)avalonTeamSelection.add(p);renderAvalon(r);};grid.append(b);});panel.append(confirm);
+    }
    }
   }else if(r.status==='avalon_approve'){
    const voted=Object.hasOwn(a.approvals||{},myId),count=Object.keys(a.approvals||{}).length;
@@ -279,7 +273,7 @@ function avalonNextBotAction(r,rand=Math.random){
  if(r.status==='avalon_ready'){
   const id=ids.find(p=>bot(p)&&!a.ready?.[p]);return id?action(id,'ready',true):null;
  }
- if(r.avalonAngel&&['avalon_team','avalon_approve','avalon_quest'].includes(r.status)&&bot(ids[a.angel])&&!a.angelChecks?.['m'+a.mission]){
+ if(r.avalonAngel&&r.status==='avalon_team'&&bot(ids[a.angel])&&!a.angelChecks?.['m'+a.mission]){
   const id=ids[a.angel];return action(id,'angel',pick(ids.filter(p=>p!==id)));
  }
  if(r.status==='avalon_team'){
