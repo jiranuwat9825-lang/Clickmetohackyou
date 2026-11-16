@@ -764,3 +764,32 @@ body.landing-transitioning .shell{
 .avalon-vote-yes{box-shadow:0 0 0 1px #75b99b inset}.avalon-vote-no{box-shadow:0 0 0 1px #d77c86 inset}
 .avalon-vote-wait{margin-top:18px;padding:12px;border-radius:10px;background:#172e47;color:#c6d8ed}
 @media(max-width:520px){.avalon-vote-dialog{padding:17px}.avalon-vote-actions{grid-template-columns:1fr}.avalon-proposal-meta{grid-template-columns:1fr}}
+
+/* Avalon player knowledge and full end-of-game summary */
+.avalon-role-list p.avalon-player-known-red{border:1.5px solid #d45c70;background:linear-gradient(110deg,#492b3a,#20263b 75%)}
+.avalon-role-list p.avalon-player-percival{border:1.5px solid #e4c65f;background:linear-gradient(110deg,#4b4228,#202b3b 75%)}
+.avalon-summary-hero{border:2px solid #d1ad65;background:linear-gradient(145deg,#352d22,#14243b 72%);text-align:center;padding:22px}
+.avalon-summary-winner{font-size:clamp(25px,5vw,36px);font-weight:900;margin:5px 0 10px}
+.avalon-summary-winner.red{color:#ff9eac}.avalon-summary-winner.blue{color:#9bd1ff}
+.avalon-summary-stats{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.avalon-summary-stats span{flex:1;min-width:100px;padding:10px 12px;border-radius:10px;background:#17263d;text-align:center}
+.avalon-summary-stats b{display:block;font-size:20px;color:#f1d38b}
+.avalon-summary-roles .avalon-summary-role{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:12px;border:1px solid #43536b}
+.avalon-summary-role strong{font-size:13px}
+.avalon-summary-role small{grid-column:1/-1;opacity:.8}
+.avalon-summary-role.red{border-color:#c85a70;background:linear-gradient(110deg,#492b3a,#17263d 78%)}
+.avalon-summary-role.blue{border-color:#568ebc;background:linear-gradient(110deg,#1d3a55,#17263d 78%)}
+.avalon-summary-mission,.avalon-summary-proposal{padding:13px;margin:9px 0;border-radius:12px;border:1px solid #526078;background:#17263d}
+.avalon-summary-mission.passed{border-color:#5da98c}.avalon-summary-mission.failed{border-color:#c96776}
+.avalon-summary-mission-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.avalon-summary-mission.passed .avalon-summary-mission-head b{color:#9be0bd}
+.avalon-summary-mission.failed .avalon-summary-mission-head b{color:#ffabb4}
+.avalon-summary-mission p,.avalon-summary-proposal p{overflow-wrap:anywhere}
+.avalon-summary-proposal.approved{border-color:#5da98c}.avalon-summary-proposal.rejected{border-color:#c96776}
+.avalon-assassin-summary{padding:16px;border-radius:12px;background:#17263d;border:1px solid #68738b}
+.avalon-assassin-summary.hit{border-color:#d16a78}.avalon-assassin-summary.miss{border-color:#62a6d3}
+.avalon-assassin-verdict{display:block;margin-top:12px}
+.avalon-assassin-summary.hit .avalon-assassin-verdict{color:#ffabb4}.avalon-assassin-summary.miss .avalon-assassin-verdict{color:#9bd1ff}
+.avalon-summary-return{margin-top:24px}
+.avalon-summary-return .btn{margin-top:8px;min-height:50px}
+@media(max-width:520px){.avalon-summary-roles .avalon-summary-role{grid-template-columns:1fr}.avalon-summary-role small{grid-column:auto}.avalon-summary-stats span{min-width:85px}}
