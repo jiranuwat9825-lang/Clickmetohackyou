@@ -734,3 +734,33 @@ body.landing-transitioning .shell{
 /* Save controls dim when there is no pending edit. */
 #saveCategoryBtn:disabled,#lobbyChangeCategoryBtn:disabled,#lobbySpyFormatSaveBtn:disabled,#lobbyChangeFormatBtn:disabled,#avalonLobbySave:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.6)}
 .avalon-bot-tools{border-top:1px solid #40506a;padding-top:12px;display:grid;gap:9px}.avalon-bot-tools .avalon-buttons{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+
+/* Avalon: private Angel inspection, collapsible player order and vote dialogs */
+.avalon-order-toggle{width:100%;margin:0 0 10px;text-align:left}
+.avalon-angel-result{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:11px;background:#172e47;border:1px solid #6b9bc7}
+.avalon-angel-result strong{color:#f2d48a}
+.avalon-proposal-result{border:2px solid #c6a45f!important;background:linear-gradient(145deg,#302a22,#18253a 65%)!important;box-shadow:0 10px 32px #0005}
+.avalon-proposal-result.approved{border-color:#5ba98d!important}
+.avalon-proposal-result.rejected{border-color:#d27a83!important}
+.avalon-proposal-status{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;font-weight:800;margin:0 0 12px;background:#27364a;color:#f4d58b}
+.avalon-proposal-status.approved{background:#183d35;color:#9ce4c7}
+.avalon-proposal-status.rejected{background:#482932;color:#ffb1b8}
+.avalon-proposal-meta{display:grid;grid-template-columns:1fr 1.5fr;gap:10px}
+.avalon-proposal-meta>div{display:grid;gap:5px;padding:12px;border-radius:10px;background:#111d30}
+.avalon-proposal-meta small{color:#a9b8cd}.avalon-proposal-meta strong{overflow-wrap:anywhere}
+.avalon-proposal-tally{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.avalon-proposal-tally span{flex:1;min-width:120px;padding:10px;border-radius:9px;background:#111d30;text-align:center}
+.avalon-proposal-tally span:first-child b{color:#91d6b6}.avalon-proposal-tally span:last-child b{color:#ff9ca8}
+.avalon-proposal-details{margin-top:12px;padding-top:10px;border-top:1px solid #596276}
+.avalon-proposal-details summary{cursor:pointer;color:#c5d3e7;font-weight:700}
+.avalon-vote-overlay{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:18px;background:#050b16c9;backdrop-filter:blur(5px)}
+.avalon-vote-dialog{width:min(560px,100%);max-height:min(88vh,760px);overflow:auto;padding:22px;border-radius:20px;border:1px solid #667a98;background:linear-gradient(150deg,#1c2b43,#101a2b 72%);box-shadow:0 24px 90px #0009;color:#f5f7fc}
+.avalon-vote-kicker{display:block;color:#bda7f3;font-size:11px;font-weight:900;letter-spacing:1.4px;margin-bottom:8px}
+.avalon-vote-dialog h2{font-size:clamp(21px,4vw,28px);margin:0 0 18px}
+.avalon-vote-info{display:grid;gap:6px;padding:13px;margin:9px 0;border:1px solid #3a4c67;border-radius:12px;background:#101d31}
+.avalon-vote-info small{color:#a9bad1}.avalon-vote-info strong{font-size:16px;line-height:1.55;overflow-wrap:anywhere}
+.avalon-vote-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+.avalon-vote-actions button{min-height:50px;font-size:16px;font-weight:800}
+.avalon-vote-yes{box-shadow:0 0 0 1px #75b99b inset}.avalon-vote-no{box-shadow:0 0 0 1px #d77c86 inset}
+.avalon-vote-wait{margin-top:18px;padding:12px;border-radius:10px;background:#172e47;color:#c6d8ed}
+@media(max-width:520px){.avalon-vote-dialog{padding:17px}.avalon-vote-actions{grid-template-columns:1fr}.avalon-proposal-meta{grid-template-columns:1fr}}
