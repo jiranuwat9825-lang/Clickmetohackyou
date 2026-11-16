@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/webp" href="assets/earthkung-logo.webp">
-<link rel="stylesheet" href="style.css?v=avalon-1">
+<link rel="stylesheet" href="style.css?v=avalon-bots-save-1">
 </head>
 <body>
 <section id="landingCover" class="landing-cover" aria-label="หน้าเปิดเกม Party Game">
@@ -125,7 +125,7 @@
 </div>
 <div class="subhead"><h3>กลุ่มย่อยและรายการคำ</h3><button id="addGroupBtn" class="btn soft small">＋ เพิ่มกลุ่ม</button></div>
 <p class="muted hint">ใส่คำละหนึ่งบรรทัด หรือคั่นด้วยจุลภาค</p><div id="groupEditors" class="groups-edit"></div>
-<div class="actions"><button id="saveCategoryBtn" class="btn primary"> บันทึกหมวด</button><button id="deleteCategoryBtn" class="btn danger">ลบหมวดนี้</button></div>
+<div class="actions"><button id="saveCategoryBtn" disabled class="btn primary"> บันทึกหมวด</button><button id="deleteCategoryBtn" class="btn danger">ลบหมวดนี้</button></div>
 </div>
 <p id="managerEmpty" class="muted">เลือกหมวดทางซ้ายหรือสร้างหมวดใหม่</p>
 </div>
@@ -137,13 +137,13 @@
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
 <div id="playerList" class="player-list"></div>
-<div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button></div>
+<div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft" disabled>บันทึกการตั้งค่า</button><div id="avalonBotTools" class="avalon-bot-tools" hidden><p id="avalonBotCount" class="muted"></p><div class="avalon-buttons"><button id="avalonAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="avalonFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="avalonRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">สำหรับทดสอบเกม · บอทเล่นอัตโนมัติเมื่อถึงตา คุณยังต้องเล่นบทบาทของคุณเอง</p></div></div>
 <div id="lobbyCategoryPanel" class="lobby-category">
  <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
  <p id="lobbyCategoryCurrent" class="muted"></p>
  <div class="lobby-category-controls">
   <select id="lobbyCategorySelect"></select>
-  <button id="lobbyChangeCategoryBtn" type="button" class="btn soft">ใช้หมวดนี้</button>
+  <button id="lobbyChangeCategoryBtn" disabled type="button" class="btn soft">ใช้หมวดนี้</button>
  </div>
  <p id="lobbyCategoryHint" class="muted"></p>
 </div>
@@ -151,7 +151,7 @@
 <label for="lobbySpyFormatSelect">รูปแบบ Spyfall</label>
 <div class="lobby-category-controls">
 <select id="lobbySpyFormatSelect"><option value="secret"> คำลับต่างกัน (เดิม)</option><option value="aware"> Spy รู้ตัวตน</option></select>
-<button id="lobbySpyFormatSaveBtn" class="btn soft">บันทึกรูปแบบ</button></div>
+<button id="lobbySpyFormatSaveBtn" disabled class="btn soft">บันทึกรูปแบบ</button></div>
 <p id="lobbySpyFormatHint" class="muted hint"></p>
 </div>
 <div id="lobbyFormatPanel" class="lobby-category" hidden>
@@ -159,7 +159,7 @@
 <div class="lobby-format-row">
 <select id="lobbyFormatSelect"><option value="whoami_time"> จับเวลาแยกแต่ละคน</option><option value="whoami_rounds"> เล่นเป็นรอบ</option><option value="whoami_custom">Customize By Player</option></select>
 <input id="lobbySettingInput" type="number" min="1" max="99" value="2" aria-label="จำนวนนาทีต่อคนหรือจำนวนรอบ">
-<button id="lobbyChangeFormatBtn" type="button" class="btn soft">บันทึก</button>
+<button id="lobbyChangeFormatBtn" disabled type="button" class="btn soft">บันทึก</button>
 </div>
 
 </div>
@@ -295,9 +295,9 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=avalon-1"></script>
+<script src="script.js?v=avalon-bots-save-1"></script>
 <script src="insider.js?v=stability-20261116"></script>
 <script src="whoami_custom.js?v=stability-20261116"></script>
-<script src="avalon.js?v=avalon-1"></script>
+<script src="avalon.js?v=avalon-bots-save-1"></script>
 </body>
 </html>
