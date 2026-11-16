@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/webp" href="assets/earthkung-logo.webp">
-<link rel="stylesheet" href="style.css?v=who-review-2">
+<link rel="stylesheet" href="style.css?v=lobby-notes-20261116">
 </head>
 <body>
 <section id="landingCover" class="landing-cover" aria-label="หน้าเปิดเกม Party Game">
@@ -182,7 +182,7 @@
  <div id="insiderLiveFeed" class="insider-live-feed" role="log" aria-live="polite" aria-relevant="additions text"></div>
 </section>
 <div id="insiderVotePanel" class="guess-box" hidden><h3>โหวตว่าใครคือ Insider</h3><p id="insiderVoteProgress" class="muted hint"></p><div id="insiderVoteChoices" class="vote-list"></div><button id="insiderVoteSubmit" class="btn primary full" disabled>ยืนยันโหวต</button></div>
-<div class="who-note-panel"><div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>สมุดโน้ตของฉัน</h3></div><span class="who-note-tag">เฉพาะคุณ</span></div><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div>
+<div class="who-note-panel"><div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="insiderNoteToggle" aria-controls="insiderNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div><div id="insiderNoteBody" class="who-note-body"><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div></div>
 </section>
 <section id="spyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div></div>
@@ -229,12 +229,13 @@
 <h3>ลำดับการถาม</h3><div id="whoOrder" class="chips"></div>
 <h3 class="section-gap">คำของเพื่อน</h3><div id="otherWords" class="word-grid"></div>
 <div class="who-note-panel">
- <div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3> สมุดโน้ตของฉัน</h3></div><span class="who-note-tag">เฉพาะคุณ</span></div>
+ <div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3> สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="whoNoteToggle" aria-controls="whoNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div>
+ <div id="whoNoteBody" class="who-note-body">
  <p class="muted hint">จดเบาะแส คำถาม หรือสิ่งที่เพื่อนตอบไว้ระหว่างเล่น · โน้ตจะล้างอัตโนมัติเมื่อเกมจบ</p>
  <label for="whoNoteInput">โน้ตระหว่างเกม</label>
  <textarea id="whoNoteInput" rows="5" maxlength="3000" placeholder="เช่น: แก๊งนี้ถามถึงตัวละครเกม / เพื่อนบอกว่าเป็นสายโจมตี..."></textarea>
  <div class="who-note-footer"><span> เห็นเฉพาะเบราว์เซอร์นี้</span><span id="whoNoteCount">0 / 3000</span></div>
- </div>
+ </div></div>
  <div class="guess-box"><h3 id="guessHeading">ทายคำของคุณ (1 ครั้ง)</h3><div id="answerReveal" class="answer-reveal" hidden></div><div id="guessInputs"><input id="guessInput" autocomplete="off" placeholder="พิมพ์เพื่อค้นหาคำ"><div id="guessSuggestions" class="suggestions" hidden></div><p id="guessSelected" class="muted hint">ยังไม่ได้เลือกคำ</p><button id="guessBtn" class="btn primary full"> ยืนยันคำตอบ</button></div><p id="whoCustomAwaiting" class="who-custom-awaiting notice" hidden>รอคนตั้งคำตรวจคำตอบของคุณ…</p><div id="whoCustomGuessHistory" class="who-custom-guesses" hidden></div></div>
 
 </section>
@@ -291,7 +292,7 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=stability-20261116"></script>
+<script src="script.js?v=lobby-notes-20261116"></script>
 <script src="insider.js?v=stability-20261116"></script>
 <script src="whoami_custom.js?v=stability-20261116"></script>
 </body>
