@@ -1,7 +1,7 @@
 // Who Am I — Customize By Player: one secret guess, reviewed by the player who wrote its word.
 const WHO_CUSTOM_PREP_MS=60000;
 const WHO_CUSTOM_FALLBACK=['แตงโม','มะม่วง','ช้าง','แมว','สุนัข','ดวงจันทร์','สายรุ้ง','รถไฟ','พิซซ่า','แพนด้า','ไดโนเสาร์','จักรยาน','ต้นไม้','นาฬิกา','ดาวเสาร์','หุ่นยนต์','กระต่าย','น้ำตก','กีตาร์','ช็อกโกแลต','ดอกทานตะวัน','สนามบิน','ปลาวาฬ','ฉลาม','หิ่งห้อย','ปราสาท','เครื่องบิน','ซูชิ','ภูเขา','สมาร์ตโฟน','ห้องสมุด','รองเท้า','นักบินอวกาศ','ประภาคาร','เรือใบ','แมงกะพรุน','ฟักทอง','ดาวอังคาร','เมฆ','สายฟ้า','ผีเสื้อ','ม้าลาย','กุญแจ','โดนัท','เครื่องซักผ้า','แว่นตา','โรงภาพยนตร์','ต้นกระบองเพชร','ลูกโป่ง','นกเพนกวิน','ไข่ดาว'];
-let activeWhoCustomKey='',lastWhoCustomNoticeToken='';
+let activeWhoCustomKey='',lastWhoCustomNoticeToken='',whoCustomJudgeBusy=false;
 function whoCustomSetup(r,ids){
  if(r.gameMode!=='whoami_custom'||r.status!=='lobby'||ids.length<2)return false;
  const order=shuffle(ids);
@@ -128,16 +128,17 @@ $('whoCustomReviewAlert').onclick=()=>{
 };
 async function whoCustomJudge(correct){
  const r=roomState;
- if(!roomId||r?.gameMode!=='whoami_custom'||!['playing','final_guess','whoami_review'].includes(r.status))return;
+ if(whoCustomJudgeBusy||!roomId||r?.gameMode!=='whoami_custom'||!['playing','final_guess','whoami_review'].includes(r.status))return;
+ const game=Number(r.gamesPlayed)||0;
  const target=whoCustomPendingForWriter(r,myId)?.[0];
  if(!target)return;
- const button=correct?$('whoCustomJudgeCorrect'):$('whoCustomJudgeWrong');
- button.disabled=true;
+ const submittedAt=r.whoCustomPending[target].submittedAt;
+ whoCustomJudgeBusy=true;$('whoCustomJudgeCorrect').disabled=true;$('whoCustomJudgeWrong').disabled=true;
  try{
   const result=await getRef().transaction(x=>{
-   if(!x||x.gameMode!=='whoami_custom'||!['playing','final_guess','whoami_review'].includes(x.status)||
+   if(!x||x.gameMode!=='whoami_custom'||(Number(x.gamesPlayed)||0)!==game||!['playing','final_guess','whoami_review'].includes(x.status)||
     !x.players?.[myId]||x.whoCustomAssignments?.[myId]!==target||
-    x.whoCustomPending?.[target]?.writerId!==myId||x.whoCustomReviews?.[target])return;
+    x.whoCustomPending?.[target]?.writerId!==myId||x.whoCustomPending[target].submittedAt!==submittedAt||x.whoCustomReviews?.[target])return;
    const pending=x.whoCustomPending[target],round=Number(pending.round)||1;
    const points=correct?Math.max(1,Number(x.totalRounds||2)-round+1):0;
    x.guessedCorrectly||={};x.guessedCorrectly[target]=correct;
@@ -154,19 +155,20 @@ async function whoCustomJudge(correct){
    x.lastActivityAt=TIMESTAMP();return x;
   },undefined,false);
   toast(result.committed?'ยืนยันผลคำตอบให้เพื่อนแล้ว':'คำตอบนี้ถูกตรวจไปแล้วหรือไม่สามารถตัดสินได้',result.committed?'success':'error');
- }catch(e){error(e);}finally{button.disabled=false;}
+ }catch(e){error(e);}finally{whoCustomJudgeBusy=false;$('whoCustomJudgeCorrect').disabled=false;$('whoCustomJudgeWrong').disabled=false;}
 }
 $('whoCustomJudgeCorrect').onclick=()=>whoCustomJudge(true);
 $('whoCustomJudgeWrong').onclick=()=>whoCustomJudge(false);
 $('whoCustomSubmitBtn').onclick=async()=>{
  if(roomState?.gameMode!=='whoami_custom'||roomState.status!=='whoami_prepare'||!roomId)return;
+ const game=Number(roomState.gamesPlayed)||0;
  const word=$('whoCustomWordInput').value.trim().replace(/\s+/g,' ');
  if(!word||word.length>100){toast('กรุณาตั้งคำตอบยาว 1–100 ตัวอักษร','error');return;}
  const button=$('whoCustomSubmitBtn');button.disabled=true;
  try{
   const res=await getRef().transaction(r=>{
    const target=r?.whoCustomAssignments?.[myId];
-   if(!r||r.gameMode!=='whoami_custom'||r.status!=='whoami_prepare'||!target||
+   if(!r||r.gameMode!=='whoami_custom'||(Number(r.gamesPlayed)||0)!==game||r.status!=='whoami_prepare'||!target||
      !r.players?.[myId]||r.whoCustomSubmitted?.[myId]||serverNow()>=Number(r.whoCustomDeadline||0))return;
    r.whoCustomWords||={};r.whoCustomSubmitted||={};
    r.whoCustomWords[target]=word;r.whoCustomSubmitted[myId]=true;
@@ -179,16 +181,18 @@ $('whoCustomSubmitBtn').onclick=async()=>{
 $('whoCustomWordInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('whoCustomSubmitBtn').click()});
 async function whoCustomGuess(){
  if(roomState?.gameMode!=='whoami_custom'||!roomId)return;
+ const submittedRoom=roomId,game=Number(roomState.gamesPlayed)||0;
  const answer=$('guessInput').value.trim().replace(/\s+/g,' ');
  if(!answer||answer.length>100){toast('กรุณาพิมพ์คำตอบ 1–100 ตัวอักษร','error');return;}
  if(Number(roomState.attempts?.[myId]||0)!==1||roomState.whoCustomPending?.[myId]){
   toast('โหมดนี้ส่งคำตอบได้เพียงครั้งเดียว','error');return;
  }
  if(!await confirmBox('ส่งคำตอบให้เพื่อนตรวจ?', 'ส่ง “'+answer+'” ได้เพียงครั้งเดียว · คนตั้งคำจะเป็นผู้ตัดสิน', 'ส่งคำตอบ'))return;
+ if(roomId!==submittedRoom)return;
  const button=$('guessBtn');button.disabled=true;
  try{
   const result=await getRef().transaction(r=>{
-   if(!r||r.gameMode!=='whoami_custom'||!['playing','final_guess'].includes(r.status)||
+   if(!r||r.gameMode!=='whoami_custom'||(Number(r.gamesPlayed)||0)!==game||!['playing','final_guess'].includes(r.status)||
     !r.players?.[myId]||Number(r.attempts?.[myId]||0)!==1||r.whoCustomPending?.[myId]||
     r.whoCustomReviews?.[myId]||(r.whoCustomGuesses?.[myId]||[]).length>0||
     (r.status==='final_guess'&&serverNow()>=Number(r.finalDeadline||0)))return;
@@ -205,7 +209,7 @@ async function whoCustomGuess(){
   },undefined,false);
   if(!result.committed){toast('หมดเวลาหรือคุณเคยส่งคำตอบแล้ว','error');return;}
   const saved=result.snapshot?.val();
-  if(saved?.whoCustomPending?.[myId]?.writerId!==whoCustomWriterFor(saved,myId)){
+  if(!saved?.whoCustomReviews?.[myId]&&saved?.whoCustomPending?.[myId]?.writerId!==whoCustomWriterFor(saved,myId)){
    toast('บันทึกคำตอบแล้ว แต่ตรวจสอบการส่งไปยังคนตั้งโจทย์ไม่ได้ กรุณารีเฟรชหน้าห้อง','error');return;
   }
   $('guessInput').value='';
