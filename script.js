@@ -110,7 +110,7 @@ const AVATARS=[
 const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
 if(!AVATARS.some(a=>a.id===myAvatar)){myAvatar='fox';try{localStorage.setItem('party_game_avatar_v1',myAvatar);}catch(e){}}
 const avatarMarkup=(player,cls='avatar-inline')=>{const a=avatarById(player?.avatar||'fox');return `<span class="avatar-token tone-${a.tone} ${cls}" title="${esc(a.name)}">${a.emoji}</span>`;};
-const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||r?.gamePlayers?.[id]||r?.playerProfiles?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
+const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||r?.gamePlayers?.[id]||r?.playerProfiles?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${p.bot?' · BOT':''}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
 function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const a=avatarById(avatarId);el.textContent=a.emoji;el.className=`game-avatar tone-${a.tone}`;}
 let avatarFilter='all';
 const AVATAR_FILTERS=[
@@ -1979,7 +1979,7 @@ function migrateNewPartyContentV25(){
  }).finally(()=>{partyContentV25Started=false;});
 }
 let library=defaultCategories();
-let categoryHistory=[],sharedCategoryReady=false,sharedCategoryBootstrapping=false,managerDirty=false;
+let categoryHistory=[],sharedCategoryReady=false,sharedCategoryBootstrapping=false,managerDirty=false,categorySaveBusy=false;
 const sharedCategoryRef=db.ref('sharedCategoryLibraryV1');
 function parseSharedCategoryDocument(raw){
  if(typeof raw!=='string')throw new Error('ข้อมูลหมวดส่วนกลางไม่ใช่ JSON string');
@@ -2000,6 +2000,7 @@ function parseSharedCategoryDocument(raw){
 function managerSyncStatus(message,state='loading'){
  const el=$('managerSyncStatus');if(!el)return;
  el.textContent=message;el.dataset.state=state;
+ if(state!=='ready')refreshCategorySave();
 }
 function applySharedCategoryDocument(raw){
  const incoming=parseSharedCategoryDocument(raw);
@@ -2020,7 +2021,7 @@ function applySharedCategoryDocument(raw){
    if(editKey&&library[editKey])chooseCategory(editKey);
    else if(Object.keys(library).length)chooseCategory(Object.keys(library)[0]);
    else{editDraft=null;editKey=null;renderManager();}
-  }
+  }else refreshCategorySave();
  }
  if(roomState?.status==='lobby')renderRoom(roomState);
 }
@@ -2239,6 +2240,15 @@ function openManager(from){
  else renderManager();
  if(!sharedCategoryReady)managerSyncStatus('กำลังเชื่อมต่อ Firebase หรือยังไม่มีสิทธิ์เข้าถึงคลังส่วนกลาง','error');
 }
+function categoryDraftSignature(d){
+ if(!d)return '';
+ return JSON.stringify([String(d.name||'').trim(),[...(d.enabledModes||[])].sort(),(d.groups||[]).map(g=>[String(g.name||'').trim(),[...new Set((g.words||[]).map(w=>String(w).trim()).filter(Boolean))]])]);
+}
+function categorySavedDraft(p){return p?{name:p.name,enabledModes:[...enabledFor(p)],groups:Object.entries(p.groups||{}).map(([name,words])=>({name,words}))}:null;}
+function refreshCategorySave(){
+ managerDirty=!!editDraft&&(editNew||categoryDraftSignature(editDraft)!==categoryDraftSignature(categorySavedDraft(library[editKey])));
+ $('saveCategoryBtn').disabled=!sharedCategoryReady||!managerDirty||categorySaveBusy;
+}
 function chooseCategory(key){
  if(!library[key])return;
  editKey=key;editNew=false;managerDirty=false;
@@ -2262,11 +2272,11 @@ function renderManager(){
  $('editCategoryName').value=editDraft.name;
  document.querySelectorAll('#enabledModes input').forEach(c=>c.checked=editDraft.enabledModes.includes(c.value));
  $('deleteCategoryBtn').disabled=editNew||!sharedCategoryReady;
- $('saveCategoryBtn').disabled=!sharedCategoryReady;
+ refreshCategorySave();
  renderGroups();
 }
-$('editCategoryName').oninput=()=>{if(editDraft){editDraft.name=$('editCategoryName').value;managerDirty=true;}};
-$('enabledModes').onchange=()=>{if(editDraft){editDraft.enabledModes=[...document.querySelectorAll('#enabledModes input:checked')].map(x=>x.value);managerDirty=true;}};
+$('editCategoryName').oninput=()=>{if(editDraft){editDraft.name=$('editCategoryName').value;managerDirty=true;refreshCategorySave();}};
+$('enabledModes').onchange=()=>{if(editDraft){editDraft.enabledModes=[...document.querySelectorAll('#enabledModes input:checked')].map(x=>x.value);managerDirty=true;refreshCategorySave();}};
 function parseWords(t){return [...new Set(String(t).split(/[\n,，]+/).map(x=>x.trim()).filter(Boolean))];}
 function renderGroups(){
  const target=$('groupEditors');target.replaceChildren();
@@ -2274,13 +2284,13 @@ function renderGroups(){
   const box=document.createElement('div');box.className='group-edit';
   const head=document.createElement('div');head.className='head';
   const name=document.createElement('input');name.value=g.name;name.placeholder='ชื่อกลุ่ม';name.maxLength=45;
-  name.oninput=()=>{g.name=name.value;managerDirty=true;};
+  name.oninput=()=>{g.name=name.value;managerDirty=true;refreshCategorySave();};
   const del=document.createElement('button');del.className='btn danger small';del.textContent='ลบ';
-  del.onclick=()=>{editDraft.groups.splice(i,1);managerDirty=true;renderGroups();};
+  del.onclick=()=>{editDraft.groups.splice(i,1);managerDirty=true;refreshCategorySave();renderGroups();};
   head.append(name,del);
   const input=document.createElement('textarea');input.value=g.words.join('\n');input.placeholder='พิมพ์คำละ 1 บรรทัด';
   const count=document.createElement('small');count.textContent=`${g.words.length} คำ`;
-  input.oninput=()=>{g.words=parseWords(input.value);count.textContent=`${g.words.length} คำ`;managerDirty=true;};
+  input.oninput=()=>{g.words=parseWords(input.value);count.textContent=`${g.words.length} คำ`;managerDirty=true;refreshCategorySave();};
   box.append(head,input,count);target.append(box);
  });
 }
@@ -2294,10 +2304,10 @@ $('addGroupBtn').onclick=()=>{
  if(!editDraft)return;
  if(editDraft.groups.length>=20){toast('สูงสุด 20 กลุ่มต่อหมวด','error');return;}
  editDraft.groups.push({name:`กลุ่ม ${editDraft.groups.length+1}`,words:[]});
- managerDirty=true;renderGroups();
+ managerDirty=true;refreshCategorySave();renderGroups();
 };
 $('saveCategoryBtn').onclick=async()=>{
- if(!editDraft||!sharedCategoryReady){toast('ต้องเชื่อมต่อ Firebase ส่วนกลางก่อนบันทึก','error');return;}
+ if(!editDraft||!sharedCategoryReady||categorySaveBusy||!managerDirty)return;
  const name=editDraft.name.trim();
  if(name.length<2||name.length>40){toast('ชื่อหมวดต้องยาว 2–40 ตัว','error');return;}
  if(!editDraft.enabledModes.length){toast('เลือกโหมดเกมอย่างน้อย 1 โหมด','error');return;}
@@ -2315,7 +2325,7 @@ $('saveCategoryBtn').onclick=async()=>{
  }
  const key=editNew?`custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`:editKey;
  const pack={name,groups,enabledModes:[...editDraft.enabledModes]},wasNew=editNew;
- const button=$('saveCategoryBtn');button.disabled=true;
+ const button=$('saveCategoryBtn');categorySaveBusy=true;refreshCategorySave();
  try{
   await mutateSharedCategory(key,pack,wasNew);
   managerDirty=false;chooseCategory(key);
@@ -2323,7 +2333,7 @@ $('saveCategoryBtn').onclick=async()=>{
  }catch(e){
   console.error('Shared category save failed',e);
   toast(`บันทึกส่วนกลางไม่สำเร็จ: ${e.message||'ตรวจสอบ Firebase Rules'}`,'error');
- }finally{button.disabled=!sharedCategoryReady;}
+ }finally{categorySaveBusy=false;refreshCategorySave();}
 };
 $('deleteCategoryBtn').onclick=async()=>{
  if(!editKey||!sharedCategoryReady)return;
@@ -2346,7 +2356,7 @@ $('deleteCategoryBtn').onclick=async()=>{
 function unsubscribe(){if(subscribedRef&&roomCallback)subscribedRef.off('value',roomCallback);subscribedRef=null;roomCallback=null;}
 function goHome(msg=''){unsubscribe();roomId='';roomState=null;isHost=false;leaving=false;sessionStorage.removeItem('pg_room_v6');$('leaveBtn').hidden=true;showOnly('homeView');if(msg)toast(msg);}
 function enterRoom(id){unsubscribe();roomId=id;leaving=false;lastTouch=serverNow();sessionStorage.setItem('pg_room_v6',id);$('roomTitle').textContent='กำลังโหลดห้อง…';$('roomCode').textContent=id;$('leaveBtn').hidden=false;showOnly('roomView');subscribe();}
-function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}if(r.kickedPlayers?.[myId]){ref.child(`players/${myId}`).onDisconnect().cancel().catch(error);goHome('คุณถูกหัวหน้าห้องเตะออกจากห้อง');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.keys(ps).length&&!ps[r.hostId])ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{});if(ids.length&&!x.players[x.hostId]){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
+function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}if(r.kickedPlayers?.[myId]){ref.child(`players/${myId}`).onDisconnect().cancel().catch(error);goHome('คุณถูกหัวหน้าห้องเตะออกจากห้อง');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.entries(ps).some(([,p])=>!p.bot)&&(!ps[r.hostId]||ps[r.hostId].bot))ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{}).filter(id=>!x.players[id].bot);if(ids.length&&(!x.players[x.hostId]||x.players[x.hostId].bot)){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
 function canRejoinRoom(r,id,manual=false){
  if(!r||inactive(r))return false;
  if(r.gameMode==='avalon'&&r.status==='lobby'&&!r.players?.[id]&&Object.keys(r.players||{}).length>=Number(r.avalonCount||9))return false;
@@ -2362,7 +2372,7 @@ function applyManualRoomJoin(r,id,name,avatar){
 }
 function applyLobbyKick(r,hostId,targetId){
  if(!r||r.status!=='lobby'||r.hostId!==hostId||!r.players?.[hostId]||!targetId||targetId===hostId||!r.players?.[targetId])return false;
- r.kickedPlayers||={};r.kickedPlayers[targetId]=true;
+ if(r.players[targetId].bot){delete r.playerProfiles?.[targetId];delete r.scores?.[targetId];}else{r.kickedPlayers||={};r.kickedPlayers[targetId]=true;}
  delete r.players[targetId];
  // Keep previously earned match scores; remove unused entries before the first game.
  if(!Number(r.gamesPlayed||0)&&r.scores)delete r.scores[targetId];
@@ -2462,7 +2472,7 @@ async function joinRoomByCode(){
 $('joinRoomCodeBtn').onclick=joinRoomByCode;
 $('joinRoomCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoomByCode();});
 
-$('leaveBtn').onclick=async()=>{if(!roomId||!await confirmBox('ออกจากห้อง?','คุณจะออกจากเกมปัจจุบัน','ออกจากห้อง'))return;const ref=getRef();leaving=true;try{await ref.child(`players/${myId}`).onDisconnect().cancel();await ref.transaction(r=>{if(!r||!r.players?.[myId])return;delete r.players[myId];if(r.hostId===myId)r.hostId=Object.keys(r.players)[0]||null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);goHome('ออกจากห้องแล้ว');}catch(e){leaving=false;error(e);}};
+$('leaveBtn').onclick=async()=>{if(!roomId||!await confirmBox('ออกจากห้อง?','คุณจะออกจากเกมปัจจุบัน','ออกจากห้อง'))return;const ref=getRef();leaving=true;try{await ref.child(`players/${myId}`).onDisconnect().cancel();await ref.transaction(r=>{if(!r||!r.players?.[myId])return;delete r.players[myId];if(r.hostId===myId)r.hostId=Object.keys(r.players).find(id=>!r.players[id].bot)||null;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);goHome('ออกจากห้องแล้ว');}catch(e){leaving=false;error(e);}};
 $('copyRoomBtn').onclick=async()=>{try{const code=roomState?.roomCode||roomId;await navigator.clipboard.writeText(code);toast(`คัดลอกเลขห้อง ${code} แล้ว`,'success');}catch{toast(`เลขห้องคือ ${roomState?.roomCode||roomId}`);}};
 async function closeRoom(){
  const id=roomId;
@@ -2549,13 +2559,34 @@ $('grandFinalLeaveBtn').onclick=()=>$('leaveBtn').click();
 $('grandFinalCloseBtn').onclick=()=>closeRoom();
 
 // ===== Game rendering =====
+const lobbySaveBusy=new Set();
+function lobbySaveChanged(r,kind){
+ if(!r||r.status!=='lobby')return false;
+ if(kind==='category')return !['insider','whoami_custom','avalon'].includes(r.gameMode)&&!!$('lobbyCategorySelect').value&&$('lobbyCategorySelect').value!==String(r.category||'');
+ if(kind==='spy')return r.gameMode==='spyfall'&&$('lobbySpyFormatSelect').value!==(isAwareSpy(r)?'aware':'secret');
+ if(kind==='who')return ['whoami_time','whoami_rounds','whoami_custom'].includes(r.gameMode)&&($('lobbyFormatSelect').value!==r.gameMode||Number($('lobbySettingInput').value)!==Number(r.settingValue||2));
+ return false;
+}
+function refreshLobbySaves(r=roomState){
+ for(const [kind,id] of [['category','lobbyChangeCategoryBtn'],['spy','lobbySpyFormatSaveBtn'],['who','lobbyChangeFormatBtn']]){
+  $(id).disabled=!isHost||lobbySaveBusy.has(kind)||!lobbySaveChanged(r,kind);
+ }
+}
+function syncLobbyDraft(panel,key,apply){
+ if(panel.dataset.savedKey!==key){panel.dataset.savedKey=key;apply();}
+}
+for(const id of ['lobbyCategorySelect','lobbySpyFormatSelect','lobbyFormatSelect','lobbySettingInput']){
+ $(id).addEventListener('input',()=>refreshLobbySaves());
+ $(id).addEventListener('change',()=>refreshLobbySaves());
+}
 function renderLobbyCategory(r){
  const freeForm=['insider','whoami_custom','avalon'].includes(r.gameMode);$('lobbyCategoryPanel').hidden=freeForm;if(freeForm)return;
  const select=$('lobbyCategorySelect'),button=$('lobbyChangeCategoryBtn'),pack=library[r.category]||packFor(r),currentKey=String(r.category||'');
  const entries=Object.entries(library)
   .filter(([,candidate])=>enabledFor(candidate).includes(r.gameMode)&&supportsMode(candidate,r.gameMode))
   .sort((a,b)=>String(a[1].name||'').localeCompare(String(b[1].name||''),'th'));
- select.replaceChildren();
+ const panel=$('lobbyCategoryPanel'),savedKey=roomId+':'+r.gameMode+':'+currentKey,previous=panel.dataset.savedKey===savedKey?select.value:currentKey;
+ panel.dataset.savedKey=savedKey;select.replaceChildren();
  const hasCurrent=entries.some(([key])=>key===currentKey);
  if(currentKey&&!hasCurrent){
   const option=document.createElement('option');option.value=currentKey;
@@ -2565,20 +2596,21 @@ function renderLobbyCategory(r){
   const option=document.createElement('option');option.value=key;
   option.textContent=`${candidate.name} · ${wordsOf(candidate).length} คำ`;select.append(option);
  });
- if(currentKey&&[...select.options].some(option=>option.value===currentKey))select.value=currentKey;
+ if(previous&&[...select.options].some(option=>option.value===previous))select.value=previous;
+ else if(currentKey&&[...select.options].some(option=>option.value===currentKey))select.value=currentKey;
  else if(select.options.length)select.selectedIndex=0;
  select.disabled=!isHost||entries.length===0;
- button.hidden=!isHost;button.disabled=!isHost||entries.length===0;
+ button.hidden=!isHost;refreshLobbySaves(r);
  $('lobbyCategoryCurrent').textContent=`หมวดปัจจุบัน: ${pack.name||'—'}`;
  $('lobbyCategoryHint').textContent=isHost?'เลือกหมวดใหม่แล้วกด “ใช้หมวดนี้” ได้จนกว่าจะเริ่มเกม':'ผู้เล่นทุกคนใช้หมวดนี้ · เปลี่ยนหมวดได้โดยหัวหน้าห้อง';
 }
 $('lobbyChangeCategoryBtn').onclick=async()=>{
- if(!roomId||!isHost||!ensureName())return;
+ if(!roomId||!isHost||!ensureName()||lobbySaveBusy.has('category')||!lobbySaveChanged(roomState,'category'))return;
  const key=$('lobbyCategorySelect').value,pack=library[key],button=$('lobbyChangeCategoryBtn');
  if(!pack||!roomState||!enabledFor(pack).includes(roomState.gameMode)||!supportsMode(pack,roomState.gameMode)){
   toast('หมวดนี้ใช้กับโหมดเกมที่เลือกไม่ได้','error');return;
  }
- const safePack=firebaseSafePack(pack);button.disabled=true;
+ const safePack=firebaseSafePack(pack);lobbySaveBusy.add('category');refreshLobbySaves();
  try{
   const res=await getRef().transaction(r=>{
    if(!r||r.status!=='lobby'||r.hostId!==myId||r.gameMode!==roomState.gameMode)return;
@@ -2588,41 +2620,40 @@ $('lobbyChangeCategoryBtn').onclick=async()=>{
   if(res.committed)toast(`เปลี่ยนหมวดเป็น ${pack.name} แล้ว`,'success');
   else toast('เปลี่ยนหมวดไม่ได้ ห้องอาจเริ่มเกมไปแล้ว','error');
  }catch(e){error(e);}
- finally{button.disabled=false;}
+ finally{lobbySaveBusy.delete('category');refreshLobbySaves();}
 };
 function renderLobbySpyFormat(r){
  const panel=$('lobbySpyFormatPanel');panel.hidden=r.gameMode!=='spyfall';if(panel.hidden)return;
  const select=$('lobbySpyFormatSelect'),button=$('lobbySpyFormatSaveBtn');
- if(document.activeElement!==select)select.value=isAwareSpy(r)?'aware':'secret';
- select.disabled=!isHost;button.hidden=!isHost;
+ syncLobbyDraft(panel,roomId+':'+r.spyVariant,()=>{select.value=isAwareSpy(r)?'aware':'secret';});
+ select.disabled=!isHost;button.hidden=!isHost;refreshLobbySaves(r);
  $('lobbySpyFormatHint').textContent=`ปัจจุบัน: ${spyVariantTitle(r.spyVariant)} · ${isHost?'เปลี่ยนได้ก่อนเริ่มเกม':'หัวหน้าห้องเป็นผู้เลือก'}`;
 }
 $('lobbySpyFormatSaveBtn').onclick=async()=>{
- if(!roomId||!isHost)return;
+ if(!roomId||!isHost||lobbySaveBusy.has('spy')||!lobbySaveChanged(roomState,'spy'))return;
  const variant=$('lobbySpyFormatSelect').value,button=$('lobbySpyFormatSaveBtn');
  if(!['secret','aware'].includes(variant))return;
- button.disabled=true;
+ lobbySaveBusy.add('spy');refreshLobbySaves();
  try{
   const res=await getRef().transaction(r=>{
    if(!r||r.status!=='lobby'||r.hostId!==myId||r.gameMode!=='spyfall')return;
    r.spyVariant=variant;r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
   toast(res.committed?`ใช้รูปแบบ ${spyVariantTitle(variant)} แล้ว`:'เปลี่ยนรูปแบบไม่ได้',res.committed?'success':'error');
- }catch(e){error(e);}finally{button.disabled=false;}
+ }catch(e){error(e);}finally{lobbySaveBusy.delete('spy');refreshLobbySaves();}
 };
 function renderLobbyFormat(r){
  const panel=$('lobbyFormatPanel');panel.hidden=['spyfall','insider','avalon'].includes(r.gameMode);if(panel.hidden)return;
  const mode=$('lobbyFormatSelect'),setting=$('lobbySettingInput'),button=$('lobbyChangeFormatBtn');
- if(document.activeElement!==mode)mode.value=r.gameMode;
- if(document.activeElement!==setting)setting.value=r.settingValue||2;
- mode.disabled=!isHost;setting.disabled=!isHost;button.hidden=!isHost;
+ syncLobbyDraft(panel,roomId+':'+r.gameMode+':'+(r.settingValue||2),()=>{mode.value=r.gameMode;setting.value=r.settingValue||2;});
+ mode.disabled=!isHost;setting.disabled=!isHost;button.hidden=!isHost;refreshLobbySaves(r);
 
 }
 $('lobbyChangeFormatBtn').onclick=async()=>{
- if(!roomId||!isHost)return;
+ if(!roomId||!isHost||lobbySaveBusy.has('who')||!lobbySaveChanged(roomState,'who'))return;
  const mode=$('lobbyFormatSelect').value,n=Number($('lobbySettingInput').value),button=$('lobbyChangeFormatBtn');
  if(!['whoami_time','whoami_rounds','whoami_custom'].includes(mode)||!Number.isInteger(n)||n<1||n>99){toast('ใส่ค่าระหว่าง 1–99','error');return;}
- button.disabled=true;
+ lobbySaveBusy.add('who');refreshLobbySaves();
  try{
   const res=await getRef().transaction(r=>{
    if(!r||r.status!=='lobby'||r.hostId!==myId||!['whoami_time','whoami_rounds','whoami_custom'].includes(r.gameMode))return;
@@ -2634,7 +2665,7 @@ $('lobbyChangeFormatBtn').onclick=async()=>{
    r.gameMode=mode;r.settingValue=n;r.category=mode==='whoami_custom'?'':key;r.categoryPack=mode==='whoami_custom'?null:firebaseSafePack(pack);r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
   toast(res.committed?'บันทึกรูปแบบการเล่นแล้ว':'ไม่สามารถเปลี่ยนรูปแบบได้',res.committed?'success':'error');
- }catch(e){error(e);}finally{button.disabled=false;}
+ }catch(e){error(e);}finally{lobbySaveBusy.delete('who');refreshLobbySaves();}
 };
 // Who Am I personal notes: never written into Firebase, only retained in this browser tab.
 // Collapse the note body only; keep its input and existing round-local storage intact.
@@ -3270,7 +3301,7 @@ async function runAutomatic(){
  if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_prepare'){await whoCustomAuto();return;}
  if(roomState.gameMode==='whoami_custom'&&roomState.status==='whoami_review')return;
  if(roomState.gameMode==='insider'){await insiderAuto();return;}
- if(roomState.gameMode==='avalon')return;
+ if(roomState.gameMode==='avalon'){await avalonBotTick();return;}
  const r=roomState,ids=r.gameMode==='whoami_time'?Object.keys(r.players||{}):gameParticipantIds(r),allAnswered=r.gameMode==='whoami_custom'?whoCustomAllGuessesSubmitted(r):ids.length>0&&ids.every(id=>r.attempts?.[id]===0),allVoted=spyVotesComplete(r);
  const timed=r.status==='playing'&&r.gameMode==='whoami_time',speaker=currentWhoSpeaker(r);
  const timedDone=timed&&(allAnswered||!speaker||!r.players?.[speaker]||r.attempts?.[speaker]===0||remainingWhoMs(r,speaker)<=0);
