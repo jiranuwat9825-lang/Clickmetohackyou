@@ -2192,7 +2192,7 @@ function ensureName(){if(!nameConfirmed||!myName){toast('กรุณากร�
 // ===== Room list and automatic cleanup =====
 function inactive(r){const t=r?.lastActivityAt??r?.createdAt;return typeof t==='number'&&serverNow()-t>=IDLE_MS;}
 db.ref('rooms').on('value',s=>renderRoomList(s.val()||{}),error);
-function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย </p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=` ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';const canJoin=canRejoinRoom(r,myId);btn.textContent=r.status==='lobby'?'เข้าร่วม':canJoin?'กลับเข้าห้อง':'กำลังเล่น';btn.disabled=!canJoin;btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
+function renderRoomList(rooms){const list=$('roomList');list.replaceChildren();const entries=Object.entries(rooms).filter(([,r])=>r&&!inactive(r));if(!entries.length){list.innerHTML='<p class="muted">ยังไม่มีห้อง ลองสร้างห้องใหม่เลย </p>';return;}entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));entries.forEach(([id,r])=>{const row=document.createElement('div');row.className='room-entry';const info=document.createElement('div'),title=document.createElement('strong'),sub=document.createElement('p');title.textContent=` ${r.roomName||id}`;sub.textContent=`เลขห้อง ${r.roomCode||id} · ${modeTitle(r.gameMode)} · ${Object.keys(r.players||{}).length} คน · ${r.status==='finished'?'จบเกมแล้ว':r.status==='lobby'?'รอผู้เล่น':'กำลังเล่น'}`;info.append(title,sub);const btn=document.createElement('button');btn.className='btn soft small';const canJoin=canRejoinRoom(r,myId);btn.textContent=r.kickedPlayers?.[myId]?'ถูกเตะออก':r.status==='lobby'?'เข้าร่วม':canJoin?'กลับเข้าห้อง':'กำลังเล่น';btn.disabled=!canJoin;btn.onclick=()=>{if(ensureName())joinRoom(id);};row.append(info,btn);list.append(row);});}
 async function removeInactive(id){await db.ref(`rooms/${id}`).transaction(r=>{if(r&&inactive(r))return null;},undefined,false);}
 async function sweep(){if(sweepBusy)return;sweepBusy=true;try{const s=await db.ref('rooms').once('value');for(const [id,r] of Object.entries(s.val()||{}))if(inactive(r))await removeInactive(id);}catch(e){console.warn('Idle cleanup',e);}finally{sweepBusy=false;}}
 setTimeout(sweep,1500);setInterval(sweep,30000);
@@ -2346,9 +2346,29 @@ $('deleteCategoryBtn').onclick=async()=>{
 function unsubscribe(){if(subscribedRef&&roomCallback)subscribedRef.off('value',roomCallback);subscribedRef=null;roomCallback=null;}
 function goHome(msg=''){unsubscribe();roomId='';roomState=null;isHost=false;leaving=false;sessionStorage.removeItem('pg_room_v6');$('leaveBtn').hidden=true;showOnly('homeView');if(msg)toast(msg);}
 function enterRoom(id){unsubscribe();roomId=id;leaving=false;lastTouch=serverNow();sessionStorage.setItem('pg_room_v6',id);$('roomTitle').textContent='กำลังโหลดห้อง…';$('roomCode').textContent=id;$('leaveBtn').hidden=false;showOnly('roomView');subscribe();}
-function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.keys(ps).length&&!ps[r.hostId])ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{});if(ids.length&&!x.players[x.hostId]){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
+function subscribe(){if(!roomId)return;unsubscribe();const id=roomId,ref=db.ref(`rooms/${id}`);const cb=s=>{if(id!==roomId||leaving)return;const r=s.val();if(!r){goHome('ห้องถูกปิดหรือหมดอายุแล้ว');return;}if(r.kickedPlayers?.[myId]){ref.child(`players/${myId}`).onDisconnect().cancel().catch(error);goHome('คุณถูกหัวหน้าห้องเตะออกจากห้อง');return;}roomState=r;isHost=r.hostId===myId;const ps=r.players||{};if(Object.keys(ps).length&&!ps[r.hostId])ref.transaction(x=>{if(!x)return;const ids=Object.keys(x.players||{});if(ids.length&&!x.players[x.hostId]){x.hostId=ids[0];return x;}},undefined,false).catch(error);renderRoom(r);runAutomatic();};subscribedRef=ref;roomCallback=cb;ref.on('value',cb,error);}
 function canRejoinRoom(r,id){
- return !!r&&!inactive(r)&&(r.status==='lobby'||gameParticipantIds(r).includes(id));
+ return !!r&&!inactive(r)&&!r.kickedPlayers?.[id]&&(r.status==='lobby'||gameParticipantIds(r).includes(id));
+}
+function applyLobbyKick(r,hostId,targetId){
+ if(!r||r.status!=='lobby'||r.hostId!==hostId||!r.players?.[hostId]||!targetId||targetId===hostId||!r.players?.[targetId])return false;
+ r.kickedPlayers||={};r.kickedPlayers[targetId]=true;
+ delete r.players[targetId];
+ // Keep previously earned match scores; remove unused entries before the first game.
+ if(!Number(r.gamesPlayed||0)&&r.scores)delete r.scores[targetId];
+ r.lastActivityAt=TIMESTAMP();return true;
+}
+let lobbyKickBusy=false;
+async function kickLobbyPlayer(targetId){
+ if(lobbyKickBusy||!roomId||roomState?.status!=='lobby'||roomState.hostId!==myId||targetId===myId||!roomState.players?.[targetId])return;
+ const id=roomId,name=roomState.players[targetId]?.name||'ผู้เล่น';
+ lobbyKickBusy=true;
+ try{
+  if(!await confirmBox('เตะผู้เล่นออกจากห้อง?', 'นำ '+name+' ออกจากห้องนี้ ผู้เล่นจะไม่สามารถกลับเข้าห้องเดิมจากแท็บนี้ได้', 'เตะออก'))return;
+  if(id!==roomId||leaving)return;
+  const result=await getRef().transaction(r=>applyLobbyKick(r,myId,targetId)?r:undefined,undefined,false);
+  toast(result.committed?'เตะ '+name+' ออกจากห้องแล้ว':'ไม่สามารถเตะผู้เล่นได้ ห้องอาจเริ่มเกมแล้วหรือสิทธิ์หัวหน้าห้องเปลี่ยน',result.committed?'success':'error');
+ }catch(e){error(e);}finally{lobbyKickBusy=false;}
 }
 async function reconnect(){
  if(!roomId||leaving||reconnectBusy)return;
@@ -2357,7 +2377,7 @@ async function reconnect(){
  try{
   const snapshot=await ref.once('value'),r=snapshot.val();
   if(id!==roomId||leaving)return;
-  if(!canRejoinRoom(r,myId)){goHome('ห้องเดิมหมดอายุหรือไม่สามารถกลับเข้าได้');return;}
+  if(!canRejoinRoom(r,myId)){goHome(r?.kickedPlayers?.[myId]?'คุณถูกหัวหน้าห้องเตะออกจากห้อง':'ห้องเดิมหมดอายุหรือไม่สามารถกลับเข้าได้');return;}
   await presence.onDisconnect().remove();
   if(id!==roomId||leaving){await presence.onDisconnect().cancel();return;}
   const res=await ref.transaction(x=>{
@@ -2412,7 +2432,7 @@ $('createConfirmBtn').onclick=async()=>{
  }catch(e){error(e);}
  finally{button.disabled=false;button.textContent='สร้างห้อง →';renderCategoryChoices();}
 };
-async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>{if(!canRejoinRoom(r,myId))return;r.players||={};r.players[myId]={name:myName,avatar:myAvatar};r.playerProfiles||={};r.playerProfiles[myId]={name:myName,avatar:myAvatar};r.scores||={};r.scores[myId]??=0;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast('ห้องนี้เข้าร่วมไม่ได้แล้ว','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
+async function joinRoom(id){if(!ensureName())return;const ref=db.ref(`rooms/${id}`);try{await ref.child(`players/${myId}`).onDisconnect().remove();const res=await ref.transaction(r=>{if(!canRejoinRoom(r,myId))return;r.players||={};r.players[myId]={name:myName,avatar:myAvatar};r.playerProfiles||={};r.playerProfiles[myId]={name:myName,avatar:myAvatar};r.scores||={};r.scores[myId]??=0;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);if(!res.committed){await ref.child(`players/${myId}`).onDisconnect().cancel();toast(res.snapshot?.val()?.kickedPlayers?.[myId]?'คุณถูกเตะออกจากห้องนี้':'ห้องนี้เข้าร่วมไม่ได้แล้ว','error');return;}enterRoom(id);toast('เข้าห้องแล้ว','success');}catch(e){error(e);}}
 async function joinRoomByCode(){
  if(!ensureName())return;
  const code=$('joinRoomCodeInput').value.trim();
@@ -2606,6 +2626,24 @@ $('lobbyChangeFormatBtn').onclick=async()=>{
  }catch(e){error(e);}finally{button.disabled=false;}
 };
 // Who Am I personal notes: never written into Firebase, only retained in this browser tab.
+// Collapse the note body only; keep its input and existing round-local storage intact.
+function setupNoteToggle(buttonId,bodyId){
+ const button=$(buttonId),body=$(bodyId),key='pg_notes_collapsed:'+bodyId;
+ let collapsed=false;
+ try{collapsed=sessionStorage.getItem(key)==='1';}catch{}
+ const render=()=>{
+  body.hidden=collapsed;
+  button.setAttribute('aria-expanded',String(!collapsed));
+  button.textContent=collapsed?'แสดงโน้ต ▾':'ซ่อนโน้ต ▴';
+ };
+ button.addEventListener('click',()=>{
+  collapsed=!collapsed;render();
+  try{sessionStorage.setItem(key,collapsed?'1':'0');}catch{}
+ });
+ render();
+}
+setupNoteToggle('whoNoteToggle','whoNoteBody');
+setupNoteToggle('insiderNoteToggle','insiderNoteBody');
 let activeWhoNoteKey='';
 function whoNoteKey(r){
  return `party_who_note_v18:${roomId}:${Number(r?.gamesPlayed)||0}:${myId}`;
@@ -2637,7 +2675,16 @@ function renderRoom(r){const players=r.players||{},ids=Object.keys(players),stat
   renderLobbyFormat(r);
   renderLobbySpyFormat(r);
   $('playerList').replaceChildren();
-  ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag"> HOST</span>':''}`;$('playerList').append(el);});
+  ids.forEach((id,i)=>{
+   const el=document.createElement('div');el.className='player-row';
+   el.innerHTML=`<span class="player-rank">${i+1}</span>${playerLabelHTML(id,r)}${id===r.hostId?'<span class="host-tag"> HOST</span>':''}`;
+   if(isHost&&id!==myId){
+    const button=document.createElement('button');button.type='button';button.className='lobby-kick-btn';
+    button.textContent='เตะออก';button.setAttribute('aria-label','เตะ '+(players[id]?.name||'ผู้เล่น')+' ออกจากห้อง');
+    button.onclick=()=>kickLobbyPlayer(id);el.append(button);
+   }
+   $('playerList').append(el);
+  });
   const min=r.gameMode==='insider'?4:r.gameMode==='spyfall'?3:2;
    const startPack=library[r.category]||packFor(r);
    const availableDistinctWords=new Set(wordsOf(startPack).map(norm)).size;
