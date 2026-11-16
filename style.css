@@ -703,3 +703,13 @@ body.landing-transitioning .shell{
 @keyframes who-review-attention{0%,100%{box-shadow:0 15px 35px rgba(0,0,0,.46)}50%{box-shadow:0 14px 40px rgba(255,211,125,.25)}}
 @media(max-width:550px){.who-custom-review-alert{left:15px;right:15px;bottom:15px;width:calc(100% - 30px);max-width:none}}
 @media(prefers-reduced-motion:reduce){.who-custom-review-alert{animation:none}}
+
+/* Collapsible private notes and lobby-only player removal */
+.who-note-body{display:grid;gap:11px;min-width:0}
+.who-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.note-toggle{padding:6px 10px;min-height:32px;border:1px solid #45698b;border-radius:9px;background:#11253d;color:#c4e7ff;font-size:11px;font-weight:700;white-space:nowrap}
+.note-toggle:hover{background:#1e3856}
+.player-row>.player-identity{min-width:0;overflow-wrap:anywhere}
+.lobby-kick-btn{margin-left:auto;flex:0 0 auto;min-height:34px;padding:6px 11px;border:1px solid rgba(255,116,148,.5);border-radius:9px;background:rgba(255,90,125,.09);color:#ffadbf;font-size:11px;font-weight:700;white-space:nowrap}
+.lobby-kick-btn:hover{background:rgba(255,90,125,.2)}
+@media(max-width:450px){.who-note-actions{flex-direction:column;align-items:flex-end}.who-note-header{gap:8px}.lobby-kick-btn{padding:6px 8px}}
