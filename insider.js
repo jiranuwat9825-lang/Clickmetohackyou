@@ -1,6 +1,6 @@
 // Insider add-on for Party Game Hub. Loaded after script.js.
 const INSIDER_PREP_MS=60000,INSIDER_GUESS_MS=300000,INSIDER_VOTE_MS=120000,INSIDER_MAX_GUESSES=5;
-let insiderVoteChoice='',activeInsiderNoteKey='';
+let insiderVoteChoice='',activeInsiderNoteKey='',insiderRoundKey='',insiderBusy=false;
 const insiderRole=(r,id=myId)=>r?.roles?.[id]||'common';
 const insiderIds=r=>gameParticipantIds(r).filter(id=>r?.roles?.[id]);
 const insiderKey=r=>'insider_note:'+roomId+':'+Number(r?.gamesPlayed||0)+':'+myId;
@@ -50,9 +50,9 @@ function insiderClock(r){
  if($('insiderScreen').hidden)return;
  const prep=r.status==='insider_prepare',play=r.status==='playing',vote=r.status==='insider_voting';
  $('insiderTimer').textContent=formatLeft(play?r.insiderGuessDeadline:r.insiderDeadline);
- if(prep&&myId===r.insiderMasterId)$('insiderMasterSubmit').disabled=serverNow()>=Number(r.insiderDeadline||0);
- if(play)$('insiderGuessSubmit').disabled=insiderRole(r)==='master'||Number(r.insiderAttempts?.[myId]||0)>=5||serverNow()>=Number(r.insiderGuessDeadline||0);
- if(vote)$('insiderVoteSubmit').disabled=!!r.insiderVotes?.[myId]||!insiderVoteChoice||serverNow()>=Number(r.insiderDeadline||0);
+ if(prep&&myId===r.insiderMasterId)$('insiderMasterSubmit').disabled=insiderBusy||serverNow()>=Number(r.insiderDeadline||0);
+ if(play)$('insiderGuessSubmit').disabled=insiderBusy||insiderRole(r)==='master'||Number(r.insiderAttempts?.[myId]||0)>=5||serverNow()>=Number(r.insiderGuessDeadline||0);
+ if(vote)$('insiderVoteSubmit').disabled=insiderBusy||!!r.insiderVotes?.[myId]||!insiderVoteChoice||serverNow()>=Number(r.insiderDeadline||0);
 }
 function insiderGuessEvents(r){
  if(Array.isArray(r.insiderGuessFeed))return r.insiderGuessFeed;
@@ -93,6 +93,8 @@ function insiderRenderGuessFeed(r){
  }
 }
 function renderInsider(r){
+ const key=roomId+':'+(Number(r.gamesPlayed)||0);
+ if(key!==insiderRoundKey){insiderRoundKey=key;insiderVoteChoice='';$('insiderMasterWord').value='';$('insiderGuessInput').value='';}
  insiderSyncNotes(r);
  const role=insiderRole(r),master=role==='master',spy=role==='insider',prep=r.status==='insider_prepare',play=r.status==='playing',vote=r.status==='insider_voting';
  const used=Number(r.insiderAttempts?.[myId]||0),remaining=Math.max(0,5-used),ids=insiderIds(r);
@@ -132,7 +134,7 @@ function renderInsiderResults(r,target,players){
  const h=document.createElement('h2');h.textContent=!found?'รอบจบโดยไม่มีคนทายถูก':res.caught?'จับ Insider ได้แล้ว!':'Insider ชนะ!';
  const p=document.createElement('p');p.textContent=!found?'ไม่มีคะแนนรอบนี้':res.caught?'ทุกคนยกเว้น Insider ได้ 1 คะแนน':'Insider ได้ 2 คะแนน';
  hero.append(h,p);target.append(hero);
- const section=document.createElement('section');section.className='result-section',heading=document.createElement('h3');heading.textContent='เฉลย Insider';section.append(heading);
+ const section=document.createElement('section');section.className='result-section';const heading=document.createElement('h3');heading.textContent='เฉลย Insider';section.append(heading);
  for(const [label,value] of [['Master',players[r.insiderMasterId]?.name||'—'],['Insider',players[r.insiderId]?.name||'—'],
  ['คำตอบ',res.answer||'ไม่ได้ตั้งคำ'],['ผู้ตอบถูก',players[res.winner]?.name||'ไม่มี'],
  ['ผลโหวต',!found?'ไม่มีโหวต':res.pickedId?players[res.pickedId]?.name||'—':'เสมอ / ไม่มีคะแนนเสียง']]){
@@ -161,49 +163,51 @@ function renderInsiderResults(r,target,players){
  }
 }
 $('insiderMasterSubmit').onclick=async()=>{
- if(!roomId||roomState?.gameMode!=='insider'||myId!==roomState.insiderMasterId)return;
+ if(insiderBusy||!roomId||roomState?.gameMode!=='insider'||myId!==roomState.insiderMasterId)return;
+ const game=Number(roomState.gamesPlayed)||0;
  const answer=$('insiderMasterWord').value.trim().replace(/\s+/g,' ');
  if(!answer||answer.length>100){toast('คำตอบต้องยาว 1–100 ตัวอักษร','error');return;}
- const b=$('insiderMasterSubmit');b.disabled=true;
+ const b=$('insiderMasterSubmit');insiderBusy=true;b.disabled=true;
  try{const res=await getRef().transaction(r=>{
-  if(!r||r.gameMode!=='insider'||r.status!=='insider_prepare'||r.insiderMasterId!==myId||serverNow()>=r.insiderDeadline)return;
+  if(!r||r.gameMode!=='insider'||(Number(r.gamesPlayed)||0)!==game||r.status!=='insider_prepare'||!r.players?.[myId]||r.insiderMasterId!==myId||serverNow()>=r.insiderDeadline)return;
   r.insiderAnswer=answer;insiderStartGuessing(r);r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);
  if(res.committed){$('insiderMasterWord').value='';toast('ยืนยันคำแล้ว เริ่ม 5 นาที','success')}else toast('หมดเวลาตั้งคำแล้ว','error');
- }catch(e){error(e)}finally{b.disabled=false}
+ }catch(e){error(e)}finally{insiderBusy=false;if(roomState?.gameMode==='insider')insiderClock(roomState);}
 };
 $('insiderGuessSubmit').onclick=async()=>{
- if(!roomId||roomState?.gameMode!=='insider'||insiderRole(roomState)==='master')return;
+ if(insiderBusy||!roomId||roomState?.gameMode!=='insider'||insiderRole(roomState)==='master')return;
+ const game=Number(roomState.gamesPlayed)||0;
  const answer=$('insiderGuessInput').value.trim().replace(/\s+/g,' ');
  if(!answer||answer.length>100){toast('กรอกคำตอบ 1–100 ตัวอักษร','error');return;}
- const b=$('insiderGuessSubmit');b.disabled=true;
+ const b=$('insiderGuessSubmit');insiderBusy=true;b.disabled=true;
  try{const res=await getRef().transaction(r=>{
-  if(!r||r.gameMode!=='insider'||r.status!=='playing'||!r.players?.[myId]||
+  if(!r||r.gameMode!=='insider'||(Number(r.gamesPlayed)||0)!==game||r.status!=='playing'||!r.players?.[myId]||!r.roles?.[myId]||
    r.roles?.[myId]==='master'||!r.insiderAnswer||serverNow()>=r.insiderGuessDeadline||
    Number(r.insiderAttempts?.[myId]||0)>=5)return;
   r.insiderAttempts||={};r.insiderAttempts[myId]=Number(r.insiderAttempts[myId]||0)+1;
   r.insiderGuesses||={};r.insiderGuesses[myId]=[...(r.insiderGuesses[myId]||[]),answer];
   const correct=norm(answer)===norm(r.insiderAnswer);
-  r.insiderGuessFeed||=[];
+  r.insiderGuessFeed=Array.isArray(r.insiderGuessFeed)?r.insiderGuessFeed:insiderGuessEvents(r).filter(event=>event.playerId!==myId||event.attempt!==r.insiderAttempts[myId]);
   r.insiderGuessFeed.push({playerId:myId,answer,correct,attempt:r.insiderAttempts[myId]});
   if(correct)insiderStartVoting(r,myId);
   r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);
  if(res.committed){$('insiderGuessInput').value='';const ok=res.snapshot.val()?.insiderWinner===myId;toast(ok?'ตอบถูก! เริ่มโหวต Insider':'บันทึกคำตอบแล้ว',ok?'success':'error')}
  else toast('หมดเวลาหรือใช้สิทธิ์ทายครบแล้ว','error');
- }catch(e){error(e)}finally{b.disabled=false}
+ }catch(e){error(e)}finally{insiderBusy=false;if(roomState?.gameMode==='insider')insiderClock(roomState);}
 };
 $('insiderGuessInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('insiderGuessSubmit').click()});
 $('insiderVoteSubmit').onclick=async()=>{
- if(!insiderVoteChoice||!roomId)return;
- const picked=insiderVoteChoice,b=$('insiderVoteSubmit');b.disabled=true;
+ if(insiderBusy||!insiderVoteChoice||!roomId||roomState?.gameMode!=='insider')return;
+ const game=Number(roomState.gamesPlayed)||0,picked=insiderVoteChoice,b=$('insiderVoteSubmit');insiderBusy=true;b.disabled=true;
  try{const res=await getRef().transaction(r=>{
-  if(!r||r.gameMode!=='insider'||r.status!=='insider_voting'||serverNow()>=r.insiderDeadline||
+  if(!r||r.gameMode!=='insider'||(Number(r.gamesPlayed)||0)!==game||r.status!=='insider_voting'||serverNow()>=r.insiderDeadline||
    !r.players?.[myId]||!r.roles?.[picked]||picked===myId||r.insiderVotes?.[myId])return;
   r.insiderVotes||={};r.insiderVotes[myId]=picked;r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);
  if(res.committed){insiderVoteChoice='';toast('ส่งโหวตแล้ว','success')}else toast('ส่งโหวตไม่ได้','error');
- }catch(e){error(e)}finally{b.disabled=false}
+ }catch(e){error(e)}finally{insiderBusy=false;if(roomState?.gameMode==='insider')insiderClock(roomState);}
 };
 async function insiderAuto(){
  if(autoBusy||!roomId||roomState?.gameMode!=='insider'||leaving)return;
@@ -211,7 +215,7 @@ async function insiderAuto(){
  if(!(prep&&serverNow()>=Number(r.insiderDeadline||0)||playing&&serverNow()>=Number(r.insiderGuessDeadline||0)||voting&&(serverNow()>=Number(r.insiderDeadline||0)||insiderVotingComplete(r))))return;
  autoBusy=true;
  try{await getRef().transaction(x=>{
-  if(!x||x.gameMode!=='insider')return;
+  if(!x||x.gameMode!=='insider'||(Number(x.gamesPlayed)||0)!==(Number(r.gamesPlayed)||0)||x.status!==r.status)return;
   if(x.status==='insider_prepare'&&serverNow()>=x.insiderDeadline){if(!insiderStartGuessing(x))insiderNoWinner(x,'master_timeout');return x}
   if(x.status==='playing'&&serverNow()>=x.insiderGuessDeadline){insiderNoWinner(x,'guess_timeout');return x}
   if(x.status==='insider_voting'&&(serverNow()>=x.insiderDeadline||insiderVotingComplete(x))){insiderResolveVotes(x);return x}
