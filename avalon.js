@@ -180,7 +180,8 @@ function renderAvalon(r){
  if(myRole&&!done){
   const intel=!draft?avalonIntel(r,myId):[];
   const hint=myRole==='Percival'?'สองคนนี้คือ Merlin และ Morgana (ไม่ทราบว่าใครเป็นใคร)':myRole==='Merlin'?'ฝ่ายแดงที่คุณมองเห็น':AVALON_RED.has(myRole)&&myRole!=='Oberon'?'เพื่อนร่วมฝ่ายแดงที่คุณมองเห็น':'คุณไม่เห็นบทบาทของผู้อื่น';
-  block('บทบาทของคุณ','<strong class="avalon-role '+avalonSide(myRole)+'">'+esc(myRole)+' · '+sideLabel(avalonSide(myRole))+'</strong>'+(!draft?'<p>'+hint+'</p>'+(intel.length?'<p>'+intel.map(name).join(' · ')+'</p>':''):'<p>เก็บบทบาทของคุณเป็นความลับจนจบเกม</p>'));
+  const angelResult=a.angelChecks?.['m'+a.mission],angelResultHtml=r.avalonAngel&&ids[a.angel]===myId&&angelResult?.by===myId?'<p class="avalon-angel-private-result">ผลตรวจส่วนตัว: '+name(angelResult.target)+' อยู่<strong>'+sideLabel(angelResult.side)+'</strong></p>':'';
+  block('บทบาทของคุณ','<strong class="avalon-role '+avalonSide(myRole)+'">'+esc(myRole)+' · '+sideLabel(avalonSide(myRole))+'</strong>'+(!draft?'<p>'+hint+'</p>'+(intel.length?'<p>'+intel.map(name).join(' · ')+'</p>':'')+angelResultHtml:'<p>เก็บบทบาทของคุณเป็นความลับจนจบเกม</p>'));
  }
  if(draft){
   const count=Object.keys(a.cards||{}).length,turn=ids[count],used=new Set(Object.values(a.cards||{}));
