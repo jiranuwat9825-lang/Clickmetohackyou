@@ -130,7 +130,7 @@ $('avalonLobbySave').onclick=async()=>{
   r.avalonCount=count;r.avalonAngel=angel;r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);toast(res.committed?'บันทึกการตั้งค่า Avalon แล้ว':'เปลี่ยนไม่ได้ จำนวนผู้เล่นอาจเกินที่เลือก',res.committed?'success':'error');}catch(e){error(e);}finally{avalonSaveBusy=false;refreshAvalonSave();}
 };
-let avalonUIKey='',avalonTeamSelection=new Set(),avalonBusy=false,avalonAngelSelection=null,avalonOrderHidden=false,avalonOrderMatchKey='';
+let avalonUIKey='',avalonTeamSelection=new Set(),avalonBusy=false,avalonAngelSelection=null;
 function avalonPhaseKey(r){
  const a=r.avalon||{};return [roomId,r.gamesPlayed,r.status,a.mission,a.proposalNo,Object.keys(a.cards||{}).length].join(':');
 }
@@ -149,7 +149,6 @@ function renderAvalon(r){
  const a=r.avalon,root=$('avalonContent');root.replaceChildren();
  if(!a){root.textContent='ไม่พบข้อมูลเกม Avalon';return;}
  const key=avalonPhaseKey(r);if(key!==avalonUIKey){avalonUIKey=key;avalonTeamSelection=new Set();avalonAngelSelection=null;}
- const matchKey=roomId+':'+r.gamesPlayed;if(matchKey!==avalonOrderMatchKey){avalonOrderMatchKey=matchKey;avalonOrderHidden=false;}
  const ids=a.order,players=gameParticipants(r),name=id=>esc(players[id]?.name||'ผู้เล่น');
  const myRole=r.roles?.[myId],mine=ids.includes(myId),draft=r.status==='avalon_draft',ready=r.status==='avalon_ready',done=r.status==='results';
  const sideLabel=side=>side==='red'?'ฝ่ายแดง':'ฝ่ายน้ำเงิน';
@@ -189,9 +188,14 @@ function renderAvalon(r){
  }else{
   const last=history[history.length-1];if(last)block('ผลภารกิจล่าสุด · รอบ '+last.mission,'<strong class="'+(last.passed?'blue':'red')+'">'+(last.passed?'ภารกิจสำเร็จ':'ภารกิจล้มเหลว')+'</strong><p>Success '+last.success+' ใบ · Fail '+last.fail+' ใบ</p>');
   const king=ids[a.king],angel=r.avalonAngel?ids[a.angel]:null,isAngel=angel===myId;
+  const knownRedIds=new Set(avalonIntel(r,myId));if(AVALON_RED.has(myRole))knownRedIds.add(myId);
   const order=block('ลำดับผู้เล่น','');
-  const toggle=document.createElement('button');toggle.type='button';toggle.className='btn soft small avalon-order-toggle';toggle.textContent=avalonOrderHidden?'แสดงลำดับผู้เล่น':'ซ่อนลำดับผู้เล่น';toggle.setAttribute('aria-expanded',String(!avalonOrderHidden));toggle.onclick=()=>{avalonOrderHidden=!avalonOrderHidden;renderAvalon(r);};order.append(toggle);
-  if(!avalonOrderHidden){const list=document.createElement('div');list.className='avalon-role-list';list.innerHTML=ids.map((p,i)=>'<p>'+(i+1)+'. '+name(p)+(p===king?' <b class="avalon-king">♛ KING</b>':'')+(p===angel&&isAngel?' <b class="avalon-angel">✦ ANGEL · คุณ</b>':'')+(!r.players?.[p]?' <small>หลุดการเชื่อมต่อ</small>':'')+'</p>').join('');order.append(list);}
+  const list=document.createElement('div');list.className='avalon-role-list';
+  list.innerHTML=ids.map((p,i)=>{
+   const role=r.roles?.[p],redKnown=knownRedIds.has(p),percivalKnown=myRole==='Percival'&&(role==='Merlin'||role==='Morgana');
+   const cls=percivalKnown?'avalon-player-percival':redKnown?'avalon-player-known-red':'';
+   return '<p class="'+cls+'">'+(i+1)+'. '+name(p)+(p===king?' <b class="avalon-king">♛ KING</b>':'')+(p===angel?' <b class="avalon-angel">✦ ANGEL</b>':'')+(!r.players?.[p]?' <small>หลุดการเชื่อมต่อ</small>':'')+'</p>';
+  }).join('');order.append(list);
   if(r.avalonAngel&&isAngel&&['avalon_team','avalon_approve','avalon_quest'].includes(r.status)){
    const inspection=a.angelChecks?.['m'+a.mission];
    if(inspection?.by===myId)block('Angel · ผลตรวจส่วนตัว','<p class="avalon-angel-result">'+name(inspection.target)+' อยู่<strong>'+sideLabel(inspection.side)+'</strong></p>');
@@ -229,9 +233,26 @@ function renderAvalon(r){
   block('ผลแต่งตั้งทีมล่าสุด · รอบ '+latest.mission,'<div class="avalon-proposal-status '+(latest.approved?'approved':'rejected')+'">'+(latest.approved?'✓ อนุมัติทีมแล้ว':'✕ ทีมไม่ได้รับการอนุมัติ')+'</div><div class="avalon-proposal-meta"><div><small>ผู้จัดตั้งทีม · KING</small><strong>'+name(latest.king)+'</strong></div><div><small>ผู้เล่นที่ถูกเลือก</small><strong>'+latest.team.map(name).join(' · ')+'</strong></div></div><div class="avalon-proposal-tally"><span>ยินยอม <b>'+latest.yes+'</b></span><span>ไม่ยินยอม <b>'+latest.no+'</b></span></div><details class="avalon-proposal-details"><summary>ดูผลโหวตรายคน</summary><div class="avalon-role-list">'+ids.map(p=>'<p>'+name(p)+' · '+(latest.votes[p]?'ยินยอม':'ไม่ยินยอม')+'</p>').join('')+'</div></details>','avalon-proposal-result '+(latest.approved?'approved':'rejected'));
  }
  if(history.length)block('ประวัติผลภารกิจ (ไม่เปิดเผยผู้โหวต)',history.map(x=>'<div class="avalon-history"><b>รอบ '+x.mission+' · '+(x.passed?'สำเร็จ':'ล้มเหลว')+'</b><p>ทีม: '+x.team.map(name).join(' · ')+'</p><p>Success '+x.success+' ใบ · Fail '+x.fail+' ใบ</p></div>').join(''));
- if(done&&isHost){
-  const p=block('เล่นอีกครั้ง','<p>โหมดนี้ไม่มีคะแนนสะสม</p>'),b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent='กลับล็อบบี้';b.onclick=async()=>{const id=roomId,game=r.gamesPlayed;if(!await confirmBox('กลับล็อบบี้?','เริ่มเกม Avalon ใหม่ได้','กลับล็อบบี้')||id!==roomId)return;try{await getRef().transaction(x=>{if(x?.gameMode!=='avalon'||x.status!=='results'||x.hostId!==myId||x.gamesPlayed!==game)return;x.status='lobby';x.avalon=null;x.roles=null;x.gamePlayers=null;x.result=null;x.lastActivityAt=TIMESTAMP();return x;},undefined,false);}catch(e){error(e);}};p.append(b);
- }
+}
+
+function renderAvalonResults(r){
+ const root=$('avalonResultsContent');root.replaceChildren();
+ const a=r.avalon;if(!a){root.textContent='ไม่พบข้อมูลสรุปเกม Avalon';return;}
+ const ids=a.order||Object.keys(r.gamePlayers||r.players||{}),players=gameParticipants(r),name=id=>esc(players[id]?.name||'ผู้เล่น');
+ const history=Object.values(a.history||{}).sort((x,y)=>x.mission-y.mission),proposals=Object.entries(a.proposals||{}).sort(([x],[y])=>Number(x.slice(1))-Number(y.slice(1))).map(([,p])=>p);
+ const result=r.result||{},sideLabel=side=>side==='red'?'ฝ่ายแดง':'ฝ่ายน้ำเงิน';
+ const reason={rejections:'แต่งตั้งทีมล้มเหลวครบ 5 ครั้ง',missions:'ภารกิจล้มเหลวครบ 3 ครั้ง',assassinated:'Assassin ทาย Merlin ถูกต้อง',assassin_missed:'Assassin ทาย Merlin ผิด'}[result.reason]||'จบเกม';
+ function section(title,html,cls=''){const e=document.createElement('section');e.className='avalon-section avalon-summary-section'+(cls?' '+cls:'');e.innerHTML='<h3>'+title+'</h3>'+html;root.append(e);return e;}
+ section('ผลการแข่งขัน','<div class="avalon-summary-winner '+(result.winner==='red'?'red':'blue')+'">'+sideLabel(result.winner)+'ชนะ</div><p>'+reason+'</p><div class="avalon-summary-stats"><span>ภารกิจสำเร็จ <b>'+history.filter(x=>x.passed).length+'</b></span><span>ภารกิจล้มเหลว <b>'+history.filter(x=>!x.passed).length+'</b></span><span>แต่งตั้งล้มเหลว <b>'+(a.rejections||0)+'</b></span></div>','avalon-summary-hero');
+ section('บทบาทของผู้เล่นทุกคน','<div class="avalon-role-list avalon-summary-roles">'+ids.map((p,i)=>{const role=r.roles?.[p]||'ไม่ทราบบทบาท',side=avalonSide(role);return '<p class="avalon-summary-role '+side+'"><span>'+(i+1)+'. '+name(p)+'</span><strong>'+esc(role)+'</strong><small>'+sideLabel(side)+'</small></p>';}).join('')+'</div>');
+ section('ผลการเล่นแต่ละภารกิจ',history.length?history.map(x=>'<article class="avalon-summary-mission '+(x.passed?'passed':'failed')+'"><div class="avalon-summary-mission-head"><strong>ภารกิจที่ '+x.mission+'</strong><b>'+(x.passed?'✓ สำเร็จ':'✕ ล้มเหลว')+'</b></div><p>ทีมภารกิจ: '+(x.team||[]).map(name).join(' · ')+'</p><div class="avalon-summary-stats"><span>Success <b>'+(x.success??0)+'</b></span><span>Fail <b>'+(x.fail??0)+'</b></span></div></article>').join(''):'<p>ไม่มีภารกิจที่ได้รับการตัดสินผล</p>');
+ if(proposals.length)section('ประวัติการแต่งตั้งทีม',proposals.map((p,i)=>'<article class="avalon-summary-proposal '+(p.approved?'approved':'rejected')+'"><div class="avalon-summary-mission-head"><strong>ครั้งที่ '+(i+1)+' · ภารกิจ '+p.mission+'</strong><b>'+(p.approved?'อนุมัติ':'ไม่อนุมัติ')+'</b></div><p>King: '+name(p.king)+'</p><p>ทีม: '+(p.team||[]).map(name).join(' · ')+'</p><p>ยินยอม '+p.yes+' · ไม่ยินยอม '+p.no+'</p></article>').join(''));
+ if(result.reason==='assassinated'||result.reason==='assassin_missed'){
+  const assassin=ids.find(p=>r.roles?.[p]==='Assassin'),target=result.assassinated,hit=result.reason==='assassinated';
+  section('การลอบสังหารของ Assassin','<div class="avalon-assassin-summary '+(hit?'hit':'miss')+'"><p>Assassin: <strong>'+name(assassin)+'</strong></p><p>เป้าหมายที่เลือก: <strong>'+name(target)+'</strong></p><p>บทบาทจริงของเป้าหมาย: <strong>'+esc(r.roles?.[target]||'ไม่ทราบ')+'</strong></p><strong class="avalon-assassin-verdict">'+(hit?'Assassin สังหาร Merlin สำเร็จ · ฝ่ายแดงชนะ':'Assassin ทายผิด · ฝ่ายน้ำเงินชนะ')+'</strong></div>');
+ }else section('การลอบสังหารของ Assassin','<p>เกมจบก่อนถึงขั้นตอนการลอบสังหารของ Assassin</p>');
+ const bottom=section('กลับสู่ Lobby','<p>'+(isHost?'เมื่อกลับ Lobby สามารถเริ่มเกม Avalon รอบใหม่ได้':'รอหัวหน้าห้องกลับสู่ Lobby')+'</p>','avalon-summary-return');
+ if(isHost){const b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent='กลับไป Lobby';b.onclick=async()=>{const id=roomId,game=r.gamesPlayed;if(!await confirmBox('กลับไป Lobby?','สรุปผลเกมนี้จะยังคงแสดงจนกว่าจะกลับ Lobby','กลับไป Lobby')||id!==roomId)return;try{await getRef().transaction(x=>{if(x?.gameMode!=='avalon'||x.status!=='results'||x.hostId!==myId||x.gamesPlayed!==game)return;x.status='lobby';x.avalon=null;x.roles=null;x.gamePlayers=null;x.result=null;x.lastActivityAt=TIMESTAMP();return x;},undefined,false);}catch(e){error(e);}};bottom.append(b);}
 }
 
 // Host drives one simulated player action per tick. Human actions are never automated.
