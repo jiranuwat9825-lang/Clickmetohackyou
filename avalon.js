@@ -74,6 +74,40 @@ function avalonApply(r,id,action,value){
  }else return false;
  r.lastActivityAt=TIMESTAMP();return true;
 }
+let avalonSaveBusy=false,avalonBotLobbyBusy=false;
+function avalonSettingsChanged(r){
+ return r?.gameMode==='avalon'&&r.status==='lobby'&&(Number($('avalonLobbyCount').value)!==Number(r.avalonCount||9)||$('avalonLobbyAngel').checked!==!!r.avalonAngel);
+}
+function refreshAvalonSave(r=roomState){
+ $('avalonLobbySave').disabled=!isHost||avalonSaveBusy||!avalonSettingsChanged(r);
+}
+for(const id of ['avalonLobbyCount','avalonLobbyAngel'])$(id).addEventListener('change',()=>refreshAvalonSave());
+function avalonManageBots(r,host,action){
+ if(!r||r.gameMode!=='avalon'||r.status!=='lobby'||r.hostId!==host||!r.players?.[host]||r.players[host].bot)return false;
+ const players=r.players,cap=Number(r.avalonCount||9);if(![9,10].includes(cap))return false;
+ r.playerProfiles||={};
+ if(action==='remove'){
+  const bots=Object.keys(players).filter(id=>players[id].bot);if(!bots.length)return false;
+  bots.forEach(id=>{delete players[id];delete r.playerProfiles[id];if(r.scores)delete r.scores[id];});
+ }else if(action==='add'||action==='fill'){
+  const amount=Math.min(cap-Object.keys(players).length,action==='add'?1:cap);
+  if(amount<=0)return false;
+  for(let n=0;n<amount;n++){
+   let i=1;while(players['avalon_bot_'+i])i++;
+   const id='avalon_bot_'+i,p={name:'Bot '+i,avatar:'robot',bot:true};
+   players[id]=p;r.playerProfiles[id]=p;if(r.kickedPlayers)delete r.kickedPlayers[id];
+  }
+ }else return false;
+ r.lastActivityAt=TIMESTAMP();return true;
+}
+async function avalonBotLobbyAction(action){
+ if(avalonBotLobbyBusy||!roomId||!isHost)return;
+ avalonBotLobbyBusy=true;try{
+  const res=await getRef().transaction(r=>avalonManageBots(r,myId,action)?r:undefined,undefined,false);
+  if(!res.committed)toast('ไม่สามารถเปลี่ยนจำนวนบอทได้','error');
+ }catch(e){error(e);}finally{avalonBotLobbyBusy=false;if(roomState?.gameMode==='avalon'&&roomState.status==='lobby')renderAvalonLobby(roomState);}
+}
+for(const [id,action] of [['avalonAddBot','add'],['avalonFillBots','fill'],['avalonRemoveBots','remove']])$(id).onclick=()=>avalonBotLobbyAction(action);
 function renderAvalonLobby(r){
  const panel=$('avalonLobbySettings');panel.hidden=r.gameMode!=='avalon';if(panel.hidden)return;
  const count=$('avalonLobbyCount'),angel=$('avalonLobbyAngel');
@@ -81,15 +115,20 @@ function renderAvalonLobby(r){
  // Keep unsaved host settings on incoming snapshots until the saved values change.
  const key=roomId+':'+r.avalonCount+':'+!!r.avalonAngel;
  if(panel.dataset.settingsKey!==key){panel.dataset.settingsKey=key;count.value=String(r.avalonCount||9);angel.checked=!!r.avalonAngel;}
- $('avalonLobbySave').hidden=!isHost;
+ $('avalonLobbySave').hidden=!isHost;refreshAvalonSave(r);
+ const botCount=Object.values(r.players||{}).filter(p=>p.bot).length,full=Object.keys(r.players||{}).length>=Number(r.avalonCount||9);
+ $('avalonBotTools').hidden=!isHost;$('avalonBotCount').textContent='บอท '+botCount+' ตัว · ผู้เล่นจริง '+(Object.keys(r.players||{}).length-botCount)+' คน';
+ $('avalonAddBot').disabled=$('avalonFillBots').disabled=!isHost||full||avalonBotLobbyBusy;
+ $('avalonRemoveBots').disabled=!isHost||!botCount||avalonBotLobbyBusy;
 }
 $('avalonLobbySave').onclick=async()=>{
- if(!roomId||!isHost)return;
+ if(!roomId||!isHost||avalonSaveBusy||!avalonSettingsChanged(roomState))return;
  const count=Number($('avalonLobbyCount').value),angel=$('avalonLobbyAngel').checked;
+ avalonSaveBusy=true;refreshAvalonSave();
  try{const res=await getRef().transaction(r=>{
   if(!r||r.gameMode!=='avalon'||r.status!=='lobby'||r.hostId!==myId||![9,10].includes(count)||Object.keys(r.players||{}).length>count)return;
   r.avalonCount=count;r.avalonAngel=angel;r.lastActivityAt=TIMESTAMP();return r;
- },undefined,false);toast(res.committed?'บันทึกการตั้งค่า Avalon แล้ว':'เปลี่ยนไม่ได้ จำนวนผู้เล่นอาจเกินที่เลือก',res.committed?'success':'error');}catch(e){error(e);}
+ },undefined,false);toast(res.committed?'บันทึกการตั้งค่า Avalon แล้ว':'เปลี่ยนไม่ได้ จำนวนผู้เล่นอาจเกินที่เลือก',res.committed?'success':'error');}catch(e){error(e);}finally{avalonSaveBusy=false;refreshAvalonSave();}
 };
 let avalonUIKey='',avalonTeamSelection=new Set(),avalonBusy=false;
 function avalonPhaseKey(r){
@@ -172,4 +211,53 @@ function renderAvalon(r){
  if(done&&isHost){
   const p=block('เล่นอีกครั้ง','<p>โหมดนี้ไม่มีคะแนนสะสม</p>'),b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent='กลับล็อบบี้';b.onclick=async()=>{const id=roomId,game=r.gamesPlayed;if(!await confirmBox('กลับล็อบบี้?','เริ่มเกม Avalon ใหม่ได้','กลับล็อบบี้')||id!==roomId)return;try{await getRef().transaction(x=>{if(x?.gameMode!=='avalon'||x.status!=='results'||x.hostId!==myId||x.gamesPlayed!==game)return;x.status='lobby';x.avalon=null;x.roles=null;x.gamePlayers=null;x.result=null;x.lastActivityAt=TIMESTAMP();return x;},undefined,false);}catch(e){error(e);}};p.append(b);
  }
+}
+
+// Host drives one simulated player action per tick. Human actions are never automated.
+function avalonNextBotAction(r,rand=Math.random){
+ if(r?.gameMode!=='avalon'||!r.avalon)return null;
+ const a=r.avalon,ids=a.order,bot=id=>!!r.players?.[id]?.bot;
+ const pick=list=>list.length?list[Math.floor(rand()*list.length)]:null;
+ const mix=list=>{const v=[...list];for(let i=v.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[v[i],v[j]]=[v[j],v[i]];}return v;};
+ const action=(id,type,value)=>({id,type,value});
+ if(r.status==='avalon_draft'){
+  const id=ids[Object.keys(a.cards||{}).length];if(!bot(id))return null;
+  const available=a.deck.map((_,i)=>i).filter(i=>!Object.values(a.cards||{}).includes(i));
+  return available.length?action(id,'card',pick(available)):null;
+ }
+ if(r.status==='avalon_ready'){
+  const id=ids.find(p=>bot(p)&&!a.ready?.[p]);return id?action(id,'ready',true):null;
+ }
+ if(r.avalonAngel&&['avalon_team','avalon_approve','avalon_quest'].includes(r.status)&&bot(ids[a.angel])&&!a.angelChecks?.['m'+a.mission]){
+  const id=ids[a.angel];return action(id,'angel',pick(ids.filter(p=>p!==id)));
+ }
+ if(r.status==='avalon_team'){
+  const id=ids[a.king];if(!bot(id))return null;
+  const size=AVALON_SIZES[a.mission-1],team=[id,...mix(ids.filter(p=>p!==id)).slice(0,size-1)];
+  return action(id,'team',team);
+ }
+ if(r.status==='avalon_approve'){
+  const id=ids.find(p=>bot(p)&&!Object.hasOwn(a.approvals||{},p));
+  return id?action(id,'approve',a.rejections>=4||a.team.includes(id)||rand()<.8):null;
+ }
+ if(r.status==='avalon_quest'){
+  const id=a.team.find(p=>bot(p)&&!Object.hasOwn(a.questVotes||{},p));
+  return id?action(id,'quest',!AVALON_RED.has(r.roles?.[id])||rand()<.35):null;
+ }
+ if(r.status==='avalon_assassin'){
+  const id=ids.find(p=>bot(p)&&r.roles?.[p]==='Assassin');if(!id)return null;
+  const known=new Set(avalonIntel(r,id));return action(id,'assassin',pick(ids.filter(p=>p!==id&&!known.has(p))));
+ }
+ return null;
+}
+let avalonLastBotTick=0;
+async function avalonBotTick(){
+ if(autoBusy||!roomId||leaving||!isHost||roomState?.gameMode!=='avalon'||!Object.values(roomState.players||{}).some(p=>p.bot))return;
+ if(Date.now()-avalonLastBotTick<650)return;
+ const r=roomState,id=roomId,key=avalonPhaseKey(r),next=avalonNextBotAction(r);if(!next)return;
+ avalonLastBotTick=Date.now();autoBusy=true;
+ try{await getRef().transaction(x=>{
+  if(id!==roomId||!x||x.hostId!==myId||x.players?.[myId]?.bot||avalonPhaseKey(x)!==key||!x.players?.[next.id]?.bot)return;
+  if(avalonApply(x,next.id,next.type,next.value))return x;
+ },undefined,false);}catch(e){error(e);}finally{autoBusy=false;}
 }
