@@ -792,3 +792,14 @@ body.landing-transitioning .shell{
 .avalon-summary-return{margin-top:24px}
 .avalon-summary-return .btn{margin-top:8px;min-height:50px}
 @media(max-width:520px){.avalon-summary-roles .avalon-summary-role{grid-template-columns:1fr}.avalon-summary-role small{grid-column:auto}.avalon-summary-stats span{min-width:85px}}
+
+/* Avalon: vote confirmation and inline approval status */
+.avalon-confirm-overlay{z-index:30}
+.avalon-confirm-dialog{max-width:480px}
+.avalon-confirm-message{margin:4px 0 10px;padding:13px 14px;border-radius:10px;background:#17263e;line-height:1.65;overflow-wrap:anywhere}
+.avalon-player-vote{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.avalon-player-vote.yes{color:#a7e8c6;background:#174334;border:1px solid #397b5e}
+.avalon-player-vote.no{color:#ffb0b9;background:#512b38;border:1px solid #a65368}
+
+.avalon-angel-private-result{margin:10px 0 0!important;padding:8px 0 0;border-top:1px solid #52627a;color:#c8ddf4;font-size:13px}
+.avalon-angel-private-result strong{color:#f0d48b}
