@@ -730,3 +730,7 @@ body.landing-transitioning .shell{
 .avalon-missions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.avalon-mission{display:grid;text-align:center;gap:6px;border:1px solid #475772;background:#1b2a43;border-radius:10px;padding:9px 3px}.avalon-mission.current{border-color:#f6ce7b}.avalon-mission.blue{background:#183e63}.avalon-mission.red{background:#542a3a}
 .avalon-role-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.avalon-role-list p{padding:8px;border-radius:8px;background:#17263e}.avalon-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.avalon-selected{border-color:#e9c979!important;background:#4c4161!important}.avalon-history{border-top:1px solid #3a4962;padding:10px 0}
 @media(max-width:520px){.avalon-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.avalon-mission{font-size:11px}.avalon-mission small{font-size:9px}.avalon-role-list{grid-template-columns:1fr}}
+
+/* Save controls dim when there is no pending edit. */
+#saveCategoryBtn:disabled,#lobbyChangeCategoryBtn:disabled,#lobbySpyFormatSaveBtn:disabled,#lobbyChangeFormatBtn:disabled,#avalonLobbySave:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.6)}
+.avalon-bot-tools{border-top:1px solid #40506a;padding-top:12px;display:grid;gap:9px}.avalon-bot-tools .avalon-buttons{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
