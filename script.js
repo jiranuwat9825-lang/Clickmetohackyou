@@ -34,11 +34,16 @@ function groupLabel(pack,key){return pack?.groupLabels?.[key]||key||'—';}
 function isAwareSpy(r){return r?.gameMode==='spyfall'&&r?.spyVariant==='aware';}
 function spyVariantTitle(v){return v==='aware'?'Spy รู้ตัวตน':'คำลับต่างกัน';}
 function normalSpyWord(r){return r?.spyCommonWord||Object.entries(r?.roles||{}).find(([id])=>id!==r?.spyId)?.[1]||'';}
+function spyValidBallots(r){
+ const ids=new Set(gameParticipantIds(r)),allowed=new Set(r.tieCandidates||[...ids]),round=Number(r.voteRound)||1;
+ return Object.fromEntries(Object.entries(r.votes||{}).filter(([id,b])=>ids.has(id)&&(!isAwareSpy(r)||id!==r.spyId)&&
+  b&&typeof b.targetId==='string'&&id!==b.targetId&&ids.has(b.targetId)&&allowed.has(b.targetId)&&
+  (b.round==null||Number(b.round)===round)));
+}
 function spyVotesComplete(r){
- const ids=Object.keys(r?.players||{});
- if(!isAwareSpy(r))return ids.length>0&&ids.every(id=>!!r.votes?.[id]);
- const normals=ids.filter(id=>id!==r.spyId);
- return normals.length>0&&normals.every(id=>!!r.votes?.[id])&&(!r.players?.[r.spyId]||!!r.spyGuess?.submitted);
+ if(r?.gameMode!=='spyfall'||r.status!=='voting')return false;
+ const ballots=spyValidBallots(r),ids=gameParticipantIds(r).filter(id=>r.players?.[id]&&(!isAwareSpy(r)||id!==r.spyId));
+ return ids.length>0&&ids.every(id=>!!ballots[id])&&(!isAwareSpy(r)||!r.players?.[r.spyId]||!!r.spyGuess?.submitted);
 }
 function supportsMode(pack,mode){
  if(mode==='insider'||mode==='whoami_custom')return true;
@@ -2735,11 +2740,14 @@ function renderWho(r){
   <span>คำที่ถูก: <b>${esc(details.correctAnswer||r.roles?.[myId]||'—')}</b></span>
   <span>คำที่คุณตอบ: <b>${esc(details.answer||'ไม่ได้ตอบ')}</b></span>`:'';
 }
+let lastSpyVoteToken='';
 function renderVotes(r){
+ const token=roomId+':'+(r.gamesPlayed||0)+':'+(r.voteRound||1);
+ if(token!==lastSpyVoteToken){lastSpyVoteToken=token;chosenVote='';chosenWord='';}
  const aware=isAwareSpy(r),youAreSpy=aware&&myId===r.spyId,players=gameParticipants(r);
- const mine=youAreSpy?r.spyGuess?.submitted:r.votes?.[myId];
- const eligible=Object.keys(r.players||{}).filter(id=>!aware||id!==r.spyId);
- const votesReceived=eligible.filter(id=>!!r.votes?.[id]).length;
+ const ballots=spyValidBallots(r),mine=youAreSpy?r.spyGuess?.submitted:ballots[myId];
+ const eligible=gameParticipantIds(r).filter(id=>r.players?.[id]&&(!aware||id!==r.spyId));
+ const votesReceived=eligible.filter(id=>!!ballots[id]).length;
  const total=eligible.length,choices=r.tieCandidates||gameParticipantIds(r);
  $('voteHeading').textContent=youAreSpy?' Spy ทายคำของคนปกติ':r.tieCandidates?' โหวตรอบตัดสิน':' ใครคือ Spy?';
  $('voteTimer').textContent=formatLeft(r.voteDeadline);
@@ -2831,10 +2839,11 @@ function renderResults(r){
   target.append(section);
   const history=res.votesByRound||{round_1:r.votes||{}};
   Object.entries(history).sort(([a],[b])=>a.localeCompare(b)).forEach(([name,votes])=>{
-   const round=Number(String(name).replace(/\D/g,''))||1,counts={};
-   Object.values(votes||{}).forEach(ballot=>{if(ballot?.targetId)counts[ballot.targetId]=(counts[ballot.targetId]||0)+1;});
+   const round=Number(String(name).replace(/\D/g,''))||1,deciding=round===(Number(r.voteRound)||1),counts={};
+   if(deciding&&res.voteCounts)Object.assign(counts,res.voteCounts);
+   else Object.values(votes||{}).forEach(ballot=>{if(ballot?.targetId)counts[ballot.targetId]=(counts[ballot.targetId]||0)+1;});
    const group=document.createElement('section');group.className='result-section';
-   group.innerHTML=`<h3> ผลโหวตรอบ ${round}</h3>`;
+   group.innerHTML=`<h3> ผลโหวตรอบ ${round}${deciding?' · รอบตัดสินผล':' · เสมอ ต้องโหวตใหม่'}</h3>`;
    const tally=document.createElement('div');tally.className='vote-tally-list';
    const ordered=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
    ordered.forEach(([id,n])=>{
@@ -3058,16 +3067,16 @@ $('voteWord').onchange=e=>chosenWord=e.target.value;
 $('spyGuessWord').onchange=e=>chosenSpyGuess=e.target.value;
 async function submitSpyVote(){
  if(!roomId||!roomState||!chosenVote)return;
- const target=chosenVote,aware=isAwareSpy(roomState);
+ const target=chosenVote,aware=isAwareSpy(roomState),round=Number(roomState.voteRound)||1,game=Number(roomState.gamesPlayed)||0;
  const word=aware?'':$('voteWord').value,button=aware?$('awareVoteSubmitBtn'):$('voteSubmitBtn');
  button.disabled=true;
  try{
   const res=await getRef().transaction(r=>{
    const allowed=r?.tieCandidates||gameParticipantIds(r);
-   if(!r||r.status!=='voting'||serverNow()>=r.voteDeadline||!r.players?.[myId]||!r.roles?.[myId]||!r.roles?.[target]||target===myId||!allowed.includes(target)||r.votes?.[myId])return;
+   if(!r||r.gameMode!=='spyfall'||r.status!=='voting'||(Number(r.voteRound)||1)!==round||(Number(r.gamesPlayed)||0)!==game||serverNow()>=r.voteDeadline||!r.players?.[myId]||!gameParticipantIds(r).includes(myId)||!gameParticipantIds(r).includes(target)||target===myId||!allowed.includes(target)||spyValidBallots(r)[myId])return;
    if(isAwareSpy(r)&&myId===r.spyId)return;
    if(!isAwareSpy(r)&&word&&!new Set(packFor(r).groups?.[r.currentGroup]||[]).has(word))return;
-   r.votes||={};r.votes[myId]={targetId:target,guessWord:isAwareSpy(r)?'':word};
+   r.votes||={};r.votes[myId]={targetId:target,guessWord:isAwareSpy(r)?'':word,round};
    r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
   toast(res.committed?'ส่งโหวตแล้ว':'โหวตไม่ได้ หรือหมดเวลาแล้ว',res.committed?'success':'error');
@@ -3090,10 +3099,11 @@ $('spyGuessSubmitBtn').onclick=async()=>{
  }catch(e){error(e);}finally{button.disabled=false;}
 };
 function resolveVotes(r){
- const ids=gameParticipantIds(r),ballots=copyPack(r.votes||{}),roundNo=Number(r.voteRound)||1;
+ if(r?.gameMode!=='spyfall'||r.status!=='voting')return;
+ const ids=gameParticipantIds(r),ballots=copyPack(spyValidBallots(r)),roundNo=Number(r.voteRound)||1;
  r.voteHistory||={};r.voteHistory[`round_${roundNo}`]=ballots;
  const counts={};
- for(const [id,b] of Object.entries(ballots))if(r.roles?.[id]&&r.roles?.[b.targetId])counts[b.targetId]=(counts[b.targetId]||0)+1;
+ for(const b of Object.values(ballots))counts[b.targetId]=(counts[b.targetId]||0)+1;
  const high=Math.max(0,...Object.values(counts)),top=Object.keys(counts).filter(id=>counts[id]===high);
  if(top.length>1&&roundNo===1){
   r.tieCandidates=top;r.voteRound=2;r.votes={};r.voteDeadline=serverNow()+FINAL_MS;return;
