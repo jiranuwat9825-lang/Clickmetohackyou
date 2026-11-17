@@ -60,6 +60,7 @@ let isHost=false,subscribedRef=null,roomCallback=null,leaving=false,sweepBusy=fa
 sessionStorage.setItem('pg_tab_id',myId);db.ref('.info/serverTimeOffset').on('value',s=>serverOffset=Number(s.val())||0);
 const AVATARS=[
 {id:"fox",name:"จิ้งจอก",emoji:"🦊",tone:"orange",group:"animals"},
+{id:"giraffe",name:"ยีราฟ",emoji:"🦒",tone:"gold",group:"animals"},
 {id:"cat",name:"แมว",emoji:"🐱",tone:"pink",group:"animals"},
 {id:"panda",name:"แพนด้า",emoji:"🐼",tone:"mono",group:"animals"},
 {id:"tiger",name:"เสือ",emoji:"🐯",tone:"gold",group:"animals"},
