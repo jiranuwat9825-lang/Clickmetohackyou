@@ -18,6 +18,15 @@ function avalonIntel(r,id){
  if(AVALON_RED.has(role)&&role!=='Oberon')visible=v=>AVALON_RED.has(v)&&v!=='Oberon';
  return others.filter(([,v])=>visible(v)).map(([p])=>p);
 }
+// Inspection markers belong to the player who performed each check, not the current Angel.
+function avalonInspectedSides(r,id){
+ const sides=new Map();
+ if(!r?.avalonAngel||!id)return sides;
+ for(const check of Object.values(r.avalon?.angelChecks||{})){
+  if(check?.by===id&&check.target&&['red','blue'].includes(check.side))sides.set(check.target,check.side);
+ }
+ return sides;
+}
 function avalonFinish(r,side,reason,target){
  r.status='results';r.result={type:'avalon',winner:side,reason,...(target?{assassinated:target}:{})};
 }
@@ -190,13 +199,16 @@ function renderAvalon(r){
   const last=history[history.length-1];if(last)block('ผลภารกิจล่าสุด · รอบ '+last.mission,'<strong class="'+(last.passed?'blue':'red')+'">'+(last.passed?'ภารกิจสำเร็จ':'ภารกิจล้มเหลว')+'</strong><p>Success '+last.success+' ใบ · Fail '+last.fail+' ใบ</p>');
   const king=ids[a.king],angel=r.avalonAngel?ids[a.angel]:null,isAngel=angel===myId;
   const knownRedIds=new Set(avalonIntel(r,myId));if(AVALON_RED.has(myRole))knownRedIds.add(myId);
+  const inspectedSides=avalonInspectedSides(r,myId);
   const order=block('ลำดับผู้เล่น','');
   const list=document.createElement('div');list.className='avalon-role-list';
   list.innerHTML=ids.map((p,i)=>{
    const role=r.roles?.[p],redKnown=knownRedIds.has(p),percivalKnown=myRole==='Percival'&&(role==='Merlin'||role==='Morgana');
    const cls=percivalKnown?'avalon-player-percival':redKnown?'avalon-player-known-red':'';
    const approval=Object.hasOwn(a.approvals||{},p)?(a.approvals[p]?'<small class="avalon-player-vote yes">✓ ยินยอม</small>':'<small class="avalon-player-vote no">✕ ไม่ยินยอม</small>'):'';
-   return '<p class="'+cls+'">'+(i+1)+'. '+name(p)+(p===king?' <b class="avalon-king">♛ KING</b>':'')+(p===angel?' <b class="avalon-angel">✦ ANGEL</b>':'')+approval+(!r.players?.[p]?' <small>หลุดการเชื่อมต่อ</small>':'')+'</p>';
+   const checkedSide=inspectedSides.get(p);
+   const checkedMark=checkedSide?'<span class="avalon-inspected-side '+checkedSide+'" role="img" aria-label="ผลตรวจ Angel: '+sideLabel(checkedSide)+'" title="ผลตรวจ Angel: '+sideLabel(checkedSide)+'"></span>':'';
+   return '<p class="'+cls+'">'+(i+1)+'. '+name(p)+checkedMark+(p===king?' <b class="avalon-king">♛ KING</b>':'')+(p===angel?' <b class="avalon-angel">✦ ANGEL</b>':'')+approval+(!r.players?.[p]?' <small>หลุดการเชื่อมต่อ</small>':'')+'</p>';
   }).join('');order.append(list);
   if(r.avalonAngel&&isAngel&&r.status==='avalon_team'){
    const inspection=a.angelChecks?.['m'+a.mission];
