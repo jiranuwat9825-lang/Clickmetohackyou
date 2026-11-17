@@ -93,3 +93,16 @@ test('creating a room snapshots the chosen mode across asynchronous room-code lo
  h.run('selectedMode="cryptid";selectedCategory="";generateRoomCode=async()=>{selectedMode="insider";return "123456"}');
  await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');
 });
+
+test('Cryptid wheel zoom stays anchored at the cursor, clamps scale and left drag does not select a cell',()=>{
+ const h=loadHub(),viewport=h.element('cryptidMapViewport'),svg=h.element('cryptidMap');
+ viewport.clientWidth=400;viewport.clientHeight=300;viewport.scrollLeft=100;viewport.scrollTop=60;viewport.getBoundingClientRect=()=>({left:50,top:30,width:400,height:300});
+ svg.style.width='800px';svg.getBoundingClientRect=()=>({left:50-viewport.scrollLeft,top:30-viewport.scrollTop,width:parseFloat(svg.style.width),height:parseFloat(svg.style.width)*430/660});
+ viewport.setPointerCapture=()=>{};viewport.hasPointerCapture=()=>false;h.run('cryptidUI.zoom=1;cryptidUI.baseWidth=800;cryptidSetupMapNavigation($("cryptidMapViewport"));');
+ const x=250,y=180,oldRx=(viewport.scrollLeft+x-50)/800;let prevented=false;
+ viewport.events.wheel({deltaY:-100,deltaMode:0,clientX:x,clientY:y,preventDefault(){prevented=true;}});
+ const width=parseFloat(svg.style.width);assert.ok(width>800);assert.ok(prevented);assert.ok(Math.abs((viewport.scrollLeft+x-50)/width-oldRx)<.000001);
+ const before=viewport.scrollLeft;viewport.events.pointerdown({button:0,pointerType:'mouse',pointerId:1,clientX:200,clientY:150});viewport.events.pointermove({pointerId:1,clientX:150,clientY:130,preventDefault(){}});viewport.events.pointerup({pointerId:1});assert.equal(viewport.scrollLeft,before+50);
+ let suppressed=false;viewport.events.click({preventDefault(){},stopImmediatePropagation(){suppressed=true;}});assert.ok(suppressed);
+ viewport.events.wheel({deltaY:-100000,deltaMode:0,clientX:x,clientY:y,preventDefault(){}});assert.equal(h.run('cryptidUI.zoom'),3);
+});

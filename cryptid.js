@@ -82,7 +82,8 @@ function cryptidBuild(r){
  <div id="cryptidLastMove" class="cryptid-last-move" aria-live="polite" hidden></div>
  <div class="cryptid-workspace"><div class="cryptid-map-panel">
   <div class="cryptid-map-toolbar"><span>แผนที่สำรวจ</span><div class="cryptid-buttons"><button type="button" class="btn outline small" id="cryptidZoomOut" aria-label="ย่อแผนที่">−</button><button type="button" class="btn outline small" id="cryptidZoomReset">100%</button><button type="button" class="btn outline small" id="cryptidZoomIn" aria-label="ขยายแผนที่">＋</button></div></div>
-  <div id="cryptidMapViewport" class="cryptid-map-viewport" tabindex="0" aria-label="เลื่อนเพื่อดูกระดาน"><svg id="cryptidMap" viewBox="0 0 660 430" role="group" aria-label="แผนที่ Cryptid เลือกช่องเพื่อดูรายละเอียด"></svg></div>
+  <p class="cryptid-map-help">🖱 ลูกกลิ้ง = ซูม · กดซ้ายค้างแล้วลาก = เลื่อน · คลิกสั้น ๆ = เลือกช่อง</p>
+  <div id="cryptidMapViewport" class="cryptid-map-viewport" tabindex="0" aria-label="แผนที่ หมุนลูกกลิ้งเพื่อซูม กดเมาส์ซ้ายค้างเพื่อลาก"><svg id="cryptidMap" viewBox="0 0 660 430" role="group" aria-label="แผนที่ Cryptid เลือกช่องเพื่อดูรายละเอียด"></svg></div>
   <section class="cryptid-legend" aria-label="ความหมายของสัญลักษณ์">
    <h3>หมากที่ผู้เล่นวาง</h3>
    <div class="cryptid-marker-key"><article><b class="cryptid-key-shape no">■</b><div><strong>สี่เหลี่ยม = อยู่ที่นี่ไม่ได้</strong><p>ไม่ตรงกับเบาะแสของคนวาง · ช่องนี้ถูกตัดทิ้ง</p></div></article><article><b class="cryptid-key-shape yes">●</b><div><strong>วงกลม = ยังเป็นไปได้</strong><p>ตรงกับเบาะแสของคนวาง · ยังไม่ใช่การยืนยันคำตอบ</p></div></article></div>
@@ -102,9 +103,10 @@ function cryptidBuild(r){
  try{$('cryptidNotes').value=sessionStorage.getItem(noteKey)||'';}catch(e){}
  $('cryptidNotes').oninput=()=>{try{sessionStorage.setItem(noteKey,$('cryptidNotes').value);}catch(e){}};
  $('cryptidToggleClue').onclick=()=>{cryptidUI.clueOpen=!cryptidUI.clueOpen;cryptidUpdateClue(roomState);};
- const zoom=delta=>{cryptidUI.zoom=Math.max(.75,Math.min(2,cryptidUI.zoom+delta));cryptidZoom();};
+ const zoom=delta=>cryptidSetZoom(cryptidUI.zoom+delta);
  $('cryptidZoomOut').onclick=()=>zoom(-.25);$('cryptidZoomIn').onclick=()=>zoom(.25);
- $('cryptidZoomReset').onclick=()=>{cryptidUI.zoom=1;cryptidZoom();};
+ $('cryptidZoomReset').onclick=()=>cryptidSetZoom(1);
+ cryptidSetupMapNavigation($('cryptidMapViewport'));
  function select(cell){if(!cell)return;cryptidUI.cell=cell;cryptidHighlight();cryptidControls(roomState);}
  $('cryptidMap').onclick=e=>select(e.target.closest('[data-cell]')?.dataset.cell);
  $('cryptidMap').onkeydown=e=>{
@@ -115,7 +117,42 @@ function cryptidBuild(r){
  };
  const guide=$('cryptidGuide');guide.innerHTML='<p>ก่อนเริ่ม ทุกคนวาง ■ คนละ 1 อัน วนสองรอบ จากนั้นผลัดกันถามผู้เล่นหนึ่งคน หรือค้นหาตำแหน่งที่ตรงกับเบาะแสตัวเอง ระบบตอบตามเบาะแสให้อัตโนมัติ</p><p>ถ้าได้รับ ■ ในตาของคุณ ต้องวาง ■ ของตัวเองในช่องอื่นก่อนจบตา การค้นหาจะเปิดผลตามลำดับและหยุดที่ ■ แรก ถ้าทุกคนยืนยันว่าเป็นไปได้ ผู้ค้นหาชนะ +1 คะแนน</p><p>ห้ามใช้ช่องที่มี ■ และห้ามวางหมากของตัวเองซ้ำช่อง ถ้าค้นหาช่องที่มี ● ของตัวเองแล้ว ต้องวาง ● เพิ่มในช่องอื่นก่อน ระยะนับตามช่องหกเหลี่ยมและรวมช่องต้นทางเป็นระยะ 0</p><p>ถ้าไม่มีช่องถูกกติกาเหลือสำหรับหมากที่ต้องเปิดเผยเพิ่ม รุ่น Beta จะข้ามขั้นตอนนั้นโดยบันทึกไว้ในประวัติ</p><p>กดดูรายการเบาะแสทั้งหมดเพื่อช่วยอนุมานของเพื่อน:</p><ul>'+CE.clueCatalogue(r.cryptid.board).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul>';
 }
-function cryptidZoom(){const svg=$('cryptidMap');if(!svg)return;svg.style.width=(cryptidUI.zoom*100)+'%';$('cryptidZoomReset').textContent=Math.round(cryptidUI.zoom*100)+'%';}
+function cryptidZoom(){
+ const svg=$('cryptidMap'),viewport=$('cryptidMapViewport');if(!svg||!viewport)return;
+ cryptidUI.baseWidth||=Math.max(740,viewport.clientWidth||0);
+ svg.style.width=(cryptidUI.baseWidth*cryptidUI.zoom)+'px';
+ $('cryptidZoomReset').textContent=Math.round(cryptidUI.zoom*100)+'%';
+}
+function cryptidSetZoom(value,anchor){
+ const svg=$('cryptidMap'),viewport=$('cryptidMapViewport');if(!svg||!viewport)return;
+ const rect=viewport.getBoundingClientRect(),before=svg.getBoundingClientRect();
+ const x=anchor?.x??rect.left+viewport.clientWidth/2,y=anchor?.y??rect.top+viewport.clientHeight/2;
+ const rx=before.width?(x-before.left)/before.width:0,ry=before.height?(y-before.top)/before.height:0;
+ cryptidUI.zoom=Math.max(.75,Math.min(3,value));cryptidZoom();
+ const after=svg.getBoundingClientRect();
+ viewport.scrollLeft+=after.left+rx*after.width-x;viewport.scrollTop+=after.top+ry*after.height-y;
+}
+function cryptidSetupMapNavigation(viewport){
+ let drag=null,suppressClick=false;
+ viewport.addEventListener('wheel',e=>{
+  if(!e.deltaY)return;e.preventDefault();
+  const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?viewport.clientHeight:1);
+  cryptidSetZoom(cryptidUI.zoom*Math.exp(-pixels*.0015),{x:e.clientX,y:e.clientY});
+ },{passive:false});
+ viewport.addEventListener('pointerdown',e=>{
+  suppressClick=false;if(e.button!==0||e.pointerType==='touch')return;
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop,moved:false};
+ });
+ viewport.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(!drag.moved&&Math.hypot(dx,dy)>5){drag.moved=true;viewport.setPointerCapture(e.pointerId);viewport.classList.add('is-dragging');}
+  if(drag.moved){e.preventDefault();viewport.scrollLeft=drag.left-dx;viewport.scrollTop=drag.top-dy;}
+ });
+ const stop=e=>{if(!drag||e.pointerId!==drag.id)return;suppressClick=drag.moved;drag=null;viewport.classList.remove('is-dragging');if(viewport.hasPointerCapture?.(e.pointerId))viewport.releasePointerCapture(e.pointerId);};
+ viewport.addEventListener('pointerup',stop);viewport.addEventListener('pointercancel',stop);viewport.addEventListener('lostpointercapture',stop);
+ viewport.addEventListener('click',e=>{if(suppressClick){suppressClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
+}
 function cryptidUpdateClue(r){
  if(!r?.cryptid||!$('cryptidClue'))return;
  $('cryptidClue').textContent=r.cryptid.clues?.[myId]?.text||'คุณไม่ได้เข้าร่วมเกมนี้';$('cryptidClue').hidden=!cryptidUI.clueOpen;
