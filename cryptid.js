@@ -79,11 +79,17 @@ function cryptidBuild(r){
  <div id="cryptidResult" hidden></div>
  <div id="cryptidPlayers" class="cryptid-players"></div>
  <p id="cryptidStatus" class="cryptid-status" role="status" aria-live="polite"></p>
+ <div id="cryptidLastMove" class="cryptid-last-move" aria-live="polite" hidden></div>
  <div class="cryptid-workspace"><div class="cryptid-map-panel">
   <div class="cryptid-map-toolbar"><span>แผนที่สำรวจ</span><div class="cryptid-buttons"><button type="button" class="btn outline small" id="cryptidZoomOut" aria-label="ย่อแผนที่">−</button><button type="button" class="btn outline small" id="cryptidZoomReset">100%</button><button type="button" class="btn outline small" id="cryptidZoomIn" aria-label="ขยายแผนที่">＋</button></div></div>
   <div id="cryptidMapViewport" class="cryptid-map-viewport" tabindex="0" aria-label="เลื่อนเพื่อดูกระดาน"><svg id="cryptidMap" viewBox="0 0 660 430" role="group" aria-label="แผนที่ Cryptid เลือกช่องเพื่อดูรายละเอียด"></svg></div>
-  <div class="cryptid-terrain-key"><span>🌲 ป่า</span><span>≈ น้ำ</span><span>▲ ภูเขา</span><span>♧ หนองบึง</span><span>☀ ทะเลทราย</span></div>
-  <p class="muted hint">🐻 เขตหมี · 🐾 เขตเสือพูมา · ◆ เสาหิน · ⌂ กระท่อม · ● เป็นไปได้ · ■ เป็นไปไม่ได้</p>
+  <section class="cryptid-legend" aria-label="ความหมายของสัญลักษณ์">
+   <h3>หมากที่ผู้เล่นวาง</h3>
+   <div class="cryptid-marker-key"><article><b class="cryptid-key-shape no">■</b><div><strong>สี่เหลี่ยม = อยู่ที่นี่ไม่ได้</strong><p>ไม่ตรงกับเบาะแสของคนวาง · ช่องนี้ถูกตัดทิ้ง</p></div></article><article><b class="cryptid-key-shape yes">●</b><div><strong>วงกลม = ยังเป็นไปได้</strong><p>ตรงกับเบาะแสของคนวาง · ยังไม่ใช่การยืนยันคำตอบ</p></div></article></div>
+   <p class="cryptid-color-help">สีและเลขบนหมากบอกว่าเป็นของผู้เล่นคนไหน</p>
+   <h3>สัญลักษณ์ที่มีอยู่บนแผนที่</h3>
+   <div class="cryptid-symbol-key"><span><b>▲</b>สามเหลี่ยม = ภูเขา</span><span><b>◆</b>สี่เหลี่ยมข้าวหลามตัด = เสาหิน</span><span><b>⌂</b>รูปบ้าน = กระท่อม</span><span><b>🌲</b>ต้นไม้ = ป่า</span><span><b>≈</b>คลื่น = น้ำ</span><span><b>♧</b>กอพืช = หนองบึง</span><span><b>☀</b>ดวงอาทิตย์ = ทะเลทราย</span><span><b>🐻</b>เขตหมี</span><span><b>🐾</b>เขตเสือพูมา</span></div>
+  </section>
  </div><aside class="cryptid-sidebar">
   <section class="cryptid-card"><div class="cryptid-card-title"><h3>เบาะแสของฉัน</h3><button type="button" class="btn outline small" id="cryptidToggleClue" aria-expanded="false">เปิดดู</button></div><p id="cryptidClue" class="cryptid-clue" hidden></p><p class="muted hint">เบาะแสของคุณเป็นเพียงส่วนหนึ่งของคำตอบ</p></section>
   <section id="cryptidControls" class="cryptid-card"></section>
@@ -121,19 +127,30 @@ function cryptidDrawBoard(r){
   const x=32+c.col*50+(c.row%2)*25,y=32+c.row*44,marks=a.markers?.[c.id]||{},entries=a.order.filter(p=>marks[p]),isSolution=r.status==='results'&&c.id===a.solution;
   const points=Array.from({length:6},(_,i)=>{const rad=(i*60-30)*Math.PI/180;return (x+28*Math.cos(rad)).toFixed(1)+','+(y+28*Math.sin(rad)).toFixed(1);}).join(' ');
   const structure=c.structure?`<text x="${x+11}" y="${y-3}" class="cryptid-structure" fill="${{white:'#fff',green:'#9dff8d',blue:'#8bcfff'}[c.structureColor]}">${c.structure==='stone'?'◆':'⌂'}</text>`:'';
-  const tokens=entries.map((p,i)=>{const tx=x+(i-(entries.length-1)/2)*8,ty=y+15,color=CE.COLORS[a.order.indexOf(p)];return marks[p]==='no'?`<rect x="${tx-4}" y="${ty-4}" width="8" height="8" fill="${color}" stroke="#101725"/>`:`<circle cx="${tx}" cy="${ty}" r="4" fill="${color}" stroke="#101725"/>`;}).join('');
+  const tokens=entries.map((p,i)=>{
+   const row=Math.floor(i/3),rowCount=Math.min(3,entries.length-row*3),tx=x+(i%3-(rowCount-1)/2)*13,ty=y+10+row*12,color=CE.COLORS[a.order.indexOf(p)],number=a.order.indexOf(p)+1;
+   const shape=marks[p]==='no'?`<rect x="${tx-5.5}" y="${ty-5.5}" width="11" height="11" rx="1" fill="${color}" stroke="#06101d" stroke-width="1.3"/>`:`<circle cx="${tx}" cy="${ty}" r="5.5" fill="${color}" stroke="#06101d" stroke-width="1.3"/>`;
+   return shape+`<text x="${tx}" y="${ty+.5}" class="cryptid-marker-number">${number}</text>`;
+  }).join('');
   const label=CE.coordinate(c)+' '+CE.TERRAIN[c.terrain]+(c.animal?' เขต'+(c.animal==='bear'?'หมี':'เสือพูมา'):'')+(c.structure?' '+(c.structure==='stone'?'เสาหิน':'กระท่อม'):'')+entries.map(p=>' '+cryptidName(r,p)+':'+(marks[p]==='yes'?'เป็นไปได้':'เป็นไปไม่ได้')).join('');
-  return `<g class="cryptid-hex${CE.blocked(a,c.id)?' is-blocked':''}${isSolution?' is-solution':''}" data-cell="${c.id}" role="button" tabindex="${c.id===(cryptidUI.cell||a.board[0].id)?0:-1}" aria-label="${esc(label)}" aria-pressed="false"><title>${esc(label)}</title><polygon points="${points}" fill="${terrainFill[c.terrain]}"/><text x="${x}" y="${y-14}" class="cryptid-coordinate">${CE.coordinate(c)}</text><text x="${x-4}" y="${y+3}" class="cryptid-land-icon">${icons[c.terrain]}</text>${structure}${c.animal?`<text x="${x-13}" y="${y+6}" class="cryptid-animal">${c.animal==='bear'?'🐻':'🐾'}</text>`:''}${tokens}${isSolution?`<text x="${x}" y="${y+6}" class="cryptid-solution-star">★</text>`:''}</g>`;
+  return `<g class="cryptid-hex${CE.blocked(a,c.id)?' is-blocked':''}${isSolution?' is-solution':''}" data-cell="${c.id}" role="button" tabindex="${c.id===(cryptidUI.cell||a.board[0].id)?0:-1}" aria-label="${esc(label)}" aria-pressed="false"><title>${esc(label)}</title><polygon points="${points}" fill="${terrainFill[c.terrain]}"/><text x="${x}" y="${y-14}" class="cryptid-coordinate">${CE.coordinate(c)}</text><text x="${x-4}" y="${y+3}" class="cryptid-land-icon">${icons[c.terrain]}</text>${structure}${c.animal?`<text x="${x-13}" y="${y+6}" class="cryptid-animal">${c.animal==='bear'?'🐻':'🐾'}</text>`:''}${tokens}<g class="cryptid-placement-ghost" aria-hidden="true"><rect class="ghost-no" x="${x+8}" y="${y+10}" width="13" height="13" rx="1"/><circle class="ghost-yes" cx="${x+14.5}" cy="${y+16.5}" r="6.5"/></g>${isSolution?`<text x="${x}" y="${y+6}" class="cryptid-solution-star">★</text>`:''}</g>`;
  }).join('');cryptidHighlight();cryptidZoom();
 }
-function cryptidHighlight(){document.querySelectorAll('#cryptidMap [data-cell]').forEach(el=>{const on=el.dataset.cell===cryptidUI.cell;el.classList.toggle('is-selected',on);el.setAttribute('aria-pressed',String(on));el.setAttribute('tabindex',on||!cryptidUI.cell&&el.dataset.cell==='c0'?'0':'-1');});}
+function cryptidHighlight(){
+ const a=roomState?.cryptid,placing=a&&CE.actor(a)===myId&&['initial','penalty','extra'].includes(a.phase),piece=a?.phase==='extra'?'yes':'no';
+ const legal=placing?CE.legalCells(a,myId,piece==='yes'):[];
+ document.querySelectorAll('#cryptidMap [data-cell]').forEach(el=>{
+  const on=el.dataset.cell===cryptidUI.cell;el.classList.toggle('is-selected',on);el.setAttribute('aria-pressed',String(on));el.setAttribute('tabindex',on||!cryptidUI.cell&&el.dataset.cell==='c0'?'0':'-1');
+  el.dataset.preview=on&&placing&&legal.includes(el.dataset.cell)?piece:'';
+ });
+}
 function cryptidControls(r){
  const root=$('cryptidControls');if(!root||!r?.cryptid)return;
  const a=r.cryptid,cell=a.board.find(c=>c.id===cryptidUI.cell),active=CE.actor(a),mine=active===myId,done=r.status==='results';
  root.innerHTML='<h3>'+(cell?'ช่อง '+CE.coordinate(cell):'เลือกช่องบนแผนที่')+'</h3>';
  if(cell){
   root.innerHTML+='<p class="cryptid-cell-detail">'+CE.TERRAIN[cell.terrain]+(cell.animal?' · เขต'+(cell.animal==='bear'?'หมี':'เสือพูมา'):'')+(cell.structure?' · '+(cell.structure==='stone'?'เสาหิน':'กระท่อม')+'สี'+({white:'ขาว',green:'เขียว',blue:'น้ำเงิน'}[cell.structureColor]):'')+'</p>';
-  root.innerHTML+=a.order.filter(p=>a.markers?.[cell.id]?.[p]).map(p=>'<div class="cryptid-cell-mark">'+cryptidToken(r,p)+esc(cryptidName(r,p))+' <b>'+ (a.markers[cell.id][p]==='yes'?'● เป็นไปได้':'■ เป็นไปไม่ได้')+'</b></div>').join('');
+  root.innerHTML+=a.order.filter(p=>a.markers?.[cell.id]?.[p]).map(p=>'<div class="cryptid-cell-mark">'+cryptidToken(r,p)+esc(cryptidName(r,p))+' <b>'+ (a.markers[cell.id][p]==='yes'?'● วงกลม · ยังเป็นไปได้':'■ สี่เหลี่ยม · อยู่ที่นี่ไม่ได้')+'</b></div>').join('');
  }
  function button(text,action,value,disabled){const b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent=text;b.disabled=cryptidBusy||disabled;b.onclick=()=>cryptidSend(action,value);root.append(b);}
  if(done)return;
@@ -145,8 +162,9 @@ function cryptidControls(r){
  if(!mine||a.phase==='search'){root.innerHTML+='<p class="muted hint">'+(a.phase==='search'?'กำลังเปิดผลค้นหาตามลำดับ…':'รอ '+esc(cryptidName(r,active))+' ทำรายการ')+'</p>';return;}
  if(['initial','penalty','extra'].includes(a.phase)){
   const yes=a.phase==='extra',legal=cell&&CE.legalCells(a,myId,yes).includes(cell.id);
-  root.innerHTML+='<p class="muted hint">'+(yes?'เลือกช่องอื่นที่ตรงกับเบาะแส เพื่อวาง ● เพิ่ม':'เลือกช่องที่ไม่ตรงกับเบาะแสของคุณ เพื่อวาง ■')+'</p>';
-  button(yes?'วาง ● เพิ่ม':a.phase==='initial'?'วาง ■ เริ่มต้น':'วาง ■ แล้วจบตา',a.phase,cell?.id,!legal);return;
+  root.innerHTML+='<div class="cryptid-placement-guide '+(yes?'yes':'no')+'"><span>'+(yes?'●':'■')+'</span><div><strong>'+(yes?'กำลังวางวงกลม':'กำลังวางสี่เหลี่ยม')+'</strong><p>'+(yes?'ช่องนี้ยังเป็นไปได้ตามเบาะแสของคุณ':'ช่องนี้อยู่ไม่ได้ตามเบาะแสของคุณ')+'</p></div></div><p class="cryptid-action-hint">'+(yes?'เลือกช่องอื่นที่ตรงกับเบาะแส เพื่อเปิดข้อมูลเพิ่ม':'เลือกช่องที่ไม่ตรงกับเบาะแสของคุณ')+'</p>';
+  if(cell&&!legal&&!CE.blocked(a,cell.id))root.innerHTML+='<p class="cryptid-invalid-placement">'+(a.markers?.[cell.id]?.[myId]?'คุณมีหมากในช่องนี้แล้ว':'ช่องนี้ไม่ตรงกับหมากที่ต้องวาง กรุณาเลือกช่องอื่น')+'</p>';
+  button(cell?'ยืนยันวาง '+(yes?'●':'■')+' ที่ '+CE.coordinate(cell):'เลือกช่องที่จะวาง '+(yes?'●':'■'),a.phase,cell?.id,!legal);return;
  }
  if(a.phase==='action'){
   const options=a.order.filter(p=>p!==myId&&!a.markers?.[cell?.id]?.[p]);
@@ -180,10 +198,10 @@ function renderCryptid(r){
  $('cryptidStatus').textContent=phase[a.phase]||'กำลังโหลด…';
  const missing=a.order.filter(p=>!r.players?.[p]);
  if(missing.length&&!done&&['initial','action','penalty','extra'].includes(a.phase)&&!r.players?.[active])$('cryptidStatus').textContent=`รอ ${cryptidName(r,active)} กลับเข้าห้อง · Host สามารถยุติเกมโดยไม่คิดคะแนน`;
- cryptidUpdateClue(r);cryptidControls(r);
+ cryptidUpdateClue(r);cryptidControls(r);cryptidHighlight();
  if(cryptidUI.revision!==revision){
   cryptidUI.revision=revision;cryptidDrawBoard(r);
-  const events=Object.entries(a.history||{}).sort(([x],[y])=>Number(y.slice(1))-Number(x.slice(1))).map(([,event])=>event);$('cryptidHistory').innerHTML=events.length?events.map(e=>'<p><small>ตา '+e.turn+'</small>'+cryptidHistoryText(r,e)+'</p>').join(''):'<p class="muted">ประวัติการถามและวางหมากจะแสดงที่นี่</p>';
+  const events=Object.entries(a.history||{}).sort(([x],[y])=>Number(y.slice(1))-Number(x.slice(1))).map(([,event])=>event);$('cryptidLastMove').hidden=!events.length;if(events.length)$('cryptidLastMove').innerHTML='<strong>เหตุการณ์ล่าสุด</strong><span>'+cryptidHistoryText(r,events[0])+'</span>';$('cryptidHistory').innerHTML=events.length?events.map(e=>'<p><small>ตา '+e.turn+'</small>'+cryptidHistoryText(r,e)+'</p>').join(''):'<p class="muted">ประวัติการถามและวางหมากจะแสดงที่นี่</p>';
  }
  $('cryptidResult').hidden=!done;
  if(done){
