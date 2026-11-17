@@ -867,3 +867,6 @@ body.landing-transitioning .shell{
 .avalon-history-reveal-section{margin-top:18px;border-color:#59677e!important;background:linear-gradient(145deg,#18263b,#101b2e)!important}
 .avalon-history-reveal-section>h3{color:#c3d1e3}
 .avalon-latest-mission-team .avalon-reveal-grid{margin-top:12px}
+
+.avalon-reveal-card-front .avalon-reveal-player-name{display:block;max-width:100%;margin-top:1px;color:#fff;font-size:12px;font-weight:900;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+.avalon-reveal-card-front .avalon-reveal-player-name::first-letter{letter-spacing:0}
