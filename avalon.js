@@ -193,24 +193,25 @@ function renderAvalon(r){
  if(ready){const n=ids.filter(p=>a.ready?.[p]).length,panel=block('เตรียมพร้อม','<p>'+n+' / '+ids.length+' คนพร้อมแล้ว</p>');button(panel,a.ready?.[myId]?'พร้อมแล้ว':'เตรียมพร้อม','ready',true,!!a.ready?.[myId],'btn primary full');return;}
  const history=Object.values(a.history||{}).sort((x,y)=>x.mission-y.mission);
  const missionWins=history.filter(x=>x.passed).length,missionFails=history.filter(x=>!x.passed).length;
+ const renderMissionCards=(records,animateLatest=false)=>records.map(record=>{
+  const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
+  const animate=animateLatest&&!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
+  const cards=(record.team||[]).map((player,index)=>{
+   const vote=record.votes?.[player];
+   if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front"><strong>ไม่พบผลโหวต</strong></div></div></div>';
+   const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL';
+   return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span></div></div></div>';
+  }).join('');
+  return '<article class="avalon-mission-reveal '+(record.passed?'passed':'failed')+'"><div class="avalon-mission-reveal-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ ภารกิจสำเร็จ':'✕ ภารกิจล้มเหลว')+'</b></div><p>ทีมภารกิจ · '+(record.team||[]).map(name).join(' · ')+'</p><div class="avalon-reveal-grid">'+cards+'</div><small class="avalon-reveal-summary">PASS '+(record.success??0)+' ใบ · FAIL '+(record.fail??0)+' ใบ</small></article>';
+ }).join('');
  block('ภารกิจ','<div class="avalon-missions">'+AVALON_SIZES.map((n,i)=>{const rec=a.history?.['m'+(i+1)];return '<div class="avalon-mission '+(rec?(rec.passed?'blue':'red'):a.mission===i+1?'current':'')+'"><small>รอบ '+(i+1)+'</small><strong>'+n+' คน</strong><small>'+(rec?(rec.passed?'สำเร็จ':'ล้มเหลว'):i===3?'Fail 2 ใบ':'Fail 1 ใบ')+'</small></div>';}).join('')+'</div><p>สำเร็จ '+missionWins+' / 3 · ภารกิจล้มเหลว '+missionFails+' · แต่งตั้งล้มเหลว '+(a.rejections||0)+'</p>');
  if(done){
   const result=r.result||{},reason={rejections:'แต่งตั้งทีมล้มเหลวครบ 5 ครั้ง',missions:'ภารกิจล้มเหลวครบ 3 ครั้ง',assassinated:'Assassin สังหาร Merlin ถูกต้อง',assassin_missed:'Assassin ทาย Merlin ผิด'}[result.reason]||'จบเกม';
   block(sideLabel(result.winner)+'ชนะ!', '<p>'+reason+'</p>'+(result.assassinated?'<p>Assassin เลือก '+name(result.assassinated)+'</p>':'')+'<div class="avalon-role-list">'+ids.map(p=>'<p>'+name(p)+' · <strong class="'+avalonSide(r.roles[p])+'">'+esc(r.roles[p])+'</strong></p>').join('')+'</div>');
  }else{
    if(history.length){
-    const revealHtml=history.map(record=>{
-     const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
-     const animate=!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
-     const cards=(record.team||[]).map((player,index)=>{
-      const vote=record.votes?.[player];
-      if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b></div><div class="avalon-reveal-card-front"><strong>ไม่มีข้อมูล</strong><small>'+name(player)+'</small></div></div></div>';
-      const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL',voter=esc(record.playerNames?.[player]||players[player]?.name||'ผู้เล่น');
-      return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong class="avalon-reveal-player-name">ผู้ลงผล: '+voter+'</strong></div></div></div>';
-     }).join('');
-     return '<article class="avalon-mission-reveal '+(record.passed?'passed':'failed')+'"><div class="avalon-mission-reveal-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ ภารกิจสำเร็จ':'✕ ภารกิจล้มเหลว')+'</b></div><p>ทีมภารกิจ · '+(record.team||[]).map(name).join(' · ')+'</p><div class="avalon-reveal-grid">'+cards+'</div><small class="avalon-reveal-summary">PASS '+record.success+' ใบ · FAIL '+record.fail+' ใบ</small></article>';
-    }).join('');
-    block('เฉลยผลภารกิจ · เปิดการ์ดทีละใบ',revealHtml,'avalon-reveal-section');
+    const latestMission=history[history.length-1];
+    block('เฉลยผลภารกิจล่าสุด · รอบ '+latestMission.mission,renderMissionCards([latestMission],true),'avalon-reveal-section avalon-latest-reveal-section');
    }
   const king=ids[a.king],angel=r.avalonAngel?ids[a.angel]:null,isAngel=angel===myId;
    const proposalEntries=Object.entries(a.proposals||{}).sort(([x],[y])=>Number(x.slice(1))-Number(y.slice(1)));
@@ -269,6 +270,8 @@ function renderAvalon(r){
    const panel=block('Assassin · ตามหา Merlin','<p>ฝ่ายน้ำเงินทำภารกิจสำเร็จ 3 ครั้งแล้ว หาก Assassin ทาย Merlin ถูก ฝ่ายแดงชนะ</p>');
    if(myRole==='Assassin'){const grid=document.createElement('div');grid.className='avalon-buttons';panel.append(grid);ids.filter(p=>p!==myId).forEach(p=>{const b=button(grid,players[p]?.name||'ผู้เล่น','assassin',p);b.onclick=async()=>{if(await confirmBox('ยืนยันเป้าหมาย Assassin?','เลือก '+(players[p]?.name||'ผู้เล่น')+' ได้เพียงครั้งเดียว','ยืนยัน'))avalonSend('assassin',p);};});}
   }
+  const previousMissions=history.slice(0,-1);
+  if(previousMissions.length)block('ประวัติภารกิจที่ผ่านมา',renderMissionCards(previousMissions,false),'avalon-reveal-section avalon-history-reveal-section');
  }
 
 
