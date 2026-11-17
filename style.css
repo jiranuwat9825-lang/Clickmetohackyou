@@ -810,3 +810,49 @@ body.landing-transitioning .shell{
 .avalon-inspected-side.blue{background:#63b2f5}
 .avalon-bot-tools .avalon-buttons{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .avalon-bot-tools .avalon-buttons .btn{width:auto;min-width:0;min-height:32px;padding:5px 10px;font-size:11px;line-height:1.4;border-radius:8px;flex:0 0 auto}
+
+/* Avalon live team-approval tally. */
+.avalon-proposal-live{border:1px solid #62728b!important;background:linear-gradient(145deg,#1b2b43,#101b2e)!important}
+.avalon-proposal-live.approved{border-color:#5ba98d!important}
+.avalon-proposal-live.rejected{border-color:#d27a83!important}
+.avalon-proposal-live-team{display:grid;gap:3px;padding:10px 12px;border-radius:10px;background:#0c1728}
+.avalon-proposal-live-team small{color:#a9b8cd}
+.avalon-proposal-live-team strong{overflow-wrap:anywhere}
+.avalon-proposal-live-tally{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:8px}
+.avalon-proposal-live-tally span{padding:9px 6px;border-radius:9px;text-align:center;font-size:12px;background:#1b2a43}
+.avalon-proposal-live-tally b{display:block;font-size:20px}
+.avalon-proposal-live-tally .yes{color:#9ce4c7;background:#183d35}
+.avalon-proposal-live-tally .no{color:#ffb1b8;background:#482932}
+.avalon-proposal-live-tally .pending{color:#c4d4e8}
+.avalon-proposal-live-track{display:flex;overflow:hidden;height:9px;margin-top:8px;border-radius:99px;background:#26354c}
+.avalon-proposal-live-track .yes{background:#57b28a}
+.avalon-proposal-live-track .no{background:#d96b7c}
+.avalon-proposal-live-count{color:#b7c6d9}
+/* Individual mission outcome cards flip open one by one after all team votes arrive. */
+.avalon-reveal-section{border-color:#8a754d!important;background:linear-gradient(145deg,#29251f,#101b2e 62%)!important}
+.avalon-mission-reveal{padding:12px 0;border-bottom:1px solid #46536a}
+.avalon-mission-reveal:last-child{border-bottom:0;padding-bottom:0}
+.avalon-mission-reveal-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.avalon-mission-reveal-head b{font-size:12px;color:#f1d28c}
+.avalon-mission-reveal.failed .avalon-mission-reveal-head b{color:#ff9daa}
+.avalon-mission-reveal>p{margin:5px 0 10px;color:#b8c8dc;font-size:12px}
+.avalon-reveal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:9px}
+.avalon-reveal-card{perspective:850px;min-width:0;min-height:108px}
+.avalon-reveal-card-inner{position:relative;width:100%;height:108px;transform-style:preserve-3d}
+.avalon-reveal-card.is-revealing .avalon-reveal-card-inner{transform:rotateY(0);animation:avalon-card-flip .78s cubic-bezier(.2,.72,.2,1) var(--reveal-delay,0ms) forwards}
+.avalon-reveal-card.is-revealed .avalon-reveal-card-inner{transform:rotateY(180deg)}
+.avalon-reveal-card-back,.avalon-reveal-card-front{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px;border:1px solid #62728b;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center;overflow:hidden}
+.avalon-reveal-card-back{background:linear-gradient(145deg,#293b58,#152239);color:#d8c28e}
+.avalon-reveal-card-back span{font-size:9px;font-weight:900;letter-spacing:2px;color:#bba7ed}
+.avalon-reveal-card-back b{font-size:29px;line-height:1}
+.avalon-reveal-card-back small{font-size:9px;color:#b9c8dc}
+.avalon-reveal-card-front{transform:rotateY(180deg);background:#17263e}
+.avalon-reveal-card-front.success{border-color:#58ad8a;background:linear-gradient(145deg,#194b3a,#142b32)}
+.avalon-reveal-card-front.fail{border-color:#d76b7b;background:linear-gradient(145deg,#542a3a,#2a2030)}
+.avalon-reveal-result{font-size:21px;font-weight:950;letter-spacing:1.5px;color:#a6ebc8}
+.avalon-reveal-card-front.fail .avalon-reveal-result{color:#ffadb7}
+.avalon-reveal-card-front strong{font-size:13px;overflow-wrap:anywhere}
+.avalon-reveal-card.is-unavailable .avalon-reveal-card-inner{transform:rotateY(180deg)}
+.avalon-reveal-summary{display:block;margin-top:9px;color:#c0cee0;font-size:11px}
+@keyframes avalon-card-flip{from{transform:rotateY(0)}to{transform:rotateY(180deg)}}
+@media(max-width:520px){.avalon-proposal-live-tally{grid-template-columns:repeat(3,minmax(0,1fr))}.avalon-proposal-live-tally span{font-size:10px;padding:8px 3px}.avalon-reveal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
