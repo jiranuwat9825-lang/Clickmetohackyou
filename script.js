@@ -2204,7 +2204,7 @@ $('roomView').addEventListener('pointerdown',touch);$('roomView').addEventListen
 setInterval(()=>touch(),30000);
 
 // ===== Create room and category selection =====
-$('openCreateBtn').onclick=()=>{if(!ensureName())return;selectedMode='';selectedCategory='';selectedSpyVariant='secret';$('durationInput').value=2;$('avalonCreateCount').value='9';$('avalonCreateAngel').checked=true;$('avalonCreateSettings').hidden=true;$('cryptidCreateSettings').hidden=true;$('cryptidCreateCount').value='3';$('createDetails').hidden=true;renderModeChoices();showOnly('createView');};
+$('openCreateBtn').onclick=()=>{if(!ensureName())return;selectedMode='';selectedCategory='';selectedSpyVariant='secret';$('durationInput').value=2;$('avalonCreateCount').value='9';$('avalonCreateAngel').checked=true;$('avalonCreateSettings').hidden=true;$('cryptidCreateSettings').hidden=true;$('cryptidCreateCount').value='3';$('cryptidCreateMap').value='random';if(typeof cryptidRenderMapPreview==='function')cryptidRenderMapPreview('cryptidCreateMapPreview','random');$('createDetails').hidden=true;renderModeChoices();showOnly('createView');};
 $('createBackBtn').onclick=()=>showOnly('homeView');
 function chooseMode(mode){
  if(!modeReady(mode)){toast('กำลังโหลดโหมดนี้ กรุณาลองอีกครั้ง','info');return;}
@@ -2431,13 +2431,13 @@ async function generateRoomCode(){
 $('createConfirmBtn').onclick=async()=>{
  if(createRoomBusy||!ensureName())return;
  const mode=selectedMode,category=selectedCategory,spyVariant=selectedSpyVariant;
- const avalonCount=Number($('avalonCreateCount').value),avalonAngel=$('avalonCreateAngel').checked,cryptidCount=Number($('cryptidCreateCount').value);
+ const avalonCount=Number($('avalonCreateCount').value),avalonAngel=$('avalonCreateAngel').checked,cryptidCount=Number($('cryptidCreateCount').value),cryptidMap=$('cryptidCreateMap').value||'random';
  if(!modeReady(mode)){toast('กำลังโหลดโหมดนี้ กรุณาลองอีกครั้ง','info');return;}
  const typedName=$('roomNameInput').value.trim(),n=Number($('durationInput').value),pack=library[category];
  if(typedName&&!/^[\p{L}\p{N}_-]{1,20}$/u.test(typedName)){toast('ชื่อห้องใช้ตัวอักษร ตัวเลข - _ ไม่เกิน 20 ตัว','error');return;}
  if(!mode||(!['insider','whoami_custom','avalon','cryptid'].includes(mode)&&(!pack||!enabledFor(pack).includes(mode)))){toast('เลือกโหมดและหมวดคำก่อน','error');return;}
  if(!['insider','whoami_custom','avalon','cryptid'].includes(mode)&&!supportsMode(pack,mode)){toast('หมวดนี้ยังไม่มีคำที่พร้อมเล่นกับโหมดที่เลือก','error');return;}
- if(mode==='cryptid'&&![3,4,5].includes(cryptidCount)){toast('เลือกจำนวนผู้เล่น 3–5 คน','error');return;}
+ if(mode==='cryptid'&&(![3,4,5].includes(cryptidCount)||!CryptidEngine.MAPS[cryptidMap])){toast('เลือกจำนวนผู้เล่น 3–5 คน','error');return;}
  if(mode==='avalon'&&![9,10].includes(avalonCount)){toast('เลือกจำนวนผู้เล่น 9 หรือ 10 คน','error');return;}
  if(!Number.isInteger(n)||n<1||n>99){toast('จำนวนรอบ/นาทีต้องอยู่ระหว่าง 1–99','error');return;}
  if(mode==='spyfall'&&!Object.values(pack.groups).some(g=>new Set(g.map(norm)).size>=2)){toast('หมวดนี้ต้องมีกลุ่มที่มีคำไม่ซ้ำอย่างน้อย 2 คำสำหรับ Spyfall','error');return;}
@@ -2451,7 +2451,7 @@ $('createConfirmBtn').onclick=async()=>{
   if(!id)throw new Error('Firebase did not return a room key');
   const roomData={
    roomName,roomCode,hostId:myId,gameMode:mode,category:category,
-   categoryPack:['insider','whoami_custom','avalon','cryptid'].includes(mode)?null:firebaseSafePack(pack),settingValue:n,...(mode==='cryptid'?{cryptidCount}:{}),...(mode==='avalon'?{avalonCount:avalonCount,avalonAngel:avalonAngel}:{}),spyVariant:mode==='spyfall'?spyVariant:'secret',status:'lobby',
+   categoryPack:['insider','whoami_custom','avalon','cryptid'].includes(mode)?null:firebaseSafePack(pack),settingValue:n,...(mode==='cryptid'?{cryptidCount,cryptidMap}:{}),...(mode==='avalon'?{avalonCount:avalonCount,avalonAngel:avalonAngel}:{}),spyVariant:mode==='spyfall'?spyVariant:'secret',status:'lobby',
    players:{[myId]:{name:myName,avatar:myAvatar}},playerProfiles:{[myId]:{name:myName,avatar:myAvatar}},scores:{[myId]:0},
    createdAt:TIMESTAMP(),lastActivityAt:TIMESTAMP(),gamesPlayed:0
   };

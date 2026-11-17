@@ -2,27 +2,38 @@
 const CE=CryptidEngine;
 let cryptidBusy=false,cryptidLobbyBusy=false,cryptidLastAuto=0;
 let cryptidUI={game:'',revision:'',cell:null,target:'',zoom:1,clueOpen:false};
+
+function cryptidRenderMapPreview(targetId,mapId){
+ const root=$(targetId);if(!root||root.dataset.mapId===mapId)return;root.dataset.mapId=mapId;
+ const board=CE.mapBoard(mapId);
+ if(!board){root.innerHTML='<div class="cryptid-random-map">🎲 <span><strong>สุ่มแผนที่ใหม่ทุกเกม</strong><small>ผังพื้นที่และตำแหน่งสิ่งปลูกสร้างจะเปลี่ยนไป</small></span></div>';return;}
+ const colors={forest:'#3b8867',water:'#4294c0',mountain:'#9c96b9',swamp:'#8d9c52',desert:'#d9a16a'};
+ root.innerHTML='<svg viewBox="0 0 250 165" role="img" aria-label="ตัวอย่างแผนที่ '+esc(CE.MAPS[mapId].name)+'">'+board.map(c=>'<rect x="'+(c.col*19+(c.row%2)*9)+'" y="'+(c.row*18)+'" width="17" height="16" rx="4" fill="'+colors[c.terrain]+'"/>').join('')+'</svg><p><strong>'+esc(CE.MAPS[mapId].name)+'</strong><span>ใช้ผังเดิม · สุ่มเบาะแสชุดใหม่ทุกเกม</span></p>';
+}
+
 function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playerProfiles?.[id])?.name||'ผู้เล่น';}
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
- const select=$('cryptidLobbyCount'),key=roomId+':'+r.cryptidCount;
- if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);panel.dataset.savedKey=key;}
- select.disabled=!isHost||cryptidLobbyBusy;$('cryptidLobbySave').hidden=!isHost;
- $('cryptidLobbySave').disabled=cryptidLobbyBusy||Number(select.value)===Number(r.cryptidCount||3);
+ const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.cryptidCount+':'+(r.cryptidMap||'random');
+ if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';panel.dataset.savedKey=key;}
+ select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidRenderMapPreview('cryptidLobbyMapPreview',mapSelect.value);$('cryptidLobbySave').hidden=!isHost;
+ $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
  const players=Object.values(r.players||{}),bots=players.filter(p=>p.bot).length,full=players.length>=Number(r.cryptidCount||3);
  $('cryptidBotTools').hidden=!isHost;$('cryptidBotCount').textContent=`ผู้เล่นจริง ${players.length-bots} คน · บอท ${bots} ตัว · ${players.length}/${r.cryptidCount||3}`;
  $('cryptidAddBot').disabled=$('cryptidFillBots').disabled=cryptidLobbyBusy||full;
  $('cryptidRemoveBots').disabled=cryptidLobbyBusy||!bots;
 }
-$('cryptidLobbyCount').onchange=()=>renderCryptidLobby(roomState);
+$('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
+$('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPreview',$('cryptidCreateMap').value);
+cryptidRenderMapPreview('cryptidCreateMapPreview','random');
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
- const count=Number($('cryptidLobbyCount').value),id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);renderCryptidLobby(roomState);
+ const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
  try{const result=await getRef().transaction(r=>{
-  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![3,4,5].includes(count)||Object.keys(r.players||{}).length>count)return;
-  r.cryptidCount=count;r.lastActivityAt=TIMESTAMP();return r;
- },undefined,false);toast(result.committed?'บันทึกจำนวนผู้เล่นแล้ว':'จำนวนผู้เล่นในห้องเกินที่เลือก ลบบอทก่อนลดจำนวน',result.committed?'success':'error');}
+  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![3,4,5].includes(count)||!CE.MAPS[mapId]||Object.keys(r.players||{}).length>count)return;
+  r.cryptidCount=count;r.cryptidMap=mapId;r.lastActivityAt=TIMESTAMP();return r;
+ },undefined,false);toast(result.committed?'บันทึกจำนวนผู้เล่นและแผนที่แล้ว':'จำนวนผู้เล่นในห้องเกินที่เลือก ลบบอทก่อนลดจำนวน',result.committed?'success':'error');}
  catch(e){error(e);}finally{cryptidLobbyBusy=false;if(id===roomId&&roomState)renderCryptidLobby(roomState);}
 };
 async function cryptidBots(action){
@@ -34,14 +45,14 @@ async function cryptidBots(action){
 for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['cryptidRemoveBots','remove']])$(id).onclick=()=>cryptidBots(action);
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
- const id=roomId,count=Number(roomState.cryptidCount||3),ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
+ const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
  if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
  cryptidBusy=true;$('startBtn').disabled=true;$('startBtn').textContent='กำลังสร้างปริศนา…';
  try{
   // Generate once, outside the RTDB retry callback, so retries use the same puzzle.
-  await new Promise(resolve=>setTimeout(resolve,0));const puzzle=CE.generate(count),order=CE.mix(ids);
+  await new Promise(resolve=>setTimeout(resolve,0));const puzzle=CE.generate(count,Math.random,mapId),order=CE.mix(ids);
   const result=await getRef().transaction(r=>{
-   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(Number(r.gamesPlayed)||0)!==game)return;
+   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(r.cryptidMap||'random')!==mapId||(Number(r.gamesPlayed)||0)!==game)return;
    const current=Object.keys(r.players||{});if(current.length!==ids.length||!current.every(p=>ids.includes(p))||!CE.setup(r,ids,puzzle,order))return;
    r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
@@ -75,7 +86,7 @@ async function cryptidReturn(){
 }
 function cryptidBuild(r){
  const root=$('cryptidContent');root.innerHTML=`
- <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid <em class="cryptid-beta">Beta</em></h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed}</span></div>
+ <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid <em class="cryptid-beta">Beta</em></h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed} · ${esc(r.cryptid.mapName||'สุ่มแผนที่')}</span></div>
  <div id="cryptidResult" hidden></div>
  <div id="cryptidPlayers" class="cryptid-players"></div>
  <p id="cryptidStatus" class="cryptid-status" role="status" aria-live="polite"></p>

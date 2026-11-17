@@ -5,13 +5,15 @@
 (function(root){
  'use strict';
  const TERRAIN={forest:'ป่า',water:'น้ำ',mountain:'ภูเขา',swamp:'หนองบึง',desert:'ทะเลทราย'};
+ const MAPS={random:{name:'สุ่มแผนที่'},mistwood:{name:'ป่าหมอก',seed:1847,theme:'forest'},highlands:{name:'หุบเขาหิน',seed:9203,theme:'mountain'},wetlands:{name:'ลุ่มน้ำลึกลับ',seed:4171,theme:'water'}};
+ function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
  const copy=v=>JSON.parse(JSON.stringify(v));
  const mix=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
  const coordinate=c=>String.fromCharCode(65+c.col)+(c.row+1);
- function makeBoard(rng){
-  const types=Object.keys(TERRAIN),board=[];
+ function makeBoard(rng,theme){
+  const types=[...Object.keys(TERRAIN),...(theme?[theme,theme]:[])],board=[];
   for(let row=0;row<9;row++)for(let col=0;col<12;col++){
    const previous=col>0?board[board.length-1]:null,above=row>0?board[(row-1)*12+col]:null;
    const terrain=rng()<.38&&previous?previous.terrain:rng()<.32&&above?above.terrain:types[Math.floor(rng()*types.length)];
@@ -36,16 +38,19 @@
   for(const [s,label] of [['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']])add('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง',near(c=>c.structureColor===s,3));
   catalogueCache.set(board,out);return out;
  }
- function generate(count,rng=Math.random){
+ function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme);}
+ function generate(count,rng=Math.random,mapId='random'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
+  if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
+  const fixedBoard=mapBoard(mapId);
   for(let map=0;map<40;map++){
-   const board=makeBoard(rng),catalogue=clueCatalogue(board).filter(c=>c.cells.length>=6&&c.cells.length<=90);
+   const board=fixedBoard||makeBoard(rng),catalogue=clueCatalogue(board).filter(c=>c.cells.length>=6&&c.cells.length<=90);
    for(let attempt=0;attempt<180;attempt++){
     const target=board[Math.floor(rng()*board.length)].id;
     const eligible=mix(catalogue.filter(c=>c.cells.includes(target)),rng);if(eligible.length<count)continue;
     const clues=eligible.slice(0,count),intersection=board.filter(c=>clues.every(clue=>clue.cells.includes(c.id)));
     if(intersection.length!==1)continue;
-    return {board,clues:clues.map(({id,text})=>({id,text})),solution:intersection[0].id};
+    return {mapId,mapName:MAPS[mapId].name,board,clues:clues.map(({id,text})=>({id,text})),solution:intersection[0].id};
    }
   }
   throw new Error('สร้างปริศนาไม่สำเร็จ กรุณากดเริ่มใหม่');
@@ -64,7 +69,7 @@
   if(common.length!==1||common[0].id!==puzzle.solution)return false;
   r.gamePlayers=copy(r.players);r.playerProfiles={...(r.playerProfiles||{}),...copy(r.players)};
   r.gamesPlayed=(Number(r.gamesPlayed)||0)+1;r.result=null;r.status='cryptid_playing';
-  r.cryptid={version:1,board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
+  r.cryptid={version:1,mapId:puzzle.mapId||'random',mapName:puzzle.mapName||'สุ่มแผนที่',board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
   return true;
  }
  function actor(a){return a.phase==='initial'?a.order[(a.initialIndex||0)%a.order.length]:a.order[a.turnIndex||0];}
@@ -173,6 +178,6 @@
   const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
   return botMove(view,id,rng);
  }
- const api={TERRAIN,COLORS,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
+ const api={TERRAIN,COLORS,MAPS,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CryptidEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
