@@ -289,10 +289,6 @@ function renderAvalonResults(r){
   const assassin=ids.find(p=>r.roles?.[p]==='Assassin'),target=result.assassinated,hit=result.reason==='assassinated';
   section('การลอบสังหารของ Assassin','<div class="avalon-assassin-summary '+(hit?'hit':'miss')+'"><p>Assassin: <strong>'+name(assassin)+'</strong></p><p>เป้าหมายที่เลือก: <strong>'+name(target)+'</strong></p><p>บทบาทจริงของเป้าหมาย: <strong>'+esc(r.roles?.[target]||'ไม่ทราบ')+'</strong></p><strong class="avalon-assassin-verdict">'+(hit?'Assassin สังหาร Merlin สำเร็จ · ฝ่ายแดงชนะ':'Assassin ทายผิด · ฝ่ายน้ำเงินชนะ')+'</strong></div>');
  }else section('การลอบสังหารของ Assassin','<p>เกมจบก่อนถึงขั้นตอนการลอบสังหารของ Assassin</p>');
- if(history.length){
-  const latest=history[history.length-1],latestProposal=proposalForMission(latest),latestKing=latest.king||latestProposal?.king;
-  section('ผลภารกิจล่าสุด · รอบ '+latest.mission,'<div class="avalon-latest-mission-team"><p><small>ผู้เลือกทีม · KING</small><strong>'+name(latestKing)+'</strong></p><p><small>ผู้เล่นที่ถูกเลือกไปทำภารกิจ</small><strong>'+(latest.team||[]).map(p=>playerName(latest,p)).join(' · ')+'</strong></p><div class="avalon-summary-stats"><span>PASS <b>'+(latest.success??0)+'</b></span><span>FAIL <b>'+(latest.fail??0)+'</b></span></div></div>','avalon-latest-mission');
- }
  const missionSummaryHtml=history.map(record=>{
   const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
   const animate=!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
