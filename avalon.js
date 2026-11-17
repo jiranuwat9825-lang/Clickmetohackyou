@@ -269,7 +269,7 @@ function renderAvalon(r){
   }
  }
 
- if(history.length)block('ประวัติผลภารกิจ (ไม่เปิดเผยผู้โหวต)',history.map(x=>'<div class="avalon-history"><b>รอบ '+x.mission+' · '+(x.passed?'สำเร็จ':'ล้มเหลว')+'</b><p>ทีม: '+x.team.map(name).join(' · ')+'</p><p>Success '+x.success+' ใบ · Fail '+x.fail+' ใบ</p></div>').join(''));
+
 }
 
 function renderAvalonResults(r){
@@ -282,7 +282,18 @@ function renderAvalonResults(r){
  function section(title,html,cls=''){const e=document.createElement('section');e.className='avalon-section avalon-summary-section'+(cls?' '+cls:'');e.innerHTML='<h3>'+title+'</h3>'+html;root.append(e);return e;}
  section('ผลการแข่งขัน','<div class="avalon-summary-winner '+(result.winner==='red'?'red':'blue')+'">'+sideLabel(result.winner)+'ชนะ</div><p>'+reason+'</p><div class="avalon-summary-stats"><span>ภารกิจสำเร็จ <b>'+history.filter(x=>x.passed).length+'</b></span><span>ภารกิจล้มเหลว <b>'+history.filter(x=>!x.passed).length+'</b></span><span>แต่งตั้งล้มเหลว <b>'+(a.rejections||0)+'</b></span></div>','avalon-summary-hero');
  section('บทบาทของผู้เล่นทุกคน','<div class="avalon-role-list avalon-summary-roles">'+ids.map((p,i)=>{const role=r.roles?.[p]||'ไม่ทราบบทบาท',side=avalonSide(role);return '<p class="avalon-summary-role '+side+'"><span>'+(i+1)+'. '+name(p)+'</span><strong>'+esc(role)+'</strong><small>'+sideLabel(side)+'</small></p>';}).join('')+'</div>');
- section('ผลการเล่นแต่ละภารกิจ',history.length?history.map(x=>'<article class="avalon-summary-mission '+(x.passed?'passed':'failed')+'"><div class="avalon-summary-mission-head"><strong>ภารกิจที่ '+x.mission+'</strong><b>'+(x.passed?'✓ สำเร็จ':'✕ ล้มเหลว')+'</b></div><p>ทีมภารกิจ: '+(x.team||[]).map(name).join(' · ')+'</p><div class="avalon-summary-stats"><span>Success <b>'+(x.success??0)+'</b></span><span>Fail <b>'+(x.fail??0)+'</b></span></div></article>').join(''):'<p>ไม่มีภารกิจที่ได้รับการตัดสินผล</p>');
+ const missionSummaryHtml=history.map((record,missionIndex)=>{
+  const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
+  const animate=!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
+  const cards=(record.team||[]).map((player,index)=>{
+   const vote=record.votes?.[player];
+   if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b></div><div class="avalon-reveal-card-front"><strong>ไม่มีข้อมูล</strong><small>'+name(player)+'</small></div></div></div>';
+   const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL';
+   return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong>'+name(player)+'</strong></div></div></div>';
+  }).join('');
+  return '<article class="avalon-summary-mission '+(record.passed?'passed':'failed')+'"><div class="avalon-summary-mission-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ สำเร็จ':'✕ ล้มเหลว')+'</b></div><p>ทีมภารกิจ: '+(record.team||[]).map(name).join(' · ')+'</p><div class="avalon-reveal-grid">'+cards+'</div><div class="avalon-summary-stats"><span>Success <b>'+(record.success??0)+'</b></span><span>Fail <b>'+(record.fail??0)+'</b></span></div></article>';
+ }).join('');
+ section('ผลการเล่นแต่ละภารกิจ',history.length?missionSummaryHtml:'<p>ไม่มีภารกิจที่ได้รับการตัดสินผล</p>');
  if(proposals.length)section('ประวัติการแต่งตั้งทีม',proposals.map((p,i)=>'<article class="avalon-summary-proposal '+(p.approved?'approved':'rejected')+'"><div class="avalon-summary-mission-head"><strong>ครั้งที่ '+(i+1)+' · ภารกิจ '+p.mission+'</strong><b>'+(p.approved?'อนุมัติ':'ไม่อนุมัติ')+'</b></div><p>King: '+name(p.king)+'</p><p>ทีม: '+(p.team||[]).map(name).join(' · ')+'</p><p>ยินยอม '+p.yes+' · ไม่ยินยอม '+p.no+'</p></article>').join(''));
  if(result.reason==='assassinated'||result.reason==='assassin_missed'){
   const assassin=ids.find(p=>r.roles?.[p]==='Assassin'),target=result.assassinated,hit=result.reason==='assassinated';
