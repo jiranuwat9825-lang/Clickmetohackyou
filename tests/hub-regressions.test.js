@@ -118,3 +118,13 @@ test('Cryptid wheel zoom stays anchored at the cursor, clamps scale and left dra
  let suppressed=false;viewport.events.click({preventDefault(){},stopImmediatePropagation(){suppressed=true;}});assert.ok(suppressed);
  viewport.events.wheel({deltaY:-100000,deltaMode:0,clientX:x,clientY:y,preventDefault(){}});assert.equal(h.run('cryptidUI.zoom'),3);
 });
+
+test('Steal Cheese renders every phase and results from RTDB-shaped snapshots',()=>{
+ const h=loadHub();h.run(`testRoom={gameMode:'cheese',status:'lobby',hostId:'a',cheeseCount:8,cheeseFall:true,players:Object.fromEntries(['a','b','c','d','e','f','g','h'].map(p=>[p,{name:p,bot:true}]))};CheeseEngine.setup(testRoom,Object.keys(testRoom.players),1000);`);
+ let r=plain(h.run('testRoom')),now=1000;const phases=new Set();
+ for(let step=0;step<300;step++){
+  h.setRoom(r);h.now(now);h.run('renderRoom(roomState)');assert.deepEqual(h.errors,[]);phases.add(r.cheese.phase);if(r.status==='results')break;
+  const engine=require('../cheese-engine'),next=engine.nextBot(r,now,()=>.25);if(next)assert.ok(engine.apply(r,next.id,next.type,next.value,now,r.cheese.revision));else now=r.cheese.deadline;
+ }
+ for(const phase of ['prepare','night','recruit','intel','discuss','vote','finished'])assert.ok(phases.has(phase),phase);
+});

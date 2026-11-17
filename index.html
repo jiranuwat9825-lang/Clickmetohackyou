@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/hacker-favicon.png">
-<link rel="stylesheet" href="style.css?v=ordered-update-7-20261118">
+<link rel="stylesheet" href="style.css?v=hub-update-20261118">
 </head>
 <body>
 <div id="toasts" class="toasts" aria-live="polite"></div>
@@ -72,7 +72,7 @@
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
-<button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Steal cheese ยังไม่เปิดให้เล่น"><strong>Steal cheese</strong><small>Wait for update</small></button>
+<button type="button" class="choice mode" data-mode="cheese"><strong>Steal Cheese</strong><small>หนูขโมยชีส · 4–8 คน</small></button>
 <button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 9–10 คน</small></button>
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid <em class="cryptid-beta">Beta</em></strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
 </div>
@@ -90,7 +90,7 @@
 </div>
 </div>
 <div id="createDetails" hidden>
-
+<div id="cheeseCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Steal Cheese</h3><label for="cheeseCreateCount">จำนวนผู้เล่น</label><select id="cheeseCreateCount"><option value="4">4 คน</option><option value="5">5 คน</option><option value="6">6 คน</option><option value="7">7 คน</option><option value="8">8 คน</option></select><label for="cheeseCreateDiscuss" class="section-gap">เวลาพูดคุย (นาที)</label><input id="cheeseCreateDiscuss" type="number" min="1" max="15" value="3"><label class="cheese-fall-toggle"><input id="cheeseCreateFall" type="checkbox"> เพิ่มหนูแพะ · ใช้ได้ในเกม 6–8 คน</label><p class="muted hint">ทอยลูกเต๋า · ตื่นกลางคืน · หาขโมยและโหวตพร้อมกัน</p></div>
 <div id="insiderCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderCreatePrep">เวลาคิดคำตอบ (วินาที)<input id="insiderCreatePrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderCreateGuess">เวลาถามและทาย (นาที)<input id="insiderCreateGuess" type="number" min="1" max="30" value="5"></label><label for="insiderCreateAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderCreateAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderCreateVote">เวลาโหวต (วินาที)<input id="insiderCreateVote" type="number" min="30" max="300" step="15" value="120"></label></div><p class="insider-settings-caption">Master ยืนยันคำก่อนหมดเวลาได้ เพื่อเริ่มช่วงถามทันที</p></div>
 <div id="cryptidCreateSettings" class="lobby-category" hidden><label for="cryptidCreateCount">จำนวนผู้เล่น Cryptid Beta</label><select id="cryptidCreateCount"><option value="3">3 คน</option><option value="4">4 คน</option><option value="5">5 คน</option></select><label for="cryptidCreateMap" class="section-gap">แผนที่ที่จะเล่น</label><select id="cryptidCreateMap"><option value="random">🎲 สุ่มแผนที่ · เปลี่ยนผังทุกเกม</option><option value="mistwood">ป่าหมอก</option><option value="highlands">หุบเขาหิน</option><option value="wetlands">ลุ่มน้ำลึกลับ</option></select><div id="cryptidCreateMapPreview" class="cryptid-map-preview"></div><p class="muted hint">เพิ่มบอททดสอบได้ในล็อบบี้ · เล่นผลัดกัน · ไม่จับเวลา</p></div>
 <div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
@@ -131,7 +131,7 @@
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
 <div id="playerList" class="player-list"></div>
-
+<div id="cheeseLobbySettings" class="lobby-category" hidden><h3>ตั้งค่า Steal Cheese</h3><label for="cheeseLobbyCount">จำนวนผู้เล่น</label><select id="cheeseLobbyCount"><option value="4">4 คน</option><option value="5">5 คน</option><option value="6">6 คน</option><option value="7">7 คน</option><option value="8">8 คน</option></select><label for="cheeseLobbyDiscuss" class="section-gap">เวลาพูดคุย (นาที)</label><input id="cheeseLobbyDiscuss" type="number" min="1" max="15" value="3"><label class="cheese-fall-toggle"><input id="cheeseLobbyFall" type="checkbox"> เพิ่มหนูแพะ · ใช้ได้ในเกม 6–8 คน</label><button id="cheeseLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button><details id="cheeseBotTools"><summary>บอทสำหรับทดสอบ</summary><div class="cheese-choices"><button id="cheeseAddBot" type="button" class="btn soft">เพิ่มบอท 1 ตัว</button><button id="cheeseFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="cheeseRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div></details></div>
 <div id="insiderLobbySettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderLobbyPrep">เวลาคิดคำตอบ (วินาที)<input id="insiderLobbyPrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderLobbyGuess">เวลาถามและทาย (นาที)<input id="insiderLobbyGuess" type="number" min="1" max="30" value="5"></label><label for="insiderLobbyAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderLobbyAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderLobbyVote">เวลาโหวต (วินาที)<input id="insiderLobbyVote" type="number" min="30" max="300" step="15" value="120"></label></div><button id="insiderLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button></div>
 <div id="cryptidLobbySettings" class="lobby-category" hidden>
  <label for="cryptidLobbyCount">จำนวนผู้เล่น Cryptid Beta</label>
@@ -173,7 +173,7 @@
  <button id="finishMatchBtn" type="button" class="btn finish-match-btn full"> จบเกม · สรุปคะแนนและผู้ชนะ</button>
 </div>
 </section>
-
+<section id="cheeseScreen" class="panel page cheese-page" hidden><div id="cheeseContent"></div></section>
 <section id="cryptidScreen" class="panel page cryptid-page" hidden><div id="cryptidContent"></div></section>
 <section id="avalonScreen" class="panel page avalon-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สงครามแห่งอวาลอน</h2></div></div><div id="avalonContent" aria-live="polite"></div></section>
 <section id="avalonResultsScreen" class="panel page avalon-page avalon-results-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สรุปผลสงครามแห่งอวาลอน</h2></div></div><div id="avalonResultsContent" aria-live="polite"></div></section>
@@ -301,11 +301,13 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=ordered-update-7-20261118"></script>
-<script src="insider.js?v=ordered-update-7-20261118"></script>
-<script src="whoami_custom.js?v=ordered-update-7-20261118"></script>
-<script src="avalon.js?v=ordered-update-7-20261118"></script>
-<script src="cryptid-engine.js?v=ordered-update-7-20261118"></script>
-<script src="cryptid.js?v=ordered-update-7-20261118"></script>
+<script src="script.js?v=hub-update-20261118"></script>
+<script src="insider.js?v=hub-update-20261118"></script>
+<script src="whoami_custom.js?v=hub-update-20261118"></script>
+<script src="avalon.js?v=hub-update-20261118"></script>
+<script src="cryptid-engine.js?v=hub-update-20261118"></script>
+<script src="cryptid.js?v=hub-update-20261118"></script>
+<script src="cheese-engine.js?v=hub-update-20261118"></script>
+<script src="cheese.js?v=hub-update-20261118"></script>
 </body>
 </html>
