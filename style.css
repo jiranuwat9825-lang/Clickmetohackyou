@@ -803,3 +803,10 @@ body.landing-transitioning .shell{
 
 .avalon-angel-private-result{margin:10px 0 0!important;padding:8px 0 0;border-top:1px solid #52627a;color:#c8ddf4;font-size:13px}
 .avalon-angel-private-result strong{color:#f0d48b}
+
+/* Personal Angel inspection markers and compact lobby bot controls. */
+.avalon-inspected-side{display:inline-block;vertical-align:middle;width:12px;height:12px;margin-left:7px;border:1px solid #f5f7fc;border-radius:50%;box-shadow:0 0 0 2px #101b2e}
+.avalon-inspected-side.red{background:#e75f76}
+.avalon-inspected-side.blue{background:#63b2f5}
+.avalon-bot-tools .avalon-buttons{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.avalon-bot-tools .avalon-buttons .btn{width:auto;min-width:0;min-height:32px;padding:5px 10px;font-size:11px;line-height:1.4;border-radius:8px;flex:0 0 auto}
