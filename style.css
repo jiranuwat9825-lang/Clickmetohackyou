@@ -852,6 +852,13 @@ body.landing-transitioning .shell{
 .avalon-reveal-result{font-size:21px;font-weight:950;letter-spacing:1.5px;color:#a6ebc8}
 .avalon-reveal-card-front.fail .avalon-reveal-result{color:#ffadb7}
 .avalon-reveal-card-front strong{font-size:13px;overflow-wrap:anywhere}
+.avalon-reveal-card-front .avalon-reveal-player-name{display:block;max-width:100%;color:#fff;font-size:13px;font-weight:900;line-height:1.4;overflow-wrap:anywhere;word-break:break-word}
+.avalon-latest-mission-team{padding:12px;border:1px solid #d2ad67;border-radius:12px;background:linear-gradient(145deg,#2b2a27,#17263d)}
+.avalon-latest-mission-team p{display:grid;gap:5px;margin:0 0 10px}
+.avalon-latest-mission-team p:last-of-type{margin-bottom:0}
+.avalon-latest-mission-team small{color:#f1d28c;font-size:11px;font-weight:800}
+.avalon-latest-mission-team strong{color:#fff;overflow-wrap:anywhere}
+.avalon-latest-mission .avalon-summary-stats{margin-top:12px}
 .avalon-reveal-card.is-unavailable .avalon-reveal-card-inner{transform:rotateY(180deg)}
 .avalon-reveal-summary{display:block;margin-top:9px;color:#c0cee0;font-size:11px}
 @keyframes avalon-card-flip{from{transform:rotateY(0)}to{transform:rotateY(180deg)}}
