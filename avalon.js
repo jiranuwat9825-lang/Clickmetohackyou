@@ -44,7 +44,9 @@ function avalonTeamApproved(r){
 }
 function avalonResolveQuest(r){
  const a=r.avalon,fail=a.team.filter(p=>a.questVotes?.[p]===false).length,success=a.team.length-fail,passed=fail<(a.mission===4?2:1);
- a.history||={};a.history['m'+a.mission]={mission:a.mission,team:[...a.team],votes:{...a.questVotes},success,fail,passed};
+ const approvedProposal=Object.entries(a.proposals||{}).sort(([x],[y])=>Number(y.slice(1))-Number(x.slice(1))).map(([,p])=>p).find(p=>p.mission===a.mission&&p.approved);
+ const playerNames=Object.fromEntries(a.team.map(p=>[p,r.gamePlayers?.[p]?.name||r.playerProfiles?.[p]?.name||r.players?.[p]?.name||'ผู้เล่น']));
+ a.history||={};a.history['m'+a.mission]={mission:a.mission,king:approvedProposal?.king||null,team:[...a.team],playerNames,votes:{...a.questVotes},success,fail,passed};
  a.questVotes={}; // Retain aggregate counts only after resolution.
  const results=Object.values(a.history),wins=results.filter(x=>x.passed).length,losses=results.length-wins;
  if(losses>=3)avalonFinish(r,'red','missions');
@@ -203,8 +205,8 @@ function renderAvalon(r){
      const cards=(record.team||[]).map((player,index)=>{
       const vote=record.votes?.[player];
       if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b></div><div class="avalon-reveal-card-front"><strong>ไม่มีข้อมูล</strong><small>'+name(player)+'</small></div></div></div>';
-      const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL';
-      return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong>'+name(player)+'</strong></div></div></div>';
+      const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL',voter=esc(record.playerNames?.[player]||players[player]?.name||'ผู้เล่น');
+      return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong class="avalon-reveal-player-name">ผู้ลงผล: '+voter+'</strong></div></div></div>';
      }).join('');
      return '<article class="avalon-mission-reveal '+(record.passed?'passed':'failed')+'"><div class="avalon-mission-reveal-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ ภารกิจสำเร็จ':'✕ ภารกิจล้มเหลว')+'</b></div><p>ทีมภารกิจ · '+(record.team||[]).map(name).join(' · ')+'</p><div class="avalon-reveal-grid">'+cards+'</div><small class="avalon-reveal-summary">PASS '+record.success+' ใบ · FAIL '+record.fail+' ใบ</small></article>';
     }).join('');
@@ -275,30 +277,37 @@ function renderAvalon(r){
 function renderAvalonResults(r){
  const root=$('avalonResultsContent');root.replaceChildren();
  const a=r.avalon;if(!a){root.textContent='ไม่พบข้อมูลสรุปเกม Avalon';return;}
- const ids=a.order||Object.keys(r.gamePlayers||r.players||{}),players=gameParticipants(r),name=id=>esc(players[id]?.name||'ผู้เล่น');
+ const ids=a.order||Object.keys(r.gamePlayers||r.players||{}),players=gameParticipants(r),name=id=>esc(players[id]?.name||r.gamePlayers?.[id]?.name||r.playerProfiles?.[id]?.name||r.players?.[id]?.name||'ผู้เล่น');
  const history=Object.values(a.history||{}).sort((x,y)=>x.mission-y.mission),proposals=Object.entries(a.proposals||{}).sort(([x],[y])=>Number(x.slice(1))-Number(y.slice(1))).map(([,p])=>p);
  const result=r.result||{},sideLabel=side=>side==='red'?'ฝ่ายแดง':'ฝ่ายน้ำเงิน';
  const reason={rejections:'แต่งตั้งทีมล้มเหลวครบ 5 ครั้ง',missions:'ภารกิจล้มเหลวครบ 3 ครั้ง',assassinated:'Assassin ทาย Merlin ถูกต้อง',assassin_missed:'Assassin ทาย Merlin ผิด'}[result.reason]||'จบเกม';
  function section(title,html,cls=''){const e=document.createElement('section');e.className='avalon-section avalon-summary-section'+(cls?' '+cls:'');e.innerHTML='<h3>'+title+'</h3>'+html;root.append(e);return e;}
+ const proposalForMission=record=>[...proposals].reverse().find(p=>p.mission===record.mission&&p.approved);
+ const playerName=(record,id)=>esc(record.playerNames?.[id]||players[id]?.name||r.gamePlayers?.[id]?.name||r.playerProfiles?.[id]?.name||r.players?.[id]?.name||'ผู้เล่น');
  section('ผลการแข่งขัน','<div class="avalon-summary-winner '+(result.winner==='red'?'red':'blue')+'">'+sideLabel(result.winner)+'ชนะ</div><p>'+reason+'</p><div class="avalon-summary-stats"><span>ภารกิจสำเร็จ <b>'+history.filter(x=>x.passed).length+'</b></span><span>ภารกิจล้มเหลว <b>'+history.filter(x=>!x.passed).length+'</b></span><span>แต่งตั้งล้มเหลว <b>'+(a.rejections||0)+'</b></span></div>','avalon-summary-hero');
- section('บทบาทของผู้เล่นทุกคน','<div class="avalon-role-list avalon-summary-roles">'+ids.map((p,i)=>{const role=r.roles?.[p]||'ไม่ทราบบทบาท',side=avalonSide(role);return '<p class="avalon-summary-role '+side+'"><span>'+(i+1)+'. '+name(p)+'</span><strong>'+esc(role)+'</strong><small>'+sideLabel(side)+'</small></p>';}).join('')+'</div>');
- const missionSummaryHtml=history.map((record,missionIndex)=>{
-  const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
-  const animate=!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
-  const cards=(record.team||[]).map((player,index)=>{
-   const vote=record.votes?.[player];
-   if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b></div><div class="avalon-reveal-card-front"><strong>ไม่มีข้อมูล</strong><small>'+name(player)+'</small></div></div></div>';
-   const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL';
-   return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong>'+name(player)+'</strong></div></div></div>';
-  }).join('');
-  return '<article class="avalon-summary-mission '+(record.passed?'passed':'failed')+'"><div class="avalon-summary-mission-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ สำเร็จ':'✕ ล้มเหลว')+'</b></div><p>ทีมภารกิจ: '+(record.team||[]).map(name).join(' · ')+'</p><div class="avalon-reveal-grid">'+cards+'</div><div class="avalon-summary-stats"><span>Success <b>'+(record.success??0)+'</b></span><span>Fail <b>'+(record.fail??0)+'</b></span></div></article>';
- }).join('');
- section('ผลการเล่นแต่ละภารกิจ',history.length?missionSummaryHtml:'<p>ไม่มีภารกิจที่ได้รับการตัดสินผล</p>');
- if(proposals.length)section('ประวัติการแต่งตั้งทีม',proposals.map((p,i)=>'<article class="avalon-summary-proposal '+(p.approved?'approved':'rejected')+'"><div class="avalon-summary-mission-head"><strong>ครั้งที่ '+(i+1)+' · ภารกิจ '+p.mission+'</strong><b>'+(p.approved?'อนุมัติ':'ไม่อนุมัติ')+'</b></div><p>King: '+name(p.king)+'</p><p>ทีม: '+(p.team||[]).map(name).join(' · ')+'</p><p>ยินยอม '+p.yes+' · ไม่ยินยอม '+p.no+'</p></article>').join(''));
  if(result.reason==='assassinated'||result.reason==='assassin_missed'){
   const assassin=ids.find(p=>r.roles?.[p]==='Assassin'),target=result.assassinated,hit=result.reason==='assassinated';
   section('การลอบสังหารของ Assassin','<div class="avalon-assassin-summary '+(hit?'hit':'miss')+'"><p>Assassin: <strong>'+name(assassin)+'</strong></p><p>เป้าหมายที่เลือก: <strong>'+name(target)+'</strong></p><p>บทบาทจริงของเป้าหมาย: <strong>'+esc(r.roles?.[target]||'ไม่ทราบ')+'</strong></p><strong class="avalon-assassin-verdict">'+(hit?'Assassin สังหาร Merlin สำเร็จ · ฝ่ายแดงชนะ':'Assassin ทายผิด · ฝ่ายน้ำเงินชนะ')+'</strong></div>');
  }else section('การลอบสังหารของ Assassin','<p>เกมจบก่อนถึงขั้นตอนการลอบสังหารของ Assassin</p>');
+ if(history.length){
+  const latest=history[history.length-1],latestProposal=proposalForMission(latest),latestKing=latest.king||latestProposal?.king;
+  section('ผลภารกิจล่าสุด · รอบ '+latest.mission,'<div class="avalon-latest-mission-team"><p><small>ผู้เลือกทีม · KING</small><strong>'+name(latestKing)+'</strong></p><p><small>ผู้เล่นที่ถูกเลือกไปทำภารกิจ</small><strong>'+(latest.team||[]).map(p=>playerName(latest,p)).join(' · ')+'</strong></p><div class="avalon-summary-stats"><span>PASS <b>'+(latest.success??0)+'</b></span><span>FAIL <b>'+(latest.fail??0)+'</b></span></div></div>','avalon-latest-mission');
+ }
+ const missionSummaryHtml=history.map(record=>{
+  const revealKey=[roomId,r.gamesPlayed,record.mission].join(':');
+  const animate=!avalonRevealPlayed.has(revealKey);if(animate)avalonRevealPlayed.add(revealKey);
+  const proposal=proposalForMission(record),king=record.king||proposal?.king;
+  const cards=(record.team||[]).map((player,index)=>{
+   const vote=record.votes?.[player],voter=playerName(record,player);
+   if(typeof vote!=='boolean')return '<div class="avalon-reveal-card is-unavailable"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front"><strong>ไม่มีข้อมูล</strong><small>'+voter+'</small></div></div></div>';
+   const resultClass=vote?'success':'fail',resultLabel=vote?'PASS':'FAIL';
+   return '<div class="avalon-reveal-card '+(animate?'is-revealing':'is-revealed')+'" style="--reveal-delay:'+(index*560)+'ms"><div class="avalon-reveal-card-inner"><div class="avalon-reveal-card-back"><span>AVALON</span><b>?</b><small>MISSION '+record.mission+'</small></div><div class="avalon-reveal-card-front '+resultClass+'"><span class="avalon-reveal-result">'+resultLabel+'</span><strong class="avalon-reveal-player-name">ผู้ลงผล: '+voter+'</strong></div></div></div>';
+  }).join('');
+  return '<article class="avalon-summary-mission '+(record.passed?'passed':'failed')+'"><div class="avalon-summary-mission-head"><strong>ภารกิจที่ '+record.mission+'</strong><b>'+(record.passed?'✓ สำเร็จ':'✕ ล้มเหลว')+'</b></div><p>ผู้เลือกทีม · KING: <strong>'+name(king)+'</strong></p><p>ผู้เล่นที่ถูกเลือกไปทำภารกิจ: <strong>'+(record.team||[]).map(p=>playerName(record,p)).join(' · ')+'</strong></p><div class="avalon-reveal-grid">'+cards+'</div><div class="avalon-summary-stats"><span>Success <b>'+(record.success??0)+'</b></span><span>Fail <b>'+(record.fail??0)+'</b></span></div></article>';
+ }).join('');
+ section('ผลการเล่นแต่ละภารกิจ',history.length?missionSummaryHtml:'<p>ไม่มีภารกิจที่ได้รับการตัดสินผล</p>');
+ section('บทบาทของผู้เล่นทุกคน','<div class="avalon-role-list avalon-summary-roles">'+ids.map((p,i)=>{const role=r.roles?.[p]||'ไม่ทราบบทบาท',side=avalonSide(role);return '<p class="avalon-summary-role '+side+'"><span>'+(i+1)+'. '+name(p)+'</span><strong>'+esc(role)+'</strong><small>'+sideLabel(side)+'</small></p>';}).join('')+'</div>');
+ if(proposals.length)section('ประวัติการแต่งตั้งทีม',proposals.map((p,i)=>'<article class="avalon-summary-proposal '+(p.approved?'approved':'rejected')+'"><div class="avalon-summary-mission-head"><strong>ครั้งที่ '+(i+1)+' · ภารกิจ '+p.mission+'</strong><b>'+(p.approved?'อนุมัติ':'ไม่อนุมัติ')+'</b></div><p>King: '+name(p.king)+'</p><p>ทีม: '+(p.team||[]).map(name).join(' · ')+'</p><p>ยินยอม '+p.yes+' · ไม่ยินยอม '+p.no+'</p></article>').join(''));
  const bottom=section('กลับสู่ Lobby','<p>'+(isHost?'เมื่อกลับ Lobby สามารถเริ่มเกม Avalon รอบใหม่ได้':'รอหัวหน้าห้องกลับสู่ Lobby')+'</p>','avalon-summary-return');
  if(isHost){const b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent='กลับไป Lobby';b.onclick=async()=>{const id=roomId,game=r.gamesPlayed;if(!await confirmBox('กลับไป Lobby?','สรุปผลเกมนี้จะยังคงแสดงจนกว่าจะกลับ Lobby','กลับไป Lobby')||id!==roomId)return;try{await getRef().transaction(x=>{if(x?.gameMode!=='avalon'||x.status!=='results'||x.hostId!==myId||x.gamesPlayed!==game)return;x.status='lobby';x.avalon=null;x.roles=null;x.gamePlayers=null;x.result=null;x.lastActivityAt=TIMESTAMP();return x;},undefined,false);}catch(e){error(e);}};bottom.append(b);}
 }
