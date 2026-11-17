@@ -233,3 +233,6 @@ setInterval(()=>{
   whoCustomClock(roomState);whoCustomAuto();
  }
 },1000);
+
+// Render a room snapshot that arrived before this mode finished loading.
+if(roomState?.gameMode==='whoami_custom'){renderRoom(roomState);runAutomatic();}

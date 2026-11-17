@@ -222,3 +222,6 @@ async function insiderAuto(){
  },undefined,false)}catch(e){error(e)}finally{autoBusy=false}
 }
 setInterval(()=>{if(roomState?.gameMode==='insider'&&['insider_prepare','playing','insider_voting'].includes(roomState.status)){insiderClock(roomState);insiderAuto()}},1000);
+
+// Render a room snapshot that arrived before this mode finished loading.
+if(roomState?.gameMode==='insider'){renderRoom(roomState);runAutomatic();}

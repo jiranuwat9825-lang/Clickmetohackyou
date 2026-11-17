@@ -267,7 +267,7 @@ function renderAvalon(r){
    }else block('กำลังดำเนินภารกิจ','<p>ทีมที่ได้รับเลือกกำลังส่งผลภารกิจ ('+count+'/'+a.team.length+')</p>');
   }else if(r.status==='avalon_assassin'){
    const panel=block('Assassin · ตามหา Merlin','<p>ฝ่ายน้ำเงินทำภารกิจสำเร็จ 3 ครั้งแล้ว หาก Assassin ทาย Merlin ถูก ฝ่ายแดงชนะ</p>');
-   if(myRole==='Assassin'){const grid=document.createElement('div');grid.className='avalon-buttons';panel.append(grid);ids.filter(p=>p!==myId).forEach(p=>{const b=button(grid,players[p]?.name||'ผู้เล่น','assassin',p);b.onclick=async()=>{if(await confirmBox('ยืนยันเป้าหมาย Assassin?','เลือก '+(players[p]?.name||'ผู้เล่น')+' ได้เพียงครั้งเดียว','ยืนยัน'))avalonSend('assassin',p);};});}
+   if(myRole==='Assassin'){const grid=document.createElement('div');grid.className='avalon-buttons';panel.append(grid);ids.filter(p=>p!==myId).forEach(p=>{const b=button(grid,players[p]?.name||'ผู้เล่น','assassin',p);b.onclick=async()=>{const id=roomId,key=avalonPhaseKey(r);if(await confirmBox('ยืนยันเป้าหมาย Assassin?','เลือก '+(players[p]?.name||'ผู้เล่น')+' ได้เพียงครั้งเดียว','ยืนยัน')&&id===roomId&&roomState&&key===avalonPhaseKey(roomState))avalonSend('assassin',p);};});}
   }
  }
 
@@ -356,3 +356,6 @@ async function avalonBotTick(){
   if(avalonApply(x,next.id,next.type,next.value))return x;
  },undefined,false);}catch(e){error(e);}finally{autoBusy=false;}
 }
+
+// Render a room snapshot that arrived before this mode finished loading.
+if(roomState?.gameMode==='avalon'){renderRoom(roomState);runAutomatic();}
