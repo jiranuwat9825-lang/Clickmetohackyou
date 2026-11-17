@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/webp" href="assets/earthkung-logo.webp">
-<link rel="stylesheet" href="style.css?v=avalon-summary-player-names-20261117">
+<link rel="stylesheet" href="style.css?v=cryptid-beta-20261118">
 </head>
 <body>
 <section id="landingCover" class="landing-cover" aria-label="หน้าเปิดเกม Party Game">
@@ -84,6 +84,7 @@
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
 <button type="button" class="choice mode coming-soon" disabled aria-disabled="true" title="Steal cheese ยังไม่เปิดให้เล่น"><strong>Steal cheese</strong><small>Wait for update</small></button>
 <button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 9–10 คน</small></button>
+<button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid <em class="cryptid-beta">Beta</em></strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
 </div>
 <div id="spyFormatSection" class="mode-formats" hidden>
 <label>เลือกรูปแบบ Spy fall</label><div class="format-grid">
@@ -99,6 +100,7 @@
 </div>
 </div>
 <div id="createDetails" hidden>
+<div id="cryptidCreateSettings" class="lobby-category" hidden><label for="cryptidCreateCount">จำนวนผู้เล่น Cryptid Beta</label><select id="cryptidCreateCount"><option value="3">3 คน</option><option value="4">4 คน</option><option value="5">5 คน</option></select><p class="muted hint">เพิ่มบอททดสอบได้ในล็อบบี้ · เล่นผลัดกัน · ไม่จับเวลา</p></div>
 <div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
 <div id="categoryCreateSection"><h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
 <div id="durationCreateSection"><h3 class="step"><b>04</b> <span id="durationLabel">จำนวนรอบ</span></h3>
@@ -137,6 +139,12 @@
 <section id="lobbyScreen" class="panel page" hidden>
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
 <div id="playerList" class="player-list"></div>
+<div id="cryptidLobbySettings" class="lobby-category" hidden>
+ <label for="cryptidLobbyCount">จำนวนผู้เล่น Cryptid Beta</label>
+ <div class="lobby-category-controls"><select id="cryptidLobbyCount"><option value="3">3 คน</option><option value="4">4 คน</option><option value="5">5 คน</option></select><button id="cryptidLobbySave" type="button" class="btn soft">บันทึก</button></div>
+ <div id="cryptidBotTools" class="cryptid-bot-tools"><p id="cryptidBotCount" class="muted"></p><div class="cryptid-buttons"><button id="cryptidAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="cryptidFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="cryptidRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">บอทเล่นเองเมื่อถึงตา และใช้เบาะแสของตนกับข้อมูลบนกระดาน</p></div>
+ <details class="cryptid-beta-note"><summary>เกี่ยวกับ Beta</summary><p>สำหรับทดสอบกับเพื่อน เบาะแสซ่อนเฉพาะหน้าจอ แต่ข้อมูลยังใช้ระบบห้องร่วมกันของเว็บเดิม จึงยังไม่เหมาะกับการแข่งขันที่ต้องป้องกันการเปิดดูข้อมูล</p></details>
+</div>
 <div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft" disabled>บันทึกการตั้งค่า</button><div id="avalonBotTools" class="avalon-bot-tools" hidden><p id="avalonBotCount" class="muted"></p><div class="avalon-buttons"><button id="avalonAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="avalonFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="avalonRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">สำหรับทดสอบเกม · บอทเล่นอัตโนมัติเมื่อถึงตา คุณยังต้องเล่นบทบาทของคุณเอง</p></div></div>
 <div id="lobbyCategoryPanel" class="lobby-category">
  <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
@@ -170,6 +178,7 @@
  <button id="finishMatchBtn" type="button" class="btn finish-match-btn full"> จบเกม · สรุปคะแนนและผู้ชนะ</button>
 </div>
 </section>
+<section id="cryptidScreen" class="panel page cryptid-page" hidden><div id="cryptidContent"></div></section>
 <section id="avalonScreen" class="panel page avalon-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สงครามแห่งอวาลอน</h2></div></div><div id="avalonContent" aria-live="polite"></div></section>
 <section id="avalonResultsScreen" class="panel page avalon-page avalon-results-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สรุปผลสงครามแห่งอวาลอน</h2></div></div><div id="avalonResultsContent" aria-live="polite"></div></section>
 <section id="insiderScreen" class="panel page insider-page" hidden>
@@ -296,9 +305,11 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=avalon-results-reveal-20261117"></script>
+<script src="script.js?v=cryptid-beta-20261118"></script>
 <script src="insider.js?v=stability-20261116"></script>
 <script src="whoami_custom.js?v=stability-20261116"></script>
 <script src="avalon.js?v=avalon-hide-voter-name-20261117-2"></script>
+<script src="cryptid-engine.js?v=cryptid-beta-20261118"></script>
+<script src="cryptid.js?v=cryptid-beta-20261118"></script>
 </body>
 </html>
