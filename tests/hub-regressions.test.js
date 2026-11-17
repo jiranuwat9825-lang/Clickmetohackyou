@@ -94,6 +94,18 @@ test('creating a room snapshots the chosen mode across asynchronous room-code lo
  await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');
 });
 
+test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
+ const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);
+ assert.equal(h.run('insiderSetup(testRoom,Object.keys(testRoom.players))'),true);assert.equal(h.run('testRoom.insiderDeadline'),1_090_000);
+ h.run('testRoom.insiderSettings.guessSeconds=60;testRoom.insiderAnswer="แมว";insiderStartGuessing(testRoom)');assert.equal(h.run('testRoom.insiderGuessDeadline'),1_420_000);
+ h.run('insiderStartVoting(testRoom,"a")');assert.equal(h.run('testRoom.insiderDeadline'),1_045_000);assert.equal(h.run('insiderConfig(testRoom).maxGuesses'),2);
+});
+test('Insider validates settings and rejects guesses beyond the configured limit',async()=>{
+ const h=loadHub(),r=base('insider');r.players.d={name:'D'};r.roles={a:'common',b:'master',c:'insider',d:'common'};r.insiderSettings={prepSeconds:60,guessSeconds:300,voteSeconds:120,maxGuesses:2};r.insiderAnswer='แมว';r.insiderGuessDeadline=1_300_000;h.setRoom(r);
+ for(let i=0;i<3;i++){h.element('insiderGuessInput').value='ไม่ใช่';await h.element('insiderGuessSubmit').onclick();h.sync();}
+ assert.equal(h.getRoom().insiderAttempts.a,2);assert.equal(h.getRoom().insiderGuessFeed.length,2);
+ assert.equal(h.run('insiderSettingsValid({prepSeconds:0,guessSeconds:30,voteSeconds:0,maxGuesses:0})'),false);
+});
 test('Cryptid wheel zoom stays anchored at the cursor, clamps scale and left drag does not select a cell',()=>{
  const h=loadHub(),viewport=h.element('cryptidMapViewport'),svg=h.element('cryptidMap');
  viewport.clientWidth=400;viewport.clientHeight=300;viewport.scrollLeft=100;viewport.scrollTop=60;viewport.getBoundingClientRect=()=>({left:50,top:30,width:400,height:300});

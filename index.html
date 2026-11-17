@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/webp" href="assets/earthkung-logo.webp">
-<link rel="stylesheet" href="style.css?v=ordered-update-5-20261118">
+<link rel="stylesheet" href="style.css?v=ordered-update-6-20261118">
 </head>
 <body>
 <div id="toasts" class="toasts" aria-live="polite"></div>
@@ -91,7 +91,7 @@
 </div>
 <div id="createDetails" hidden>
 
-
+<div id="insiderCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderCreatePrep">เวลาคิดคำตอบ (วินาที)<input id="insiderCreatePrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderCreateGuess">เวลาถามและทาย (นาที)<input id="insiderCreateGuess" type="number" min="1" max="30" value="5"></label><label for="insiderCreateAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderCreateAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderCreateVote">เวลาโหวต (วินาที)<input id="insiderCreateVote" type="number" min="30" max="300" step="15" value="120"></label></div><p class="insider-settings-caption">Master ยืนยันคำก่อนหมดเวลาได้ เพื่อเริ่มช่วงถามทันที</p></div>
 <div id="cryptidCreateSettings" class="lobby-category" hidden><label for="cryptidCreateCount">จำนวนผู้เล่น Cryptid Beta</label><select id="cryptidCreateCount"><option value="3">3 คน</option><option value="4">4 คน</option><option value="5">5 คน</option></select><label for="cryptidCreateMap" class="section-gap">แผนที่ที่จะเล่น</label><select id="cryptidCreateMap"><option value="random">🎲 สุ่มแผนที่ · เปลี่ยนผังทุกเกม</option><option value="mistwood">ป่าหมอก</option><option value="highlands">หุบเขาหิน</option><option value="wetlands">ลุ่มน้ำลึกลับ</option></select><div id="cryptidCreateMapPreview" class="cryptid-map-preview"></div><p class="muted hint">เพิ่มบอททดสอบได้ในล็อบบี้ · เล่นผลัดกัน · ไม่จับเวลา</p></div>
 <div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
 <div id="categoryCreateSection"><h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
@@ -132,7 +132,7 @@
 <div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
 <div id="playerList" class="player-list"></div>
 
-
+<div id="insiderLobbySettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderLobbyPrep">เวลาคิดคำตอบ (วินาที)<input id="insiderLobbyPrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderLobbyGuess">เวลาถามและทาย (นาที)<input id="insiderLobbyGuess" type="number" min="1" max="30" value="5"></label><label for="insiderLobbyAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderLobbyAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderLobbyVote">เวลาโหวต (วินาที)<input id="insiderLobbyVote" type="number" min="30" max="300" step="15" value="120"></label></div><button id="insiderLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button></div>
 <div id="cryptidLobbySettings" class="lobby-category" hidden>
  <label for="cryptidLobbyCount">จำนวนผู้เล่น Cryptid Beta</label>
  <div class="lobby-category-controls"><select id="cryptidLobbyCount"><option value="3">3 คน</option><option value="4">4 คน</option><option value="5">5 คน</option></select><button id="cryptidLobbySave" type="button" class="btn soft">บันทึก</button></div>
@@ -183,7 +183,7 @@
 <div class="role-card insider-role"><div id="insiderAvatar" class="game-avatar tone-orange">🦊</div><small>บทบาทของคุณ</small><h2 id="insiderMyRole">—</h2><p id="insiderRoleHint"></p></div>
 <div class="timer-block"><span id="insiderTimerLabel">เวลาที่เหลือ</span><strong id="insiderTimer">01:00</strong></div>
 <p id="insiderStatus" class="notice"></p>
-<div id="insiderMasterPanel" class="guess-box" hidden><h3>Master · ตั้งโจทย์</h3><p class="muted hint">พิมพ์คำตอบอะไรก็ได้ ภายใน 1 นาที แล้วยืนยันเพื่อเริ่มเกมทันที</p><input id="insiderMasterWord" maxlength="100" autocomplete="off" placeholder="เช่น ดาวเสาร์, แตงโม"><button id="insiderMasterSubmit" class="btn primary full">ยืนยันโจทย์</button></div>
+<div id="insiderMasterPanel" class="guess-box" hidden><h3>Master · ตั้งโจทย์</h3><p class="muted hint" id="insiderMasterHelp">พิมพ์คำตอบแล้วกดยืนยันเพื่อเริ่มช่วงถามทันที</p><input id="insiderMasterWord" maxlength="100" autocomplete="off" placeholder="เช่น ดาวเสาร์, แตงโม"><button id="insiderMasterSubmit" class="btn primary full">ยืนยันโจทย์</button></div>
 <div id="insiderKnownPanel" class="guess-box" hidden><h3>คุณคือ Insider · คำตอบลับ</h3><p class="insider-secret-answer" id="insiderKnownWord"></p><p class="muted hint">อย่าให้คนอื่นรู้ว่าคุณมีคำตอบอยู่แล้ว</p></div>
 <div id="insiderGuessPanel" class="guess-box" hidden><h3>พิมพ์คำตอบของคุณ</h3><p id="insiderRemaining" class="muted hint">เหลือ 5 ครั้ง</p><input id="insiderGuessInput" maxlength="100" autocomplete="off" placeholder="พิมพ์คำตอบ"><button id="insiderGuessSubmit" class="btn primary full">ยืนยันคำตอบ</button><div id="insiderGuessHistory" class="insider-attempts"></div></div>
 <section id="insiderLiveFeedPanel" class="insider-live-feed-panel" hidden aria-label="คำตอบของทุกคน">
@@ -301,11 +301,11 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=ordered-update-5-20261118"></script>
-<script src="insider.js?v=ordered-update-5-20261118"></script>
-<script src="whoami_custom.js?v=ordered-update-5-20261118"></script>
-<script src="avalon.js?v=ordered-update-5-20261118"></script>
-<script src="cryptid-engine.js?v=ordered-update-5-20261118"></script>
-<script src="cryptid.js?v=ordered-update-5-20261118"></script>
+<script src="script.js?v=ordered-update-6-20261118"></script>
+<script src="insider.js?v=ordered-update-6-20261118"></script>
+<script src="whoami_custom.js?v=ordered-update-6-20261118"></script>
+<script src="avalon.js?v=ordered-update-6-20261118"></script>
+<script src="cryptid-engine.js?v=ordered-update-6-20261118"></script>
+<script src="cryptid.js?v=ordered-update-6-20261118"></script>
 </body>
 </html>

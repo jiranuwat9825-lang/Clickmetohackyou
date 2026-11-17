@@ -1,5 +1,38 @@
 // Insider add-on for Party Game Hub. Loaded after script.js.
-const INSIDER_PREP_MS=60000,INSIDER_GUESS_MS=300000,INSIDER_VOTE_MS=120000,INSIDER_MAX_GUESSES=5;
+const INSIDER_DEFAULT_SETTINGS={prepSeconds:60,guessSeconds:300,voteSeconds:120,maxGuesses:5};
+function insiderSettingsValid(s){return !!s&&Number.isInteger(s.prepSeconds)&&s.prepSeconds>=15&&s.prepSeconds<=300&&Number.isInteger(s.guessSeconds)&&s.guessSeconds>=60&&s.guessSeconds<=1800&&s.guessSeconds%60===0&&Number.isInteger(s.voteSeconds)&&s.voteSeconds>=30&&s.voteSeconds<=300&&Number.isInteger(s.maxGuesses)&&s.maxGuesses>=1&&s.maxGuesses<=20;}
+function insiderConfig(r,setup=false){const s=setup?r?.insiderSettings:r?.insiderRoundSettings||r?.insiderSettings;return {...(insiderSettingsValid(s)?s:INSIDER_DEFAULT_SETTINGS)};}
+function insiderDuration(seconds){return seconds%60===0?seconds/60+' นาที':seconds+' วินาที';}
+function insiderReadSettings(prefix){return {prepSeconds:Number($(prefix+'Prep').value),guessSeconds:Number($(prefix+'Guess').value)*60,voteSeconds:Number($(prefix+'Vote').value),maxGuesses:Number($(prefix+'Attempts').value)};}
+function insiderWriteSettings(prefix,s){$(prefix+'Prep').value=String(s.prepSeconds);$(prefix+'Guess').value=String(s.guessSeconds/60);$(prefix+'Vote').value=String(s.voteSeconds);$(prefix+'Attempts').value=String(s.maxGuesses);}
+let insiderSettingsBusy=false;
+function renderInsiderLobby(r){
+ const panel=$('insiderLobbySettings');panel.hidden=r.gameMode!=='insider';if(panel.hidden)return;
+ const settings=insiderConfig(r,true),key=roomId+':'+JSON.stringify(settings);
+ if(panel.dataset.savedKey!==key){panel.dataset.savedKey=key;insiderWriteSettings('insiderLobby',settings);}
+ for(const field of ['Prep','Guess','Vote','Attempts'])$('insiderLobby'+field).disabled=!isHost||insiderSettingsBusy;
+ $('insiderLobbySave').hidden=!isHost;$('insiderLobbySave').disabled=!isHost||insiderSettingsBusy||JSON.stringify(insiderReadSettings('insiderLobby'))===JSON.stringify(settings);
+}
+for(const field of ['Prep','Guess','Vote','Attempts'])$('insiderLobby'+field).oninput=()=>{if(roomState)renderInsiderLobby(roomState);};
+$('insiderLobbySave').onclick=async()=>{
+ if(!roomId||!isHost||insiderSettingsBusy||roomState?.gameMode!=='insider')return;
+ const id=roomId,settings=insiderReadSettings('insiderLobby');
+ if(!insiderSettingsValid(settings)){toast('ตรวจสอบเวลาและจำนวนครั้งตามช่วงที่กำหนด','error');return;}
+ insiderSettingsBusy=true;renderInsiderLobby(roomState);
+ try{const result=await getRef().transaction(r=>{if(id!==roomId||!r||r.status!=='lobby'||r.gameMode!=='insider'||r.hostId!==myId)return;r.insiderSettings=settings;r.lastActivityAt=TIMESTAMP();return r;},undefined,false);toast(result.committed?'บันทึกการตั้งค่า Insider แล้ว':'ห้องเริ่มเกมแล้วหรือสิทธิ์ Host เปลี่ยน',result.committed?'success':'error');}
+ catch(e){error(e);}finally{insiderSettingsBusy=false;if(id===roomId&&roomState)renderInsiderLobby(roomState);}
+};
+function insiderSetup(r,ids){
+ if(!r||r.gameMode!=='insider'||r.status!=='lobby'||ids.length<4)return false;
+ if(r.insiderSettings&&!insiderSettingsValid(r.insiderSettings))return false;
+ const picks=shuffle(ids),masterId=picks[0],insiderId=picks[1];
+ r.roles=Object.fromEntries(ids.map(id=>[id,id===masterId?'master':id===insiderId?'insider':'common']));
+ r.gamePlayers=copyPack(r.players);r.playerProfiles={...(r.playerProfiles||{}),...copyPack(r.players)};
+ r.insiderRoundSettings=insiderConfig(r,true);
+ r.insiderMasterId=masterId;r.insiderId=insiderId;r.insiderAnswer=null;r.insiderDeadline=serverNow()+r.insiderRoundSettings.prepSeconds*1000;r.insiderGuessDeadline=null;
+ r.insiderAttempts={};r.insiderVotes={};r.insiderGuesses={};r.insiderGuessFeed=[];r.insiderWinner=null;r.insiderResolved=false;r.result=null;
+ r.status='insider_prepare';r.gamesPlayed=(r.gamesPlayed||0)+1;r.lastActivityAt=TIMESTAMP();return true;
+}
 let insiderVoteChoice='',activeInsiderNoteKey='',insiderRoundKey='',insiderBusy=false;
 const insiderRole=(r,id=myId)=>r?.roles?.[id]||'common';
 const insiderIds=r=>gameParticipantIds(r).filter(id=>r?.roles?.[id]);
@@ -18,14 +51,14 @@ $('insiderNoteInput').addEventListener('input',()=>{
 });
 function insiderStartGuessing(r){
  if(r.gameMode!=='insider'||r.status!=='insider_prepare'||!String(r.insiderAnswer||'').trim())return false;
- r.status='playing';r.insiderDeadline=null;r.insiderGuessDeadline=serverNow()+INSIDER_GUESS_MS;return true;
+ r.status='playing';r.insiderDeadline=null;r.insiderGuessDeadline=serverNow()+insiderConfig(r).guessSeconds*1000;return true;
 }
 function insiderNoWinner(r,reason){
  r.status='results';r.insiderResolved=true;r.insiderDeadline=null;r.insiderGuessDeadline=null;
  r.result={type:'insider',reason,found:false,answer:r.insiderAnswer||null,masterId:r.insiderMasterId,insiderId:r.insiderId,awards:{}};
 }
 function insiderStartVoting(r,winner){
- r.status='insider_voting';r.insiderWinner=winner;r.insiderDeadline=serverNow()+INSIDER_VOTE_MS;
+ r.status='insider_voting';r.insiderWinner=winner;r.insiderDeadline=serverNow()+insiderConfig(r).voteSeconds*1000;
  r.insiderGuessDeadline=null;r.insiderVotes={};
 }
 function insiderVotingComplete(r){
@@ -51,7 +84,7 @@ function insiderClock(r){
  const prep=r.status==='insider_prepare',play=r.status==='playing',vote=r.status==='insider_voting';
  $('insiderTimer').textContent=formatLeft(play?r.insiderGuessDeadline:r.insiderDeadline);
  if(prep&&myId===r.insiderMasterId)$('insiderMasterSubmit').disabled=insiderBusy||serverNow()>=Number(r.insiderDeadline||0);
- if(play)$('insiderGuessSubmit').disabled=insiderBusy||insiderRole(r)==='master'||Number(r.insiderAttempts?.[myId]||0)>=5||serverNow()>=Number(r.insiderGuessDeadline||0);
+ if(play)$('insiderGuessSubmit').disabled=insiderBusy||insiderRole(r)==='master'||Number(r.insiderAttempts?.[myId]||0)>=insiderConfig(r).maxGuesses||serverNow()>=Number(r.insiderGuessDeadline||0);
  if(vote)$('insiderVoteSubmit').disabled=insiderBusy||!!r.insiderVotes?.[myId]||!insiderVoteChoice||serverNow()>=Number(r.insiderDeadline||0);
 }
 function insiderGuessEvents(r){
@@ -97,7 +130,7 @@ function renderInsider(r){
  if(key!==insiderRoundKey){insiderRoundKey=key;insiderVoteChoice='';$('insiderMasterWord').value='';$('insiderGuessInput').value='';}
  insiderSyncNotes(r);
  const role=insiderRole(r),master=role==='master',spy=role==='insider',prep=r.status==='insider_prepare',play=r.status==='playing',vote=r.status==='insider_voting';
- const used=Number(r.insiderAttempts?.[myId]||0),remaining=Math.max(0,5-used),ids=insiderIds(r);
+ const used=Number(r.insiderAttempts?.[myId]||0),settings=insiderConfig(r),remaining=Math.max(0,settings.maxGuesses-used),ids=insiderIds(r);
  setGameAvatar('insiderAvatar');
  $('insiderMyRole').textContent=role.toUpperCase();
  $('insiderRoleHint').textContent=master?'คุณตั้งคำและตอบคำถามด้วยความจริง โดยไม่พูดคำตอบ':spy?'คุณรู้คำตอบ จงทำตัวให้กลมกลืนและไม่ให้ถูกจับได้':'คุณต้องพยายามทายคำลับและหาคนที่รู้คำตอบ';
@@ -108,15 +141,16 @@ function renderInsider(r){
  $('insiderKnownWord').textContent=spy&&!prep?r.insiderAnswer||'':'';
  $('insiderGuessPanel').hidden=!play||master||remaining===0;
  $('insiderVotePanel').hidden=!vote;
- $('insiderRemaining').textContent='โอกาสทายคงเหลือ '+remaining+' / 5 ครั้ง';
+ $('insiderRemaining').textContent='โอกาสทายคงเหลือ '+remaining+' / '+settings.maxGuesses+' ครั้ง';
+ $('insiderMasterHelp').textContent='พิมพ์คำตอบภายใน '+insiderDuration(settings.prepSeconds)+' แล้วยืนยันเพื่อเริ่มช่วงถามทันที';
  insiderRenderGuessFeed(r);
  const guesses=$('insiderGuessHistory');guesses.replaceChildren();
  (r.insiderGuesses?.[myId]||[]).forEach((word,i)=>{const p=document.createElement('p');p.className='insider-attempt';p.textContent='ครั้งที่ '+(i+1)+': '+word;guesses.append(p)});
  const voters=Object.keys(r.players||{}).filter(id=>r.roles?.[id]);
- $('insiderStatus').textContent=prep?(master?'กรอกคำตอบภายใน 1 นาที ถ้าไม่ทันจะยกเลิกรอบ':'รอ Master ตั้งคำ ถ้าคิดเสร็จก่อนจะเริ่มเวลา 5 นาทีทันที'):
-  play?(master?'ตอบคำถามให้ผู้เล่นทุกคนตามจริง':'ถาม Master และพิมพ์คำตอบได้สูงสุดคนละ 5 ครั้ง'):
+ $('insiderStatus').textContent=prep?(master?'กรอกคำตอบภายใน '+insiderDuration(settings.prepSeconds)+' ถ้าไม่ทันจะยกเลิกรอบ':'รอ Master ตั้งคำ · ช่วงถาม '+insiderDuration(settings.guessSeconds)):
+  play?(master?'ตอบคำถามให้ผู้เล่นทุกคนตามจริง':'ถาม Master และพิมพ์คำตอบได้สูงสุดคนละ '+settings.maxGuesses+' ครั้ง'):
   'ตอบถูกแล้ว! โหวตว่าใครเป็น Insider · ลงคะแนนแล้ว '+Object.keys(r.insiderVotes||{}).length+'/'+voters.length;
- renderGameStats('insiderProgress',[{label:'บทบาท',value:role.toUpperCase()},{label:'ผู้เล่น',value:ids.length+' คน'},{label:'โอกาสที่เหลือ',value:master?'—':remaining+' / 5'}]);
+ renderGameStats('insiderProgress',[{label:'บทบาท',value:role.toUpperCase()},{label:'ผู้เล่น',value:ids.length+' คน'},{label:'โอกาสที่เหลือ',value:master?'—':remaining+' / '+settings.maxGuesses}]);
  if(vote){
   const box=$('insiderVoteChoices');box.replaceChildren();
   ids.filter(id=>id!==myId).forEach(id=>{
@@ -172,7 +206,7 @@ $('insiderMasterSubmit').onclick=async()=>{
   if(!r||r.gameMode!=='insider'||(Number(r.gamesPlayed)||0)!==game||r.status!=='insider_prepare'||!r.players?.[myId]||r.insiderMasterId!==myId||serverNow()>=r.insiderDeadline)return;
   r.insiderAnswer=answer;insiderStartGuessing(r);r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);
- if(res.committed){$('insiderMasterWord').value='';toast('ยืนยันคำแล้ว เริ่ม 5 นาที','success')}else toast('หมดเวลาตั้งคำแล้ว','error');
+ if(res.committed){$('insiderMasterWord').value='';toast('ยืนยันคำแล้ว เริ่มช่วงถาม '+insiderDuration(insiderConfig(res.snapshot.val()).guessSeconds),'success')}else toast('หมดเวลาตั้งคำแล้ว','error');
  }catch(e){error(e)}finally{insiderBusy=false;if(roomState?.gameMode==='insider')insiderClock(roomState);}
 };
 $('insiderGuessSubmit').onclick=async()=>{
@@ -184,7 +218,7 @@ $('insiderGuessSubmit').onclick=async()=>{
  try{const res=await getRef().transaction(r=>{
   if(!r||r.gameMode!=='insider'||(Number(r.gamesPlayed)||0)!==game||r.status!=='playing'||!r.players?.[myId]||!r.roles?.[myId]||
    r.roles?.[myId]==='master'||!r.insiderAnswer||serverNow()>=r.insiderGuessDeadline||
-   Number(r.insiderAttempts?.[myId]||0)>=5)return;
+   Number(r.insiderAttempts?.[myId]||0)>=insiderConfig(r).maxGuesses)return;
   r.insiderAttempts||={};r.insiderAttempts[myId]=Number(r.insiderAttempts[myId]||0)+1;
   r.insiderGuesses||={};r.insiderGuesses[myId]=[...(r.insiderGuesses[myId]||[]),answer];
   const correct=norm(answer)===norm(r.insiderAnswer);
