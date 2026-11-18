@@ -236,7 +236,7 @@ function cryptidHighlight(){
 function cryptidControls(r){
  const root=$('cryptidControls');if(!root||!r?.cryptid)return;
  const a=r.cryptid,cell=a.board.find(c=>c.id===cryptidUI.cell),active=CE.actor(a),mine=active===myId,done=r.status==='results';
- root.innerHTML='<h3>'+(cell?'ช่อง '+CE.coordinate(cell):'เลือกช่องบนแผนที่')+'</h3>';
+ root.innerHTML=cell?'<h3 class="cryptid-cell-heading"><span>ช่องที่เลือก</span><strong>'+CE.coordinate(cell)+'</strong></h3>':'<h3>เลือกช่องบนแผนที่</h3>';
  if(cell){
   root.innerHTML+='<p class="cryptid-cell-detail">'+CE.TERRAIN[cell.terrain]+(cell.animal?' · เขต'+(cell.animal==='bear'?'หมี':'เสือพูมา'):'')+(cell.structure?' · '+(cell.structure==='stone'?'เสาหิน':'กระท่อม')+'สี'+({white:'ขาว',green:'เขียว',blue:'น้ำเงิน'}[cell.structureColor]):'')+'</p>';
   root.innerHTML+=a.order.filter(p=>a.markers?.[cell.id]?.[p]).map(p=>'<div class="cryptid-cell-mark">'+cryptidToken(r,p)+esc(cryptidName(r,p))+' <b>'+ (a.markers[cell.id][p]==='yes'?'● วงกลม · ยังเป็นไปได้':'■ สี่เหลี่ยม · อยู่ที่นี่ไม่ได้')+'</b></div>').join('');

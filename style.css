@@ -786,3 +786,8 @@
 .lobby-settings-toolbar{display:flex;justify-content:flex-end;margin:20px 0 12px}.lobby-settings-toolbar .btn{font-size:15px;min-height:46px}.lobby-settings-toolbar .btn:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
 
 #cryptidCreateCountLabel,#cryptidLobbyCountLabel{font-size:16px}
+
+#cryptidControls .cryptid-cell-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+.cryptid-cell-heading>span{font-size:16px;font-weight:600;color:#c5d7eb}
+.cryptid-cell-heading>strong{display:inline-flex;align-items:center;justify-content:center;min-width:88px;padding:8px 16px;border:1px solid #72dafa88;border-radius:12px;background:#183c50;color:#a1edff;font-size:36px;font-weight:800;line-height:1.2;letter-spacing:1px}
+#cryptidControls .cryptid-cell-detail{font-size:18px;line-height:1.8;color:#d4e3f3;margin:0 0 18px}
