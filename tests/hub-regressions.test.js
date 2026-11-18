@@ -90,8 +90,8 @@ test('confirming a stale leave or next-game dialog cannot affect a different roo
 });
 test('creating a room snapshots the chosen mode across asynchronous room-code lookup',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';h.setRoom(r);h.element('durationInput').value='2';h.element('cryptidCreateCount').value='3';h.element('cryptidCreateMap').value='random';
- h.element('cryptidCreateClueSet').value='standard';h.run('selectedMode="cryptid";selectedCategory="";generateRoomCode=async()=>{selectedMode="insider";$("cryptidCreateClueSet").value="mixed";return "123456"}');
- await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');assert.equal(h.getRoom().cryptidClueSet,'standard');
+ h.run('selectedMode="cryptid";selectedCategory="";generateRoomCode=async()=>{selectedMode="insider";return "123456"}');
+ await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');assert.equal(h.getRoom().cryptidClueSet,undefined);
 });
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
@@ -158,23 +158,21 @@ test('Cryptid stage cards save the selected map, start on that exact layout and 
  r.cryptidMap='shadowfen';h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const card of cards)assert.equal(card.disabled,true);
  cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'shadowfen');
 });
-test('Cryptid clue-set buttons save and start the selected pool and guests cannot change it',async()=>{
- const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
- const buttons=h.element('cryptidLobbyClueSetChoices').children;assert.equal(buttons.length,2);assert.equal(h.element('cryptidLobbyClueSet').value,'mixed');
- buttons.find(b=>b.dataset.clueSet==='standard').onclick();assert.equal(h.element('cryptidLobbySave').disabled,false);
- h.run('setTimeout=fn=>fn()');await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby');await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidClueSet,'standard');
- h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');assert.equal(h.getRoom().cryptid.clueSet,'standard');assert.ok(Object.values(h.getRoom().cryptid.clues).every(c=>!c.id.startsWith('not_')));
- h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[0].onclick();assert.equal(h.element('cryptidLobbyClueSet').value,'mixed');
+test('Cryptid starts legacy Standard rooms with all clue types and has no map dropdown or clue-set selector',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';r.cryptidClueSet='standard';h.setRoom(r);h.run('renderCryptidLobby(roomState);setTimeout=fn=>fn()');
+ const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+ assert.doesNotMatch(html,/<select id="cryptid(?:Create|Lobby)(?:Count|Map)"|cryptid(?:Create|Lobby)ClueSet/);
+ await h.run('cryptidStart()');assert.equal(h.getRoom().status,'cryptid_playing');assert.equal(h.getRoom().cryptidClueSet,undefined);assert.equal(h.getRoom().cryptid.clueSet,undefined);
 });
-test('Cryptid catalogue button lists the round’s full public pool in a closable dialog without the old help text',()=>{
+test('Cryptid catalogue button always lists all 51 clues, ignores legacy set metadata and has no old help text',()=>{
  const engine=require('../cryptid-engine');
  for(const clueSet of ['standard','mixed']){
-  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidClueSet=clueSet;assert.ok(engine.setup(r,Object.keys(r.players),engine.generate(3,Math.random,'mistwood',clueSet)));
-  r.cryptidClueSet=clueSet==='standard'?'mixed':'standard';h.setRoom(r);
+  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidClueSet=clueSet;assert.ok(engine.setup(r,Object.keys(r.players),engine.generate(3,Math.random,'mistwood')));
+  r.cryptid.clueSet=clueSet;h.setRoom(r);
   const dialog=h.element('cryptidClueDialog');dialog.close=()=>{dialog.open=false;};dialog.showModal=()=>{dialog.open=true;};h.run('renderCryptid(roomState)');
   const content=h.element('cryptidContent').innerHTML;assert.match(content,/ดูชนิดเบาะแสทั้งหมด/);assert.doesNotMatch(content,/วิธีเล่นและชนิดเบาะแส|ลูกกลิ้ง = ซูม|cryptidGuide/);
-  h.element('cryptidOpenClues').onclick();assert.equal(dialog.open,true);const list=h.element('cryptidClueList').innerHTML,pool=engine.cluesForSet(r.cryptid.board,clueSet);
-  assert.equal((list.match(/<li>/g)||[]).length,pool.length);for(const clue of pool)assert.ok(list.includes(clue.text));assert.doesNotMatch(list,/ผู้เล่น|winner|solution/);
+  h.element('cryptidOpenClues').onclick();assert.equal(dialog.open,true);const list=h.element('cryptidClueList').innerHTML,pool=engine.clueCatalogue(r.cryptid.board);
+  assert.equal((list.match(/<li>/g)||[]).length,51);for(const clue of pool)assert.ok(list.includes(clue.text));assert.doesNotMatch(list,/ผู้เล่น|winner|solution/);
   h.element('cryptidCloseClues').onclick();assert.equal(dialog.open,false);h.run('cryptidOpenClues();showScreen("lobbyScreen")');assert.equal(dialog.open,false);
   h.run('cryptidOpenClues();showOnly("homeView")');assert.equal(dialog.open,false);
  }

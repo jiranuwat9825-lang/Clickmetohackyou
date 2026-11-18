@@ -5,7 +5,8 @@ Cryptid Beta room, select the player count, then add individual bots or fill the
 remaining seats in the lobby. Choose one of six numbered map cards (Mistwood,
 Highlands, Wetlands, Sunlands, Shadowfen, or Crossroads) to retain its layout
 with fresh clues, or use Random for a new layout each game. Both creation and
-lobby screens show selectable previews. The host must save lobby changes before
+lobby screens show selectable previews. Player counts use 3/4/5-player buttons;
+maps are selected directly with stage cards. The host must save lobby changes before
 starting; guests see the saved selection. Only the host can manage settings. Bots
 are marked in the player list; only connected human participants may host.
 
@@ -22,16 +23,15 @@ extra disclosures, results, and cumulative scoring are supported. A win awards
 one point; a host-aborted game awards none. Return to the lobby for another map.
 
 
-The host selects Standard (23 positive clues) or Mixed (51 patterns: 23 positive
-clues and 28 exclusions) when creating a room or saving lobby settings. The
-choice is frozen per round and restricts generation and bot inference. Old rooms
-default to Mixed. The exclusions include
+Every game uses the full pool of 51 clue patterns (23 positive and 28 exclusions).
+There is no clue-set selector; legacy room preferences are ignored and cleared
+when starting a new round. The exclusions include
 not in one terrain, not in either of two terrains, and outside the terrain,
 animal or structure distance bands. Negative distance clues require at least
 N + 1 hexes from every matching target; distance zero is included in the excluded
 band. Only nontrivial clues with 6–90 allowed cells can be dealt, and the joint
-solution must still be unique. A button opens a scrollable dialog listing every clue type in the round’s chosen
-set. This is the public pool, never a list of players’ assigned private clues.
+solution must still be unique. A button opens a scrollable dialog listing every clue type in the game’s
+full pool. This is the public pool, never a list of players’ assigned private clues.
 
 Existing discs are skipped during search responses. The search stops on the
 first negative response, without revealing later responses. Searching a cell

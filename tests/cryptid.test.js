@@ -121,21 +121,21 @@ test('exclusion clues are dealt to real puzzles and remain valid for placement a
  }
  assert.ok(negativeCount>50,'expanded clue pool must actually deal exclusions');
 });
-test('each selectable clue set generates unique puzzles on every map for 3–5 players and freezes its pool',()=>{
- for(const clueSet of Object.keys(E.CLUE_SETS))for(const mapId of Object.keys(E.MAPS))for(const count of [3,4,5])for(let seed=1;seed<=5;seed++){
-  const p=E.generate(count,seeded(seed),mapId,clueSet),pool=E.cluesForSet(p.board,clueSet),chosen=p.clues.map(c=>pool.find(x=>x.id===c.id));
-  assert.equal(pool.length,clueSet==='standard'?23:51);assert.ok(chosen.every(Boolean));
+test('all maps use the full clue pool for 3–5 players even when a room has a legacy Standard setting',()=>{
+ let negatives=0;
+ for(const mapId of Object.keys(E.MAPS))for(const count of [3,4,5])for(let seed=1;seed<=5;seed++){
+  const p=E.generate(count,seeded(seed),mapId),pool=E.clueCatalogue(p.board),chosen=p.clues.map(c=>pool.find(x=>x.id===c.id));
+  assert.equal(pool.length,51);assert.ok(chosen.every(Boolean));negatives+=chosen.filter(c=>c.negative).length;
   assert.deepEqual(p.board.filter(c=>chosen.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[p.solution]);
-  if(clueSet==='standard')assert.ok(p.clues.every(c=>!c.id.startsWith('not_')));
-  const ids=Array.from({length:count},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidClueSet:clueSet,players:Object.fromEntries(ids.map(id=>[id,{name:id}]))};assert.ok(E.setup(r,ids,p));
-  assert.equal(r.cryptid.clueSet,clueSet);r.cryptidClueSet=clueSet==='standard'?'mixed':'standard';assert.equal(r.cryptid.clueSet,clueSet);
+  const ids=Array.from({length:count},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidClueSet:'standard',players:Object.fromEntries(ids.map(id=>[id,{name:id}]))};assert.ok(E.setup(r,ids,p));
+  assert.equal(r.cryptidClueSet,undefined);assert.equal(r.cryptid.clueSet,undefined);
  }
- const p=E.generate(3,seeded(8),'mistwood','mixed'),r={gameMode:'cryptid',status:'lobby',cryptidClueSet:'standard',players:{a:{},b:{},c:{}}};assert.equal(E.setup(r,['a','b','c'],p),false);
- assert.throws(()=>E.generate(3,seeded(1),'random','invalid'),/ชุดเบาะแส/);
+ assert.ok(negatives>50);
 });
-test('standard-set bots complete games using their restricted clue pool',()=>{
+test('bots complete full-pool games even with legacy restricted-round metadata',()=>{
  for(const n of [3,4,5])for(let seed=1;seed<=5;seed++){
-  const ids=Array.from({length:n},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidClueSet:'standard',players:Object.fromEntries(ids.map(id=>[id,{name:id,bot:true}]))};assert.ok(E.setup(r,ids,E.generate(n,seeded(seed),'mistwood','standard')));
+  const ids=Array.from({length:n},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidClueSet:'standard',players:Object.fromEntries(ids.map(id=>[id,{name:id,bot:true}]))};assert.ok(E.setup(r,ids,E.generate(n,seeded(seed),'mistwood')));
+  r.cryptid.clueSet='standard';
   for(let i=0;i<1800&&r.status!=='results';i++){const move=E.nextBotAction(r,seeded(seed+i));assert.ok(move);act(r,move.id,move.type,move.value);validMarkers(r);}
   assert.equal(r.status,'results');assert.equal(r.result.cell,r.cryptid.solution);
  }

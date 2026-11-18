@@ -11,19 +11,10 @@ function cryptidCountChoices(prefix,count=3,disabled=false){
  }
  for(const button of root.children){const selected=Number(button.dataset.count)===Number(count);button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
 }
-function cryptidClueSetChoices(prefix,clueSet='mixed',disabled=false){
- const root=$(prefix+'ClueSetChoices'),input=$(prefix+'ClueSet');if(!root||!input)return;input.value=clueSet;
- if(!root.children.length)for(const [id,set] of Object.entries(CE.CLUE_SETS)){
-  const button=document.createElement('button');button.type='button';button.className='cryptid-clue-set-choice';button.dataset.clueSet=id;
-  button.innerHTML='<strong>'+esc(set.name)+'</strong><small>'+set.count+' ชนิด</small>';
-  button.onclick=()=>{if(button.disabled)return;input.value=id;if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidClueSetChoices(prefix,id);};root.append(button);
- }
- for(const button of root.children){button.disabled=disabled;button.setAttribute('aria-pressed',String(button.dataset.clueSet===clueSet));}
-}
 function cryptidOpenClues(){
  const r=roomState;if(r?.gameMode!=='cryptid'||!r.cryptid||!['cryptid_playing','results'].includes(r.status))return;
- const clueSet=r.cryptid.clueSet||'mixed',clues=CE.cluesForSet(r.cryptid.board,clueSet);
- $('cryptidClueSetSummary').textContent='ชุด'+CE.CLUE_SETS[clueSet].name+' · '+clues.length+' ชนิด';
+ const clues=CE.clueCatalogue(r.cryptid.board);
+ $('cryptidClueSummary').textContent='เบาะแสทั้งหมด '+clues.length+' ชนิด';
  $('cryptidClueList').innerHTML=[false,true].map(negative=>{
   const group=clues.filter(c=>c.negative===negative);if(!group.length)return '';
   return '<section class="cryptid-clue-group"><h3>'+(negative?'เบาะแส “ไม่อยู่…”':'เบาะแสปกติ')+' · '+group.length+' ชนิด</h3><ol>'+group.map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ol></section>';
@@ -61,13 +52,12 @@ function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playe
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
- const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),setInput=$('cryptidLobbyClueSet'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+(r.cryptidClueSet||'mixed')+':'+isHost;
- if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';setInput.value=r.cryptidClueSet||'mixed';panel.dataset.savedKey=key;}
+ const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+isHost;
+ if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';panel.dataset.savedKey=key;}
  select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidRenderMapPreview('cryptidLobbyMapPreview',mapSelect.value);$('cryptidLobbySave').hidden=!isHost;
  cryptidCountChoices('cryptidLobby',Number(select.value),!isHost||cryptidLobbyBusy);
- cryptidClueSetChoices('cryptidLobby',setInput.value,!isHost||cryptidLobbyBusy);
- $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random')&&setInput.value===(r.cryptidClueSet||'mixed'));
- $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านและชุดเบาะแสให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random')+' · ชุด'+CE.CLUE_SETS[r.cryptidClueSet||'mixed'].name:'เปลี่ยนแล้ว · กดบันทึกการตั้งค่าก่อนเริ่มเกม';
+ $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
+ $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random'):'เปลี่ยนแล้ว · กดบันทึกการตั้งค่าก่อนเริ่มเกม';
  const players=Object.values(r.players||{}),bots=players.filter(p=>p.bot).length,full=players.length>=Number(r.cryptidCount||3);
  $('cryptidBotTools').hidden=!isHost;$('cryptidBotCount').textContent=`ผู้เล่นจริง ${players.length-bots} คน · บอท ${bots} ตัว · ${players.length}/${r.cryptidCount||3}`;
  $('cryptidAddBot').disabled=$('cryptidFillBots').disabled=cryptidLobbyBusy||full;
@@ -78,13 +68,12 @@ $('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPrev
 $('cryptidCreateMap').value='random';
 cryptidRenderMapPreview('cryptidCreateMapPreview','random');
 cryptidCountChoices('cryptidCreate',3);
-cryptidClueSetChoices('cryptidCreate','mixed');
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
- const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,clueSet=$('cryptidLobbyClueSet').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
+ const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
  try{const result=await getRef().transaction(r=>{
-  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![3,4,5].includes(count)||!CE.MAPS[mapId]||!CE.CLUE_SETS[clueSet]||Object.keys(r.players||{}).length>count)return;
-  r.cryptidCount=count;r.cryptidMap=mapId;r.cryptidClueSet=clueSet;r.lastActivityAt=TIMESTAMP();return r;
+  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![3,4,5].includes(count)||!CE.MAPS[mapId]||Object.keys(r.players||{}).length>count)return;
+  r.cryptidCount=count;r.cryptidMap=mapId;delete r.cryptidClueSet;r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);toast(result.committed?'บันทึกการตั้งค่า Cryptid แล้ว':'บันทึกไม่ได้ ตรวจสอบจำนวนผู้เล่นและสถานะห้อง',result.committed?'success':'error');}
  catch(e){error(e);}finally{cryptidLobbyBusy=false;if(id===roomId&&roomState)renderCryptidLobby(roomState);}
 };
@@ -97,15 +86,15 @@ async function cryptidBots(action){
 for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['cryptidRemoveBots','remove']])$(id).onclick=()=>cryptidBots(action);
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
- if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||($('cryptidLobbyClueSet').value||'mixed')!==(roomState.cryptidClueSet||'mixed')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
- const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',clueSet=roomState.cryptidClueSet||'mixed',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
+ if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
+ const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
  if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
  cryptidBusy=true;$('startBtn').disabled=true;$('startBtn').textContent='กำลังสร้างปริศนา…';
  try{
   // Generate once, outside the RTDB retry callback, so retries use the same puzzle.
-  await new Promise(resolve=>setTimeout(resolve,0));const puzzle=CE.generate(count,Math.random,mapId,clueSet),order=CE.mix(ids);
+  await new Promise(resolve=>setTimeout(resolve,0));const puzzle=CE.generate(count,Math.random,mapId),order=CE.mix(ids);
   const result=await getRef().transaction(r=>{
-   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(r.cryptidMap||'random')!==mapId||(r.cryptidClueSet||'mixed')!==clueSet||(Number(r.gamesPlayed)||0)!==game)return;
+   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(r.cryptidMap||'random')!==mapId||(Number(r.gamesPlayed)||0)!==game)return;
    const current=Object.keys(r.players||{});if(current.length!==ids.length||!current.every(p=>ids.includes(p))||!CE.setup(r,ids,puzzle,order))return;
    r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
