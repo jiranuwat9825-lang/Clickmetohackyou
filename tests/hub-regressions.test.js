@@ -128,3 +128,22 @@ test('Steal Cheese renders every phase and results from RTDB-shaped snapshots',(
  }
  for(const phase of ['prepare','night','recruit','intel','discuss','vote','finished'])assert.ok(phases.has(phase),phase);
 });
+
+test('Steal Cheese rolls once, keeps the animation across snapshots and reveals the saved dice afterwards',async()=>{
+ const h=loadHub(),engine=require('../cheese-engine'),r={gameMode:'cheese',status:'lobby',hostId:'a',cheeseCount:4,players:Object.fromEntries(['a','b','c','d'].map(p=>[p,{name:p}]))};
+ engine.setup(r,Object.keys(r.players),1000,()=>.25);r.cheese.dice.a=[2,6];h.setRoom(r);h.run('testTimeouts=[];setTimeout=(fn,ms)=>testTimeouts.push({fn,ms})');
+ await h.run('cheeseRoll()');assert.equal(h.getRoom().cheese.rolled.a,true);assert.equal(h.getRoom().cheese.revision,1);
+ h.sync();h.element('cheeseBody').children=[];h.run('renderCheese(roomState)');let html=h.element('cheeseBody').children.map(e=>e.innerHTML).join('');
+ assert.match(html,/is-rolling/);assert.doesNotMatch(html,/ได้แต้ม 2 และ 6/);
+ await h.run('cheeseRoll()');assert.equal(h.getRoom().cheese.revision,1,'double click must not roll twice');
+ h.element('cheeseBody').children=[];h.run('testTimeouts[0].fn()');html=h.element('cheeseBody').children.map(e=>e.innerHTML).join('');
+ assert.doesNotMatch(html,/is-rolling/);assert.match(html,/ได้แต้ม 2 และ 6/);assert.match(html,/data-value="6"/);
+});
+test('Steal Cheese sleeping view shows only personal waking hours and hides current witnesses and cheese',()=>{
+ const h=loadHub(),engine=require('../cheese-engine'),r={gameMode:'cheese',status:'lobby',hostId:'a',cheeseCount:5,players:Object.fromEntries(['a','b','c','d','e'].map(p=>[p,{name:'NAME_'+p}]))};
+ engine.setup(r,Object.keys(r.players),1000,()=>.25);const a=r.cheese;a.thief='a';r.roles.a='thief';r.roles.b='sleepy';a.dice={a:[2],b:[4],c:[2],d:[5],e:[6]};a.rolled=Object.fromEntries(a.order.map(p=>[p,true]));a.wake={b:4,c:2,d:5,e:6};a.phase='night';a.hour=2;a.deadline=11000;a.stolenHour=2;a.sightings={a:{h2:{hour:2,peers:['c'],cheeseBefore:true,cheeseAfter:false}},c:{h2:{hour:2,peers:['a'],cheeseBefore:true,cheeseAfter:false,witness:'a'}}};
+ h.setRoom(r,'b');h.run('renderCheese(roomState)');let html=h.element('cheeseBody').children.map(e=>e.innerHTML).join('');
+ assert.match(html,/คุณกำลังหลับ/);assert.match(html,/คุณจะตื่นตอนตี 4/);assert.doesNotMatch(html,/NAME_a|NAME_c|สถานะชีส|คุณเห็น/);
+ h.setRoom(r,'c');h.element('cheeseBody').children=[];h.run('renderCheese(roomState)');html=h.element('cheeseBody').children.map(e=>e.innerHTML).join('');
+ assert.match(html,/คุณตื่นแล้ว · ตี 2/);assert.match(html,/NAME_a/);assert.match(html,/หยิบชีส/);
+});

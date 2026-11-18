@@ -1,6 +1,23 @@
 /* Steal Cheese — online table for Cheese Thief (4–8 players). */
 const CH=CheeseEngine;
 let cheeseBusy=false,cheeseLastAuto=0,cheeseSelection=new Set(),cheeseViewKey='';
+let cheeseRollAnimation=null;
+const cheeseRoundKey=r=>[roomId,r.gamesPlayed,myId].join(':');
+function cheeseDiceHTML(values=[],rolling=false,count=1){
+ const dice=rolling?Array.from({length:count},()=>0):values;
+ return '<div class="cheese-dice-tray" role="img" aria-label="'+(rolling?'กำลังทอยลูกเต๋า':dice.length?'ลูกเต๋าแต้ม '+dice.join(' และ '):'ยังไม่ได้ทอยลูกเต๋า')+'">'+(dice.length?dice.map(n=>'<span class="cheese-die'+(rolling?' is-rolling':'')+'" data-value="'+n+'" aria-hidden="true">'+Array.from({length:9},(_,i)=>'<i class="pip pip-'+(i+1)+'"></i>').join('')+'</span>').join(''):'<span class="cheese-die is-unrolled" aria-hidden="true">?</span>')+'</div>';
+}
+async function cheeseRoll(){
+ const r=roomState;if(cheeseBusy||!roomId||r?.gameMode!=='cheese'||r.status!=='cheese_playing'||r.cheese?.phase!=='prepare'||r.cheese.rolled?.[myId]||cheeseRollAnimation?.key===cheeseRoundKey(r))return;
+ const animation={key:cheeseRoundKey(r),started:Date.now()};cheeseRollAnimation=animation;renderCheese(r);
+ try{await cheeseSend('roll');}finally{
+  const duration=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?100:1100;
+  setTimeout(()=>{if(cheeseRollAnimation!==animation)return;cheeseRollAnimation=null;if(roomState?.gameMode==='cheese'&&cheeseRoundKey(roomState)===animation.key)renderCheese(roomState);},Math.max(0,duration-(Date.now()-animation.started)));
+ }
+}
+function cheeseNightTimeline(a,info){
+ return '<ol class="cheese-night-timeline" aria-label="ชั่วโมงกลางคืนของคุณ">'+Array.from({length:6},(_,i)=>{const hour=i+1,mine=info.wake.includes(hour),current=hour===a.hour;return '<li class="'+(current?'is-now ':'')+(hour<a.hour?'is-past ':'')+(mine?'is-my-hour':'')+'"'+(current?' aria-current="step"':'')+'><span>ตี '+hour+'</span><small>'+(mine?'เวลาตื่นของคุณ':'หลับ')+'</small></li>';}).join('')+'</ol>';
+}
 const cheeseName=(r,id)=>gameParticipants(r)[id]?.name||'ผู้เล่น';
 const cheeseKey=r=>[roomId,r.gamesPlayed,r.cheese?.revision].join(':');
 const cheeseRoleLabel=(r,id)=>r.cheese?.followers?.includes(id)?(r.roles?.[id]==='fall'?'หนูแพะ · ถูกเลือกเป็นผู้ช่วย':'ผู้ช่วยขโมย'):({thief:'หนูขโมยชีส',sleepy:'หนูขี้เซา',fall:'หนูแพะ'}[r.roles?.[id]]||'—');
@@ -47,10 +64,12 @@ async function cheeseReturn(){if(!roomId||!isHost||cheeseBusy)return;const id=ro
 function cheeseRules(){return '<details class="cheese-rules"><summary>วิธีเล่น Steal Cheese · หนูขโมยชีส</summary><ol><li>รับบทลับและทอยลูกเต๋า จากนั้นตื่นเฉพาะชั่วโมงที่ลูกเต๋ากำหนด ตั้งแต่ตี 1 ถึงตี 6</li><li>ขโมยต้องหยิบชีสเมื่อตื่น หนูขี้เซาที่ตื่นคนเดียวส่องลูกเต๋าคนอื่นได้หนึ่งคน ถ้าตื่นพร้อมใครให้ดูว่าใครตื่นด้วยและชีสยังอยู่หรือไม่</li><li>4 คน: ลูกเต๋าคนละสองลูก หนูขี้เซาเลือกตื่นหนึ่งเวลา ขโมยตื่นได้ทั้งสองเวลา ห้ามส่องลูกเต๋าและไม่มีผู้ช่วย</li><li>5 คน: ขโมยเลือกผู้ช่วยหนึ่งคนจากคนที่เห็นขโมย ถ้าไม่มีใครเห็น จะไม่มีผู้ช่วย</li><li>6 คน: ขโมยเลือกผู้ช่วยหนึ่งคน ทั้งสองรู้จักกัน</li><li>7 คน: ขโมยเลือกผู้ช่วยสองคน ผู้ช่วยรู้จักกัน แต่ไม่รู้ตัวขโมยจากการเป็นผู้ช่วย</li><li>8 คน: ขโมยเลือกผู้ช่วยสองคน ทั้งสามรู้จักกัน</li><li>คุยกันแล้วโหวตลับพร้อมกัน ห้ามเลือกตัวเอง คนคะแนนสูงสุดทั้งหมดจะถูกเปิดเผย ถ้ามีขโมยอยู่ด้วย ฝ่ายหนูขี้เซาชนะ มิฉะนั้นขโมยกับผู้ช่วยชนะ</li><li>เปิดหนูแพะได้ในเกม 6–8 คน ถ้าหนูแพะได้คะแนนโหวตสูงสุด จะชนะคนเดียว แม้เสมอกับขโมย</li></ol><p>การเล่นบนเว็บ: ช่วงกลางคืนชั่วโมงละ 10 วินาที ระบบหยิบชีสให้อัตโนมัติ หากขโมยไม่เลือกผู้ช่วยภายในเวลา ระบบเลือกให้จากรายชื่อที่ถูกกติกา ช่วงโหวตมี 2 นาที หมดเวลาให้นับเฉพาะโหวตที่ส่งแล้ว ผู้ชนะได้คนละ +1 คะแนน</p><a href="https://ludopedia-anexos.nyc3.digitaloceanspaces.com/cheese_thief_rules_217050.pdf" target="_blank" rel="noopener">คู่มือบอร์ดเกมต้นฉบับ</a><p>ข้อมูลลับยังใช้ระบบห้องร่วมกันของเว็บ ควรเล่นกับเพื่อนที่ไว้ใจ</p></details>';}
 function renderCheese(r){
  const a=r.cheese,root=$('cheeseContent');if(!a){root.textContent='กำลังโหลดเกม…';return;}
- const key=cheeseKey(r),game=roomId+':'+r.gamesPlayed;if(cheeseViewKey!==key){cheeseViewKey=key;cheeseSelection=new Set();}
+ const key=cheeseKey(r);if(cheeseViewKey!==key){cheeseViewKey=key;cheeseSelection=new Set();}
+ if(cheeseRollAnimation&&cheeseRollAnimation.key!==cheeseRoundKey(r))cheeseRollAnimation=null;
+ const rolling=!!cheeseRollAnimation&&a.phase==='prepare';
  const info=CH.intel(r,myId),done=r.status==='results',name=id=>esc(cheeseName(r,id));
  const labels={prepare:'เตรียมตัว · รับบทและทอยลูกเต๋า',night:'กลางคืน · ตี '+a.hour,recruit:'ขโมยกำลังเลือกผู้ช่วย',intel:'รับข้อมูลฝ่ายของคุณ',discuss:'เช้าแล้ว · ใครขโมยชีส?',vote:'โหวตหาหนูขโมยชีส',finished:'สรุปผล'};
- root.innerHTML='<div class="section-head"><div><small>STEAL CHEESE</small><h2>🐭 หนูขโมยชีส 🧀</h2></div><span>'+a.order.length+' คน</span></div><p class="cheese-phase">'+labels[a.phase]+' <strong id="cheeseTimer">'+(a.deadline?formatLeft(a.deadline):'')+'</strong></p><div id="cheeseBody"></div>'+cheeseRules()+'<div id="cheeseHostActions"></div>';
+ root.innerHTML='<div class="section-head"><div><small>STEAL CHEESE</small><h2>🐭 หนูขโมยชีส 🧀</h2></div><span>'+a.order.length+' คน</span></div><p class="cheese-phase"><span>'+labels[a.phase]+'</span><strong id="cheeseTimer" aria-label="เวลาที่เหลือ">'+(a.deadline?formatLeft(a.deadline):'')+'</strong></p>'+(a.phase==='night'?cheeseNightTimeline(a,info):'')+'<div id="cheeseBody"></div>'+cheeseRules()+'<div id="cheeseHostActions"></div>';
  const body=$('cheeseBody');
  function block(title,html,cls=''){const section=document.createElement('section');section.className='cheese-card '+cls;section.innerHTML='<h3>'+title+'</h3>'+html;body.append(section);return section;}
  function button(parent,text,action,value,disabled=false){const b=document.createElement('button');b.type='button';b.className='btn primary';b.textContent=text;b.disabled=cheeseBusy||disabled;b.onclick=()=>cheeseSend(action,value);parent.append(b);return b;}
@@ -60,24 +79,32 @@ function renderCheese(r){
   block('ผลโหวต',a.order.map(id=>'<p>'+name(id)+' → '+(a.votes?.[id]?name(a.votes[id]):'ไม่ได้ส่งโหวต')+'</p>').join(''));
  }else{
   const roleInfo=info.role==='thief'?'ตื่นตามลูกเต๋าเพื่อขโมยชีส แล้วหลบการจับให้ได้':info.baseRole==='fall'?'พยายามให้ตัวเองถูกโหวตมากที่สุด เพื่อชนะคนเดียว':info.role==='follower'?'คุณอยู่ฝ่ายขโมย ต้องช่วยไม่ให้ตัวขโมยถูกจับ':'ใช้สิ่งที่เห็นตอนกลางคืนเพื่อหาตัวขโมย';
-  block('บทบาทส่วนตัวของคุณ','<strong class="cheese-my-role">'+esc(cheeseRoleLabel(r,myId))+'</strong><p>'+roleInfo+'</p><p>'+ (info.dice.length?'ลูกเต๋าของคุณ: <b>'+info.dice.map(n=>'⚄ '+n).join(' / ')+'</b>':'ยังไม่ได้เปิดลูกเต๋า')+'</p>');
+  const roleHTML='<strong class="cheese-my-role">'+esc(cheeseRoleLabel(r,myId))+'</strong><p>'+roleInfo+'</p>';
+  if(a.phase!=='night')block('บทบาทส่วนตัวของคุณ',roleHTML+(a.phase!=='prepare'?cheeseDiceHTML(info.dice)+'<p>เวลาตื่นของคุณ: ตี '+info.wake.join(' และตี ')+'</p>':''));
   if(a.phase==='prepare'){
-   const panel=block('เตรียมพร้อม','<p>พร้อมแล้ว '+a.order.filter(p=>a.ready?.[p]).length+' / '+a.order.length+' คน</p>');
-   if(!a.rolled?.[myId])button(panel,'🎲 ทอยลูกเต๋า','roll');
+   const panel=block(rolling?'กำลังทอยลูกเต๋า…':!info.dice.length?'1 · ทอยลูกเต๋าของคุณ':a.ready?.[myId]?'พร้อมเข้านอนแล้ว':'2 · ตรวจเวลาตื่นและยืนยัน',cheeseDiceHTML(info.dice,rolling,a.order.length===4?2:1)+'<p class="cheese-roll-result" role="status" aria-live="polite">'+(rolling?'รอสักครู่…':info.dice.length?'ได้แต้ม '+info.dice.join(' และ '):'กดทอยเพื่อกำหนดเวลาตื่นของคุณ')+'</p>','cheese-prepare');
+   if(!a.rolled?.[myId]||rolling){const b=button(panel,rolling?'กำลังทอย…':'🎲 ทอยลูกเต๋า','roll',null,rolling);b.onclick=cheeseRoll;}
    else{
     if(a.order.length===4&&info.baseRole!=='thief'){panel.innerHTML+='<p>เลือกลูกเต๋าหนึ่งลูกเป็นเวลาตื่นของคุณ</p>';for(const hour of [...new Set(info.dice)])button(panel,(a.wake?.[myId]===hour?'✓ ':'')+'ตื่นตี '+hour,'wake',hour,!!a.ready?.[myId]);}
     else panel.innerHTML+='<p>คุณจะตื่นตี '+info.wake.join(' และ ')+'</p>';
     button(panel,a.ready?.[myId]?'พร้อมแล้ว':'ยืนยัน · พร้อมเข้านอน','ready',null,!!a.ready?.[myId]||(a.order.length===4&&info.baseRole!=='thief'&&!a.wake?.[myId]));
    }
+   block('รอทุกคนพร้อม','<p class="cheese-ready-count">'+a.order.filter(p=>a.ready?.[p]).length+' / '+a.order.length+' คนพร้อมแล้ว</p><div class="cheese-ready-list">'+a.order.map(id=>'<span>'+name(id)+' · '+(a.ready?.[id]?'✓ พร้อม':a.rolled?.[id]?'กำลังเตรียมตัว':'รอทอย')+'</span>').join('')+'</div>');
   }
   if(a.phase==='night'){
    const sight=info.sightings['h'+a.hour];
-   if(!info.awake)block('🌙 คุณกำลังหลับ','<p>รอชั่วโมงของคุณ ข้อมูลคนที่ตื่นจะไม่แสดงให้คุณเห็น</p>','cheese-asleep');
-   else{
-    const panel=block('👁 คุณตื่นแล้ว','<p>ตื่นพร้อม: '+(sight.peers.length?sight.peers.map(name).join(' · '):'ไม่มีใคร · คุณตื่นคนเดียว')+'</p><p>ชีส: '+(sight.cheeseBefore?'ตอนตื่นยังอยู่':'ตอนตื่นหายไปแล้ว')+(sight.cheeseBefore&&!sight.cheeseAfter?' → ถูกหยิบไปในชั่วโมงนี้':'')+'</p>'+(sight.witness?'<p>คุณเห็น <strong>'+name(sight.witness)+'</strong> หยิบชีส!</p>':''));
-    if(info.role!=='thief'&&a.order.length>4&&!sight.peers.length&&!info.peek){panel.innerHTML+='<p>ส่องลูกเต๋าได้หนึ่งคน เลือกก่อนหมดเวลา</p>';for(const id of a.order.filter(p=>p!==myId))button(panel,'ส่อง '+cheeseName(r,id),'peek',id);}
-    if(info.peek)panel.innerHTML+='<p>คุณส่อง '+name(info.peek.target)+' ได้แต้ม <b>'+info.peek.value+'</b></p>';
+   if(!info.awake){
+    const next=info.wake.filter(h=>h>a.hour).sort((x,y)=>x-y)[0];
+    block('🌙 คุณกำลังหลับ','<div class="cheese-sleep-symbol" aria-hidden="true">☾<small>z z z</small></div><p class="cheese-next-action">'+(next?'คุณจะตื่นตอนตี '+next:'คืนนี้คุณตื่นครบแล้ว รอเช้าเพื่อพูดคุย')+'</p><p>ตอนนี้ไม่ต้องกดอะไร · รอเวลาเปลี่ยนอัตโนมัติ</p><p class="muted">คุณจะเห็นเหตุการณ์เฉพาะชั่วโมงที่ตัวเองตื่น</p>','cheese-night-state cheese-asleep');
    }
+   else{
+    const peers=sight?.peers||[],canPeek=info.baseRole!=='thief'&&a.order.length>4&&!peers.length&&!info.peek;
+    const panel=block('☀ คุณตื่นแล้ว · ตี '+a.hour,'<p class="cheese-next-action">'+(info.baseRole==='thief'?'ระบบหยิบชีสให้แล้ว · จำสิ่งที่เห็นไว้':canPeek?'คุณตื่นคนเดียว · เลือกส่องลูกเต๋าได้ 1 คน':'จำคนที่ตื่นพร้อมคุณและสถานะของชีส')+'</p><div class="cheese-observation-grid"><div><small>คนที่ตื่นพร้อมคุณ</small><strong>'+ (peers.length?peers.map(name).join(' · '):'ไม่มี · คุณตื่นคนเดียว')+'</strong></div><div><small>สถานะชีสเมื่อตื่น</small><strong>'+(sight?.cheeseBefore?'🧀 ยังอยู่':'ชีสหายไปแล้ว')+'</strong><span>'+(sight?.cheeseBefore&&!sight.cheeseAfter?'ถูกหยิบไปในชั่วโมงนี้':sight?.cheeseAfter?'ยังอยู่หลังจบเหตุการณ์':'')+'</span></div></div>'+(sight?.witness?'<p class="cheese-witness">คุณเห็น <strong>'+name(sight.witness)+'</strong> หยิบชีส!</p>':''),'cheese-night-state cheese-awake');
+    if(canPeek){const grid=document.createElement('div');grid.className='cheese-choices cheese-peek-choices';panel.append(grid);for(const id of a.order.filter(p=>p!==myId))button(grid,'ส่อง '+cheeseName(r,id),'peek',id);}
+    else if(!info.peek)panel.innerHTML+='<p class="muted">'+(a.order.length===4?'เกม 4 คนไม่มีการส่องลูกเต๋า':peers.length?'ตื่นพร้อมคนอื่น จึงส่องลูกเต๋าไม่ได้':'รอเวลาเปลี่ยนอัตโนมัติ')+'</p>';
+    if(info.peek)panel.innerHTML+='<div class="cheese-peek-result"><strong>ส่อง '+name(info.peek.target)+' · ได้แต้ม '+info.peek.value+'</strong>'+cheeseDiceHTML([info.peek.value])+'<span>ส่องครบแล้ว · จำข้อมูลไว้ใช้ตอนเช้า</span></div>';
+   }
+   block('ข้อมูลส่วนตัว','<details><summary>เปิดดูบทบาทและลูกเต๋าของคุณ</summary>'+roleHTML+cheeseDiceHTML(info.dice)+'</details>','cheese-private-info');
   }
   if(['night','recruit'].includes(a.phase)&&info.role==='thief'&&info.recruitCount&&!a.followers?.length){
    const panel=block('เลือกผู้ช่วยขโมย '+info.recruitCount+' คน','<p>เลือกจากรายชื่อที่ถูกกติกา แล้วกดยืนยัน</p>'),grid=document.createElement('div');grid.className='cheese-choices';panel.append(grid);
