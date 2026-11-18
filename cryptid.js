@@ -3,6 +3,14 @@ const CE=CryptidEngine;
 let cryptidBusy=false,cryptidLobbyBusy=false,cryptidLastAuto=0;
 let cryptidUI={game:'',revision:'',cell:null,target:'',zoom:1,clueOpen:false};
 
+function cryptidCountChoices(prefix,count=3,disabled=false){
+ const root=$(prefix+'CountChoices'),input=$(prefix+'Count');if(!root||!input)return;input.value=String(count);
+ if(!root.children.length)for(const n of [3,4,5]){
+  const button=document.createElement('button');button.type='button';button.className='choice cryptid-count-choice';button.dataset.count=String(n);button.innerHTML='<strong>'+n+' คน</strong>';
+  button.onclick=()=>{if(button.disabled)return;input.value=String(n);if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidCountChoices(prefix,n);};root.append(button);
+ }
+ for(const button of root.children){const selected=Number(button.dataset.count)===Number(count);button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+}
 function cryptidClueSetChoices(prefix,clueSet='mixed',disabled=false){
  const root=$(prefix+'ClueSetChoices'),input=$(prefix+'ClueSet');if(!root||!input)return;input.value=clueSet;
  if(!root.children.length)for(const [id,set] of Object.entries(CE.CLUE_SETS)){
@@ -56,6 +64,7 @@ function renderCryptidLobby(r){
  const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),setInput=$('cryptidLobbyClueSet'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+(r.cryptidClueSet||'mixed')+':'+isHost;
  if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';setInput.value=r.cryptidClueSet||'mixed';panel.dataset.savedKey=key;}
  select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidRenderMapPreview('cryptidLobbyMapPreview',mapSelect.value);$('cryptidLobbySave').hidden=!isHost;
+ cryptidCountChoices('cryptidLobby',Number(select.value),!isHost||cryptidLobbyBusy);
  cryptidClueSetChoices('cryptidLobby',setInput.value,!isHost||cryptidLobbyBusy);
  $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random')&&setInput.value===(r.cryptidClueSet||'mixed'));
  $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านและชุดเบาะแสให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random')+' · ชุด'+CE.CLUE_SETS[r.cryptidClueSet||'mixed'].name:'เปลี่ยนแล้ว · กดบันทึกการตั้งค่าก่อนเริ่มเกม';
@@ -67,6 +76,7 @@ function renderCryptidLobby(r){
 $('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
 $('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPreview',$('cryptidCreateMap').value);
 cryptidRenderMapPreview('cryptidCreateMapPreview','random');
+cryptidCountChoices('cryptidCreate',3);
 cryptidClueSetChoices('cryptidCreate','mixed');
 for(const prefix of ['cryptidCreate','cryptidLobby']){
  const select=$(prefix+'Map');select.replaceChildren();for(const [id] of Object.entries(CE.MAPS)){const option=document.createElement('option');option.value=id;option.textContent=cryptidMapLabel(id);select.append(option);}select.value='random';

@@ -179,3 +179,10 @@ test('Cryptid catalogue button lists the round’s full public pool in a closabl
   h.run('cryptidOpenClues();showOnly("homeView")');assert.equal(dialog.open,false);
  }
 });
+test('Cryptid player-count cards change creation and saved lobby counts and are host-only',async()=>{
+ const h=loadHub(),create=h.element('cryptidCreateCountChoices').children;assert.equal(create.length,3);assert.deepEqual(create.map(b=>b.dataset.count),['3','4','5']);
+ create[2].onclick();assert.equal(h.element('cryptidCreateCount').value,'5');h.run('nameConfirmed=true;myName="Test"');h.element('openCreateBtn').onclick();assert.equal(h.element('cryptidCreateCount').value,'3');
+ const r=base('cryptid');r.status='lobby';r.cryptidCount=3;h.setRoom(r);h.run('renderCryptidLobby(roomState)');const buttons=h.element('cryptidLobbyCountChoices').children;
+ buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'5');assert.equal(h.element('cryptidLobbySave').disabled,false);await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidCount,5);
+ h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'3');
+});
