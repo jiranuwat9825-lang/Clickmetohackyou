@@ -166,3 +166,16 @@ test('Cryptid clue-set buttons save and start the selected pool and guests canno
  h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');assert.equal(h.getRoom().cryptid.clueSet,'standard');assert.ok(Object.values(h.getRoom().cryptid.clues).every(c=>!c.id.startsWith('not_')));
  h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[0].onclick();assert.equal(h.element('cryptidLobbyClueSet').value,'mixed');
 });
+test('Cryptid catalogue button lists the round’s full public pool in a closable dialog without the old help text',()=>{
+ const engine=require('../cryptid-engine');
+ for(const clueSet of ['standard','mixed']){
+  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidClueSet=clueSet;assert.ok(engine.setup(r,Object.keys(r.players),engine.generate(3,Math.random,'mistwood',clueSet)));
+  r.cryptidClueSet=clueSet==='standard'?'mixed':'standard';h.setRoom(r);
+  const dialog=h.element('cryptidClueDialog');dialog.close=()=>{dialog.open=false;};dialog.showModal=()=>{dialog.open=true;};h.run('renderCryptid(roomState)');
+  const content=h.element('cryptidContent').innerHTML;assert.match(content,/ดูชนิดเบาะแสทั้งหมด/);assert.doesNotMatch(content,/วิธีเล่นและชนิดเบาะแส|ลูกกลิ้ง = ซูม|cryptidGuide/);
+  h.element('cryptidOpenClues').onclick();assert.equal(dialog.open,true);const list=h.element('cryptidClueList').innerHTML,pool=engine.cluesForSet(r.cryptid.board,clueSet);
+  assert.equal((list.match(/<li>/g)||[]).length,pool.length);for(const clue of pool)assert.ok(list.includes(clue.text));assert.doesNotMatch(list,/ผู้เล่น|winner|solution/);
+  h.element('cryptidCloseClues').onclick();assert.equal(dialog.open,false);h.run('cryptidOpenClues();showScreen("lobbyScreen")');assert.equal(dialog.open,false);
+  h.run('cryptidOpenClues();showOnly("homeView")');assert.equal(dialog.open,false);
+ }
+});

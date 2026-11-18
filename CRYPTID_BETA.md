@@ -30,7 +30,8 @@ not in one terrain, not in either of two terrains, and outside the terrain,
 animal or structure distance bands. Negative distance clues require at least
 N + 1 hexes from every matching target; distance zero is included in the excluded
 band. Only nontrivial clues with 6–90 allowed cells can be dealt, and the joint
-solution must still be unique. The guide lists both families with explanations.
+solution must still be unique. A button opens a scrollable dialog listing every clue type in the round’s chosen
+set. This is the public pool, never a list of players’ assigned private clues.
 
 Existing discs are skipped during search responses. The search stops on the
 first negative response, without revealing later responses. Searching a cell

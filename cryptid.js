@@ -12,6 +12,17 @@ function cryptidClueSetChoices(prefix,clueSet='mixed',disabled=false){
  }
  for(const button of root.children){button.disabled=disabled;button.setAttribute('aria-pressed',String(button.dataset.clueSet===clueSet));}
 }
+function cryptidOpenClues(){
+ const r=roomState;if(r?.gameMode!=='cryptid'||!r.cryptid||!['cryptid_playing','results'].includes(r.status))return;
+ const clueSet=r.cryptid.clueSet||'mixed',clues=CE.cluesForSet(r.cryptid.board,clueSet);
+ $('cryptidClueSetSummary').textContent='ชุด'+CE.CLUE_SETS[clueSet].name+' · '+clues.length+' ชนิด';
+ $('cryptidClueList').innerHTML=[false,true].map(negative=>{
+  const group=clues.filter(c=>c.negative===negative);if(!group.length)return '';
+  return '<section class="cryptid-clue-group"><h3>'+(negative?'เบาะแส “ไม่อยู่…”':'เบาะแสปกติ')+' · '+group.length+' ชนิด</h3><ol>'+group.map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ol></section>';
+ }).join('');
+ const dialog=$('cryptidClueDialog');if(!dialog.open)dialog.showModal();
+}
+$('cryptidCloseClues').onclick=()=>$('cryptidClueDialog').close();
 function cryptidMapLabel(mapId){const map=CE.MAPS[mapId];return map?(map.stage?'ด่าน '+map.stage+' · ':'')+map.name:'สุ่มแผนที่';}
 function cryptidMapThumbnail(mapId){
  const board=CE.mapBoard(mapId);if(!board)return '<span class="cryptid-random-thumbnail" aria-hidden="true">🎲</span>';
@@ -119,6 +130,7 @@ async function cryptidReturn(){
  },undefined,false);}catch(e){error(e);}finally{cryptidBusy=false;}
 }
 function cryptidBuild(r){
+ $('cryptidClueDialog').close?.();
  const root=$('cryptidContent');root.innerHTML=`
  <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid <em class="cryptid-beta">Beta</em></h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed} · ${esc(r.cryptid.mapName||'สุ่มแผนที่')}</span></div>
  <div id="cryptidResult" hidden></div>
@@ -140,7 +152,7 @@ function cryptidBuild(r){
   <section id="cryptidControls" class="cryptid-card"></section>
   <details class="cryptid-card"><summary>โน้ตส่วนตัว</summary><label for="cryptidNotes" class="muted hint">บันทึกข้อสังเกตของคุณ</label><textarea id="cryptidNotes" rows="5" maxlength="4000" placeholder="เช่น ผู้เล่น 2 น่าจะเกี่ยวกับเสาหิน…"></textarea></details>
  </aside></div>
- <details class="cryptid-guide cryptid-card"><summary>วิธีเล่นและชนิดเบาะแส</summary><div id="cryptidGuide"></div></details>
+ <button type="button" id="cryptidOpenClues" class="btn outline full cryptid-open-clues" aria-haspopup="dialog" aria-controls="cryptidClueDialog">ดูชนิดเบาะแสทั้งหมด</button>
  <section class="cryptid-history"><h3>ประวัติการสำรวจ</h3><div id="cryptidHistory"></div></section>
  <div id="cryptidHostTools" class="cryptid-host-tools"></div>`;
  const noteKey=`party_cryptid_note_v1:${roomId}:${r.gamesPlayed}:${myId}`;
@@ -159,7 +171,7 @@ function cryptidBuild(r){
   const cell=roomState.cryptid.board.find(c=>c.id===el.dataset.cell),delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
   if(delta){e.preventDefault();const next=roomState.cryptid.board.find(c=>c.col===cell.col+delta[0]&&c.row===cell.row+delta[1]);if(next){select(next.id);$('cryptidMap').querySelector('[data-cell="'+next.id+'"]').focus();}}
  };
- const guide=$('cryptidGuide');guide.innerHTML='<p>ก่อนเริ่ม ทุกคนวาง ■ คนละ 1 อัน วนสองรอบ จากนั้นผลัดกันถามผู้เล่นหนึ่งคน หรือค้นหาตำแหน่งที่ตรงกับเบาะแสตัวเอง ระบบตอบตามเบาะแสให้อัตโนมัติ</p><p>ถ้าได้รับ ■ ในตาของคุณ ต้องวาง ■ ของตัวเองในช่องอื่นก่อนจบตา การค้นหาจะเปิดผลตามลำดับและหยุดที่ ■ แรก ถ้าทุกคนยืนยันว่าเป็นไปได้ ผู้ค้นหาชนะ +1 คะแนน</p><p>ห้ามใช้ช่องที่มี ■ และห้ามวางหมากของตัวเองซ้ำช่อง ถ้าค้นหาช่องที่มี ● ของตัวเองแล้ว ต้องวาง ● เพิ่มในช่องอื่นก่อน ระยะนับตามช่องหกเหลี่ยมและรวมช่องต้นทางเป็นระยะ 0</p><p>ถ้าไม่มีช่องถูกกติกาเหลือสำหรับหมากที่ต้องเปิดเผยเพิ่ม รุ่น Beta จะข้ามขั้นตอนนั้นโดยบันทึกไว้ในประวัติ</p><p>กดดูรายการเบาะแสทั้งหมดเพื่อช่วยอนุมานของเพื่อน:</p><ul>'+CE.cluesForSet(r.cryptid.board,r.cryptid.clueSet||'mixed').filter(c=>!c.negative).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul><h4>เบาะแสแบบไม่อยู่…</h4><p>ตัดพื้นที่ที่ระบุออก ถ้าบอกว่าไม่อยู่ในพื้นที่สองแบบ ให้ตัดทั้งสองแบบ คำว่าไม่อยู่ในระยะ N ช่อง หมายถึงต้องห่างอย่างน้อย N + 1 ช่องจากทุกช่องของสิ่งที่ระบุ โดยช่องต้นทางนับเป็นระยะ 0</p><ul class="cryptid-negative-clues">'+CE.cluesForSet(r.cryptid.board,r.cryptid.clueSet||'mixed').filter(c=>c.negative).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul>';
+ $('cryptidOpenClues').onclick=cryptidOpenClues;
 }
 function cryptidZoom(){
  const svg=$('cryptidMap'),viewport=$('cryptidMapViewport');if(!svg||!viewport)return;
