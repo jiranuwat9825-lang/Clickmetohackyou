@@ -783,3 +783,4 @@
 @media(max-width:540px){.cryptid-clue-dialog{padding:16px;max-height:88dvh}.cryptid-clue-dialog-head h2{font-size:20px}.cryptid-clue-dialog-head .btn{padding:9px 12px}.cryptid-clue-group li{font-size:15px}}
 
 .cryptid-count-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 24px}.cryptid-count-choice{min-height:80px;align-items:center;justify-content:center;text-align:center;padding:14px 8px}.cryptid-count-choice strong{font-size:22px}.cryptid-count-choice:disabled{cursor:default;opacity:.8}.cryptid-count-choice:focus-visible{outline:3px solid white;outline-offset:3px}
+.lobby-settings-toolbar{display:flex;justify-content:flex-end;margin:20px 0 12px}.lobby-settings-toolbar .btn{font-size:15px;min-height:46px}.lobby-settings-toolbar .btn:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}

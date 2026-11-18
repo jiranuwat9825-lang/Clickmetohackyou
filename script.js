@@ -2727,8 +2727,24 @@ $('whoNoteInput').addEventListener('input',()=>{
  refreshWhoNoteCounter();
 });
 function modeReady(mode){return mode==='cheese'?typeof renderCheese==='function':mode==='insider'?typeof renderInsider==='function':mode==='whoami_custom'?typeof renderWhoCustomPrepare==='function':mode==='avalon'?typeof renderAvalon==='function':mode==='cryptid'?typeof renderCryptid==='function':true;}
+function renderLobbySettingsToggle(){
+ const body=$('lobbySettingsBody'),button=$('lobbySettingsToggle');
+ if(body.dataset.roomId!==roomId){
+  body.dataset.roomId=roomId;
+  try{body.hidden=sessionStorage.getItem('pg_lobby_settings_collapsed:'+roomId)==='1';}catch{body.hidden=false;}
+ }
+ button.setAttribute('aria-expanded',String(!body.hidden));
+ button.textContent=body.hidden?'แสดงการตั้งค่าเกม ▾':'ซ่อนการตั้งค่าเกม ▴';
+}
+$('lobbySettingsToggle').onclick=()=>{
+ if(!roomId||roomState?.status!=='lobby')return;
+ const body=$('lobbySettingsBody');body.hidden=!body.hidden;
+ try{sessionStorage.setItem('pg_lobby_settings_collapsed:'+roomId,body.hidden?'1':'0');}catch{}
+ renderLobbySettingsToggle();
+};
 function renderRoom(r){if(!modeReady(r.gameMode))return;const players=r.players||{},ids=Object.keys(players),status=r.status;syncWhoNotes(r);if(typeof insiderSyncNotes==='function')insiderSyncNotes(r);$('roomTitle').textContent=r.roomName||`ห้อง ${roomId}`;$('roomCode').textContent=r.roomCode||roomId;$('roomScoreboard').hidden=['avalon','cryptid','cheese'].includes(r.gameMode);$('roomScoreboard').parentElement.classList.toggle('avalon-layout',['avalon','cryptid','cheese'].includes(r.gameMode));$('roomMeta').textContent=r.gameMode==='cheese'?`Steal Cheese · ${r.cheeseCount||4} คน · พูดคุย ${r.cheeseDiscussMinutes||3} นาที`:r.gameMode==='cryptid'?`Cryptid Beta · ${r.cryptidCount||3} คน · ไขเบาะแสสัตว์ลึกลับ`:r.gameMode==='avalon'?`Avalon · ${r.avalonCount||9} คน · Angel ${r.avalonAngel?'เปิด':'ปิด'}`:r.gameMode==='whoami_custom'?`Who Am I · Customize By Player · ${r.settingValue||2} รอบ · 1 คำตอบ`:r.gameMode==='insider'?`Insider · 4+ คน · คิดคำ ${insiderDuration(insiderConfig(r).prepSeconds)} · ถาม ${insiderDuration(insiderConfig(r).guessSeconds)}`:`${modeTitle(r.gameMode)} · ${(r.status==='lobby'?library[r.category]:null)?.name||packFor(r).name} · ${r.settingValue||2} ${r.gameMode==='whoami_time'?'นาทีต่อคน':'รอบ'}${r.gameMode==='spyfall'?' · '+spyVariantTitle(r.spyVariant):''}`;if(r.gameMode!=='avalon')renderScores(r);$('deleteRoomBtn').hidden=!(isHost&&status==='lobby');showScreen(r.gameMode==='cheese'?(status==='lobby'?'lobbyScreen':status==='finished'?'grandFinalScreen':'cheeseScreen'):r.gameMode==='cryptid'?(status==='lobby'?'lobbyScreen':status==='finished'?'grandFinalScreen':'cryptidScreen'):r.gameMode==='avalon'?(status==='lobby'?'lobbyScreen':status==='results'?'avalonResultsScreen':'avalonScreen'):({lobby:'lobbyScreen',playing:r.gameMode==='insider'?'insiderScreen':r.gameMode==='spyfall'?'spyScreen':'whoScreen',insider_prepare:'insiderScreen',insider_voting:'insiderScreen',whoami_prepare:'whoCustomScreen',whoami_review:'whoScreen',final_guess:'whoScreen',voting:'voteScreen',results:'resultsScreen',finished:'grandFinalScreen'})[status]||'lobbyScreen');
  if(status==='lobby'){
+  renderLobbySettingsToggle();
   renderLobbyCategory(r);
   renderLobbyFormat(r);
   renderLobbySpyFormat(r);
