@@ -92,3 +92,32 @@ test('selected maps keep their exact layout while clues and solutions remain val
  }
  const a=E.generate(3,seeded(1),'random'),b=E.generate(3,seeded(2),'random');assert.notDeepEqual(a.board,b.board);
 });
+
+test('negative terrain and distance clues exclude exactly the named cells, including every target and boundary',()=>{
+ for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random')){
+  const board=E.mapBoard(mapId),cat=E.clueCatalogue(board);assert.equal(cat.length,51);assert.equal(new Set(cat.map(c=>c.id)).size,51);assert.equal(cat.filter(c=>c.negative).length,28);
+  for(const positive of cat.filter(c=>!c.negative)){
+   const negative=cat.find(c=>c.id==='not_'+positive.id);assert.ok(negative);
+   assert.deepEqual(negative.cells,board.filter(c=>!positive.cells.includes(c.id)).map(c=>c.id));
+  }
+  for(const terrain of Object.keys(E.TERRAIN)){
+   assert.deepEqual(cat.find(c=>c.id==='not_terrain_'+terrain).cells,board.filter(c=>c.terrain!==terrain).map(c=>c.id));
+   for(const cell of board){const distance=Math.min(...board.filter(t=>t.terrain===terrain).map(t=>E.distance(cell,t)));assert.equal(cat.find(c=>c.id==='not_near_'+terrain).cells.includes(cell.id),distance>=2);}
+  }
+  for(const [id,fn,range] of [['animal_any',c=>!!c.animal,1],['animal_bear',c=>c.animal==='bear',2],['structure_stone',c=>c.structure==='stone',2],['color_blue',c=>c.structureColor==='blue',3]])for(const cell of board){
+   const distance=Math.min(...board.filter(fn).map(t=>E.distance(cell,t)));assert.equal(cat.find(c=>c.id==='not_'+id).cells.includes(cell.id),distance>range);
+  }
+ }
+});
+test('exclusion clues are dealt to real puzzles and remain valid for placement and bot inference',()=>{
+ let negativeCount=0;
+ for(const count of [3,4,5])for(let seed=1;seed<=30;seed++){
+  const puzzle=E.generate(count,seeded(seed)),ids=Array.from({length:count},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',players:Object.fromEntries(ids.map(id=>[id,{name:id}]))};assert.ok(E.setup(r,ids,puzzle));
+  for(const id of ids)if(r.cryptid.clues[id].id.startsWith('not_')){
+   negativeCount++;assert.equal(E.allows(r.cryptid,id,puzzle.solution),true);
+   const excluded=E.clueCatalogue(puzzle.board).find(c=>c.id===r.cryptid.clues[id].id);assert.ok(excluded.cells.length>=6&&excluded.cells.length<=90);
+   for(const cell of E.legalCells(r.cryptid,id,false))assert.equal(excluded.cells.includes(cell),false);
+  }
+ }
+ assert.ok(negativeCount>50,'expanded clue pool must actually deal exclusions');
+});

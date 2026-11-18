@@ -126,7 +126,7 @@ function cryptidBuild(r){
    <div class="cryptid-symbol-key"><span><b>▲</b>สามเหลี่ยม = ภูเขา</span><span><b>◆</b>สี่เหลี่ยมข้าวหลามตัด = เสาหิน</span><span><b>⌂</b>รูปบ้าน = กระท่อม</span><span><b>🌲</b>ต้นไม้ = ป่า</span><span><b>≈</b>คลื่น = น้ำ</span><span><b>♧</b>กอพืช = หนองบึง</span><span><b>☀</b>ดวงอาทิตย์ = ทะเลทราย</span><span><b>🐻</b>เขตหมี</span><span><b>🐾</b>เขตเสือพูมา</span></div>
   </section>
  </div><aside class="cryptid-sidebar">
-  <section class="cryptid-card"><div class="cryptid-card-title"><h3>เบาะแสของฉัน</h3><button type="button" class="btn outline small" id="cryptidToggleClue" aria-expanded="false">เปิดดู</button></div><p id="cryptidClue" class="cryptid-clue" hidden></p><p class="muted hint">เบาะแสของคุณเป็นเพียงส่วนหนึ่งของคำตอบ</p></section>
+  <section class="cryptid-card"><div class="cryptid-card-title"><h3>เบาะแสของฉัน</h3><button type="button" class="btn outline small" id="cryptidToggleClue" aria-expanded="false">เปิดดู</button></div><p id="cryptidClue" class="cryptid-clue" hidden></p><p id="cryptidClueMeaning" class="cryptid-clue-meaning" hidden></p><p class="muted hint">เบาะแสของคุณเป็นเพียงส่วนหนึ่งของคำตอบ</p></section>
   <section id="cryptidControls" class="cryptid-card"></section>
   <details class="cryptid-card"><summary>โน้ตส่วนตัว</summary><label for="cryptidNotes" class="muted hint">บันทึกข้อสังเกตของคุณ</label><textarea id="cryptidNotes" rows="5" maxlength="4000" placeholder="เช่น ผู้เล่น 2 น่าจะเกี่ยวกับเสาหิน…"></textarea></details>
  </aside></div>
@@ -149,7 +149,7 @@ function cryptidBuild(r){
   const cell=roomState.cryptid.board.find(c=>c.id===el.dataset.cell),delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
   if(delta){e.preventDefault();const next=roomState.cryptid.board.find(c=>c.col===cell.col+delta[0]&&c.row===cell.row+delta[1]);if(next){select(next.id);$('cryptidMap').querySelector('[data-cell="'+next.id+'"]').focus();}}
  };
- const guide=$('cryptidGuide');guide.innerHTML='<p>ก่อนเริ่ม ทุกคนวาง ■ คนละ 1 อัน วนสองรอบ จากนั้นผลัดกันถามผู้เล่นหนึ่งคน หรือค้นหาตำแหน่งที่ตรงกับเบาะแสตัวเอง ระบบตอบตามเบาะแสให้อัตโนมัติ</p><p>ถ้าได้รับ ■ ในตาของคุณ ต้องวาง ■ ของตัวเองในช่องอื่นก่อนจบตา การค้นหาจะเปิดผลตามลำดับและหยุดที่ ■ แรก ถ้าทุกคนยืนยันว่าเป็นไปได้ ผู้ค้นหาชนะ +1 คะแนน</p><p>ห้ามใช้ช่องที่มี ■ และห้ามวางหมากของตัวเองซ้ำช่อง ถ้าค้นหาช่องที่มี ● ของตัวเองแล้ว ต้องวาง ● เพิ่มในช่องอื่นก่อน ระยะนับตามช่องหกเหลี่ยมและรวมช่องต้นทางเป็นระยะ 0</p><p>ถ้าไม่มีช่องถูกกติกาเหลือสำหรับหมากที่ต้องเปิดเผยเพิ่ม รุ่น Beta จะข้ามขั้นตอนนั้นโดยบันทึกไว้ในประวัติ</p><p>กดดูรายการเบาะแสทั้งหมดเพื่อช่วยอนุมานของเพื่อน:</p><ul>'+CE.clueCatalogue(r.cryptid.board).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul>';
+ const guide=$('cryptidGuide');guide.innerHTML='<p>ก่อนเริ่ม ทุกคนวาง ■ คนละ 1 อัน วนสองรอบ จากนั้นผลัดกันถามผู้เล่นหนึ่งคน หรือค้นหาตำแหน่งที่ตรงกับเบาะแสตัวเอง ระบบตอบตามเบาะแสให้อัตโนมัติ</p><p>ถ้าได้รับ ■ ในตาของคุณ ต้องวาง ■ ของตัวเองในช่องอื่นก่อนจบตา การค้นหาจะเปิดผลตามลำดับและหยุดที่ ■ แรก ถ้าทุกคนยืนยันว่าเป็นไปได้ ผู้ค้นหาชนะ +1 คะแนน</p><p>ห้ามใช้ช่องที่มี ■ และห้ามวางหมากของตัวเองซ้ำช่อง ถ้าค้นหาช่องที่มี ● ของตัวเองแล้ว ต้องวาง ● เพิ่มในช่องอื่นก่อน ระยะนับตามช่องหกเหลี่ยมและรวมช่องต้นทางเป็นระยะ 0</p><p>ถ้าไม่มีช่องถูกกติกาเหลือสำหรับหมากที่ต้องเปิดเผยเพิ่ม รุ่น Beta จะข้ามขั้นตอนนั้นโดยบันทึกไว้ในประวัติ</p><p>กดดูรายการเบาะแสทั้งหมดเพื่อช่วยอนุมานของเพื่อน:</p><ul>'+CE.clueCatalogue(r.cryptid.board).filter(c=>!c.negative).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul><h4>เบาะแสแบบไม่อยู่…</h4><p>ตัดพื้นที่ที่ระบุออก ถ้าบอกว่าไม่อยู่ในพื้นที่สองแบบ ให้ตัดทั้งสองแบบ คำว่าไม่อยู่ในระยะ N ช่อง หมายถึงต้องห่างอย่างน้อย N + 1 ช่องจากทุกช่องของสิ่งที่ระบุ โดยช่องต้นทางนับเป็นระยะ 0</p><ul class="cryptid-negative-clues">'+CE.clueCatalogue(r.cryptid.board).filter(c=>c.negative).map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ul>';
 }
 function cryptidZoom(){
  const svg=$('cryptidMap'),viewport=$('cryptidMapViewport');if(!svg||!viewport)return;
@@ -189,7 +189,9 @@ function cryptidSetupMapNavigation(viewport){
 }
 function cryptidUpdateClue(r){
  if(!r?.cryptid||!$('cryptidClue'))return;
- $('cryptidClue').textContent=r.cryptid.clues?.[myId]?.text||'คุณไม่ได้เข้าร่วมเกมนี้';$('cryptidClue').hidden=!cryptidUI.clueOpen;
+ const clue=r.cryptid.clues?.[myId],negative=clue?.id.startsWith('not_');
+ $('cryptidClue').textContent=clue?.text||'คุณไม่ได้เข้าร่วมเกมนี้';$('cryptidClue').hidden=!cryptidUI.clueOpen;$('cryptidClue').classList.toggle('is-negative',!!negative);
+ $('cryptidClueMeaning').hidden=!cryptidUI.clueOpen||!negative;$('cryptidClueMeaning').textContent='เบาะแสแบบตัดออก · ตัดพื้นที่ที่ระบุออก ถ้ามีระยะ ให้ใช้ระยะขั้นต่ำที่เขียนในวงเล็บ';
  $('cryptidToggleClue').textContent=cryptidUI.clueOpen?'ซ่อน':'เปิดดู';$('cryptidToggleClue').setAttribute('aria-expanded',String(cryptidUI.clueOpen));
 }
 function cryptidDrawBoard(r){

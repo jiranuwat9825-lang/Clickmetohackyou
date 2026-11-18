@@ -21,6 +21,14 @@ two clockwise rounds of initial negative markers, questions, sequential searches
 extra disclosures, results, and cumulative scoring are supported. A win awards
 one point; a host-aborted game awards none. Return to the lobby for another map.
 
+
+The clue pool contains 51 patterns: 23 positive clues and 28 exclusions, including
+not in one terrain, not in either of two terrains, and outside the terrain,
+animal or structure distance bands. Negative distance clues require at least
+N + 1 hexes from every matching target; distance zero is included in the excluded
+band. Only nontrivial clues with 6–90 allowed cells can be dealt, and the joint
+solution must still be unique. The guide lists both families with explanations.
+
 Existing discs are skipped during search responses. The search stops on the
 first negative response, without revealing later responses. Searching a cell
 with the searcher's disc requires another positive disclosure. If there is no

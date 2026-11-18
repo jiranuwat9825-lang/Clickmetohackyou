@@ -36,14 +36,16 @@
  function clueCatalogue(board){
   if(catalogueCache.has(board))return catalogueCache.get(board);
   const out=[],types=Object.keys(TERRAIN);
-  function add(id,text,fn){out.push({id,text,cells:board.filter(fn).map(c=>c.id)});}
+  function add(id,text,fn,negative=false){out.push({id,text,negative,cells:board.filter(fn).map(c=>c.id)});}
+  function pair(id,text,negativeText,fn){add(id,text,fn);add('not_'+id,negativeText,c=>!fn(c),true);}
   function near(filter,n){const targets=board.filter(filter);return c=>targets.some(p=>distance(c,p)<=n);}
-  for(let i=0;i<types.length;i++)for(let j=i+1;j<types.length;j++)add('terrain_'+types[i]+'_'+types[j],'อยู่บน'+TERRAIN[types[i]]+' หรือ'+TERRAIN[types[j]],c=>[types[i],types[j]].includes(c.terrain));
-  types.forEach(t=>add('near_'+t,'อยู่ห่างจาก'+TERRAIN[t]+'ไม่เกิน 1 ช่อง',near(c=>c.terrain===t,1)));
-  add('animal_any','อยู่ห่างจากเขตหมีหรือเสือพูมาไม่เกิน 1 ช่อง',near(c=>!!c.animal,1));
-  for(const [s,label] of [['stone','เสาหิน'],['shack','กระท่อม']])add('structure_'+s,'อยู่ห่างจาก'+label+'ไม่เกิน 2 ช่อง (สีใดก็ได้)',near(c=>c.structure===s,2));
-  for(const [s,label] of [['bear','หมี'],['cougar','เสือพูมา']])add('animal_'+s,'อยู่ห่างจากเขต'+label+'ไม่เกิน 2 ช่อง',near(c=>c.animal===s,2));
-  for(const [s,label] of [['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']])add('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง',near(c=>c.structureColor===s,3));
+  types.forEach(t=>add('not_terrain_'+t,'ไม่อยู่ใน'+TERRAIN[t],c=>c.terrain!==t,true));
+  for(let i=0;i<types.length;i++)for(let j=i+1;j<types.length;j++)pair('terrain_'+types[i]+'_'+types[j],'อยู่บน'+TERRAIN[types[i]]+' หรือ'+TERRAIN[types[j]],'ไม่อยู่ใน'+TERRAIN[types[i]]+' และไม่อยู่ใน'+TERRAIN[types[j]],c=>[types[i],types[j]].includes(c.terrain));
+  types.forEach(t=>pair('near_'+t,'อยู่ห่างจาก'+TERRAIN[t]+'ไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจาก'+TERRAIN[t]+' (ต้องห่างอย่างน้อย 2 ช่อง)',near(c=>c.terrain===t,1)));
+  pair('animal_any','อยู่ห่างจากเขตหมีหรือเสือพูมาไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจากเขตหมีและเขตเสือพูมา (ต้องห่างอย่างน้อย 2 ช่องจากทั้งสองเขต)',near(c=>!!c.animal,1));
+  for(const [s,label] of [['stone','เสาหิน'],['shack','กระท่อม']])pair('structure_'+s,'อยู่ห่างจาก'+label+'ไม่เกิน 2 ช่อง (สีใดก็ได้)','ไม่อยู่ในระยะ 2 ช่องจาก'+label+'ทุกสี (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.structure===s,2));
+  for(const [s,label] of [['bear','หมี'],['cougar','เสือพูมา']])pair('animal_'+s,'อยู่ห่างจากเขต'+label+'ไม่เกิน 2 ช่อง','ไม่อยู่ในระยะ 2 ช่องจากเขต'+label+' (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.animal===s,2));
+  for(const [s,label] of [['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']])pair('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง','ไม่อยู่ในระยะ 3 ช่องจากสิ่งปลูกสร้างสี'+label+' (ต้องห่างอย่างน้อย 4 ช่อง)',near(c=>c.structureColor===s,3));
   catalogueCache.set(board,out);return out;
  }
  function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme);}
