@@ -127,7 +127,6 @@ function cryptidBuild(r){
  <div id="cryptidLastMove" class="cryptid-last-move" aria-live="polite" hidden></div>
  <div class="cryptid-workspace"><div class="cryptid-map-panel">
   <div class="cryptid-map-toolbar"><span>แผนที่สำรวจ</span><div class="cryptid-buttons"><button type="button" class="btn outline small" id="cryptidZoomOut" aria-label="ย่อแผนที่">−</button><button type="button" class="btn outline small" id="cryptidZoomReset">100%</button><button type="button" class="btn outline small" id="cryptidZoomIn" aria-label="ขยายแผนที่">＋</button></div></div>
-  <p class="cryptid-map-help">🖱 ลูกกลิ้ง = ซูม · กดซ้ายค้างแล้วลาก = เลื่อน · คลิกสั้น ๆ = เลือกช่อง</p>
   <div id="cryptidMapViewport" class="cryptid-map-viewport" tabindex="0" aria-label="แผนที่ หมุนลูกกลิ้งเพื่อซูม กดเมาส์ซ้ายค้างเพื่อลาก"><svg id="cryptidMap" viewBox="0 0 660 430" role="group" aria-label="แผนที่ Cryptid เลือกช่องเพื่อดูรายละเอียด"></svg></div>
   <section class="cryptid-legend" aria-label="ความหมายของสัญลักษณ์">
    <h3>หมากที่ผู้เล่นวาง</h3>
