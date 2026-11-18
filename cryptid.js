@@ -15,10 +15,7 @@ function cryptidOpenClues(){
  const r=roomState;if(r?.gameMode!=='cryptid'||!r.cryptid||!['cryptid_playing','results'].includes(r.status))return;
  const clues=CE.clueCatalogue(r.cryptid.board);
  $('cryptidClueSummary').textContent='เบาะแสทั้งหมด '+clues.length+' ชนิด';
- $('cryptidClueList').innerHTML=[false,true].map(negative=>{
-  const group=clues.filter(c=>c.negative===negative);if(!group.length)return '';
-  return '<section class="cryptid-clue-group"><h3>'+(negative?'เบาะแส “ไม่อยู่…”':'เบาะแสปกติ')+' · '+group.length+' ชนิด</h3><ol>'+group.map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ol></section>';
- }).join('');
+ $('cryptidClueList').innerHTML='<ol class="cryptid-clue-catalogue">'+clues.map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ol>';
  const dialog=$('cryptidClueDialog');if(!dialog.open)dialog.showModal();
 }
 $('cryptidCloseClues').onclick=()=>$('cryptidClueDialog').close();
