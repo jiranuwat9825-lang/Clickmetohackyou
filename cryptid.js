@@ -75,12 +75,10 @@ function renderCryptidLobby(r){
 }
 $('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
 $('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPreview',$('cryptidCreateMap').value);
+$('cryptidCreateMap').value='random';
 cryptidRenderMapPreview('cryptidCreateMapPreview','random');
 cryptidCountChoices('cryptidCreate',3);
 cryptidClueSetChoices('cryptidCreate','mixed');
-for(const prefix of ['cryptidCreate','cryptidLobby']){
- const select=$(prefix+'Map');select.replaceChildren();for(const [id] of Object.entries(CE.MAPS)){const option=document.createElement('option');option.value=id;option.textContent=cryptidMapLabel(id);select.append(option);}select.value='random';
-}
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
  const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,clueSet=$('cryptidLobbyClueSet').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
