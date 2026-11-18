@@ -16,6 +16,7 @@
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
+ const CLUE_SETS={standard:{name:'ปกติ',count:23},mixed:{name:'ผสม · เพิ่มไม่อยู่…',count:51}};
  const copy=v=>JSON.parse(JSON.stringify(v));
  const mix=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
@@ -49,18 +50,23 @@
   catalogueCache.set(board,out);return out;
  }
  function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme);}
- function generate(count,rng=Math.random,mapId='random'){
+ function cluesForSet(board,clueSet='mixed'){
+  if(!CLUE_SETS[clueSet])throw new Error('ไม่พบชุดเบาะแสที่เลือก');
+  return clueCatalogue(board).filter(c=>clueSet==='mixed'||!c.negative);
+ }
+ function generate(count,rng=Math.random,mapId='random',clueSet='mixed'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
+  if(!CLUE_SETS[clueSet])throw new Error('ไม่พบชุดเบาะแสที่เลือก');
   const fixedBoard=mapBoard(mapId);
   for(let map=0;map<40;map++){
-   const board=fixedBoard||makeBoard(rng),catalogue=clueCatalogue(board).filter(c=>c.cells.length>=6&&c.cells.length<=90);
+   const board=fixedBoard||makeBoard(rng),catalogue=cluesForSet(board,clueSet).filter(c=>c.cells.length>=6&&c.cells.length<=90);
    for(let attempt=0;attempt<180;attempt++){
     const target=board[Math.floor(rng()*board.length)].id;
     const eligible=mix(catalogue.filter(c=>c.cells.includes(target)),rng);if(eligible.length<count)continue;
     const clues=eligible.slice(0,count),intersection=board.filter(c=>clues.every(clue=>clue.cells.includes(c.id)));
     if(intersection.length!==1)continue;
-    return {mapId,mapName:MAPS[mapId].name,board,clues:clues.map(({id,text})=>({id,text})),solution:intersection[0].id};
+    return {mapId,mapName:MAPS[mapId].name,clueSet,board,clues:clues.map(({id,text})=>({id,text})),solution:intersection[0].id};
    }
   }
   throw new Error('สร้างปริศนาไม่สำเร็จ กรุณากดเริ่มใหม่');
@@ -73,13 +79,14 @@
  function mark(a,id,cell,yes){a.markers||={};a.markers[cell]||={};a.markers[cell][id]=yes?'yes':'no';}
  function setup(r,ids,puzzle,order=ids){
   if(!r||r.status!=='lobby'||r.gameMode!=='cryptid'||![3,4,5].includes(ids.length)||puzzle?.clues?.length!==ids.length||order.length!==ids.length||new Set(order).size!==ids.length||!order.every(id=>ids.includes(id)))return false;
-  const cat=clueCatalogue(puzzle.board),chosen=puzzle.clues.map(c=>cat.find(v=>v.id===c.id));
+  const clueSet=puzzle.clueSet||'mixed';if(!CLUE_SETS[clueSet]||(r.cryptidClueSet||'mixed')!==clueSet)return false;
+  const cat=cluesForSet(puzzle.board,clueSet),chosen=puzzle.clues.map(c=>cat.find(v=>v.id===c.id));
   if(chosen.some(c=>!c)||new Set(chosen.map(c=>c.id)).size!==ids.length)return false;
   const common=puzzle.board.filter(c=>chosen.every(clue=>clue.cells.includes(c.id)));
   if(common.length!==1||common[0].id!==puzzle.solution)return false;
   r.gamePlayers=copy(r.players);r.playerProfiles={...(r.playerProfiles||{}),...copy(r.players)};
   r.gamesPlayed=(Number(r.gamesPlayed)||0)+1;r.result=null;r.status='cryptid_playing';
-  r.cryptid={version:1,mapId:puzzle.mapId||'random',mapName:puzzle.mapName||'สุ่มแผนที่',board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
+  r.cryptid={version:1,clueSet,mapId:puzzle.mapId||'random',mapName:puzzle.mapName||'สุ่มแผนที่',board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
   return true;
  }
  function actor(a){return a.phase==='initial'?a.order[(a.initialIndex||0)%a.order.length]:a.order[a.turnIndex||0];}
@@ -159,7 +166,7 @@
  // The bot receives its own clue plus the public board/markers, never the solution
  // or another player's actual clue. Infer each opponent's possible clues from marks.
  function botMove(view,id,rng=Math.random){
-  const a=view,cat=clueCatalogue(a.board),own=cat.find(c=>c.id===a.clues?.[id]?.id);if(!own)return null;
+  const a=view,cat=cluesForSet(a.board,a.clueSet||'mixed'),own=cat.find(c=>c.id===a.clues?.[id]?.id);if(!own)return null;
   const pick=xs=>xs.length?xs[Math.floor(rng()*xs.length)]:null;
   if(['initial','penalty','extra'].includes(a.phase)){
    const cell=pick(legalCells(a,id,a.phase==='extra'));return cell?{id,type:a.phase==='extra'?'extra':a.phase,value:cell}:null;
@@ -185,9 +192,9 @@
   if(a.phase==='search')return {id:r.hostId,type:'reveal'};
   if(a.phase==='ready'){const id=a.order.find(p=>bot(p)&&!a.ready?.[p]);return id?{id,type:'ready'}:null;}
   const id=actor(a);if(!bot(id))return null;
-  const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
+  const view={board:a.board,clueSet:a.clueSet||'mixed',markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
   return botMove(view,id,rng);
  }
- const api={TERRAIN,COLORS,MAPS,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
+ const api={TERRAIN,COLORS,MAPS,CLUE_SETS,mapBoard,distance,coordinate,clueCatalogue,cluesForSet,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CryptidEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -90,8 +90,8 @@ test('confirming a stale leave or next-game dialog cannot affect a different roo
 });
 test('creating a room snapshots the chosen mode across asynchronous room-code lookup',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';h.setRoom(r);h.element('durationInput').value='2';h.element('cryptidCreateCount').value='3';h.element('cryptidCreateMap').value='random';
- h.run('selectedMode="cryptid";selectedCategory="";generateRoomCode=async()=>{selectedMode="insider";return "123456"}');
- await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');
+ h.element('cryptidCreateClueSet').value='standard';h.run('selectedMode="cryptid";selectedCategory="";generateRoomCode=async()=>{selectedMode="insider";$("cryptidCreateClueSet").value="mixed";return "123456"}');
+ await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');assert.equal(h.getRoom().cryptidClueSet,'standard');
 });
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
@@ -157,4 +157,12 @@ test('Cryptid stage cards save the selected map, start on that exact layout and 
  const saved=h.getRoom();assert.equal(saved.cryptid.mapId,'sunlands');assert.deepEqual(plain(saved.cryptid.board),require('../cryptid-engine').mapBoard('sunlands'));
  r.cryptidMap='shadowfen';h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const card of cards)assert.equal(card.disabled,true);
  cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'shadowfen');
+});
+test('Cryptid clue-set buttons save and start the selected pool and guests cannot change it',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
+ const buttons=h.element('cryptidLobbyClueSetChoices').children;assert.equal(buttons.length,2);assert.equal(h.element('cryptidLobbyClueSet').value,'mixed');
+ buttons.find(b=>b.dataset.clueSet==='standard').onclick();assert.equal(h.element('cryptidLobbySave').disabled,false);
+ h.run('setTimeout=fn=>fn()');await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby');await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidClueSet,'standard');
+ h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');assert.equal(h.getRoom().cryptid.clueSet,'standard');assert.ok(Object.values(h.getRoom().cryptid.clues).every(c=>!c.id.startsWith('not_')));
+ h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[0].onclick();assert.equal(h.element('cryptidLobbyClueSet').value,'mixed');
 });

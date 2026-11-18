@@ -22,7 +22,10 @@ extra disclosures, results, and cumulative scoring are supported. A win awards
 one point; a host-aborted game awards none. Return to the lobby for another map.
 
 
-The clue pool contains 51 patterns: 23 positive clues and 28 exclusions, including
+The host selects Standard (23 positive clues) or Mixed (51 patterns: 23 positive
+clues and 28 exclusions) when creating a room or saving lobby settings. The
+choice is frozen per round and restricts generation and bot inference. Old rooms
+default to Mixed. The exclusions include
 not in one terrain, not in either of two terrains, and outside the terrain,
 animal or structure distance bands. Negative distance clues require at least
 N + 1 hexes from every matching target; distance zero is included in the excluded
