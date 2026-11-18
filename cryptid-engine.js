@@ -5,7 +5,15 @@
 (function(root){
  'use strict';
  const TERRAIN={forest:'ป่า',water:'น้ำ',mountain:'ภูเขา',swamp:'หนองบึง',desert:'ทะเลทราย'};
- const MAPS={random:{name:'สุ่มแผนที่'},mistwood:{name:'ป่าหมอก',seed:1847,theme:'forest'},highlands:{name:'หุบเขาหิน',seed:9203,theme:'mountain'},wetlands:{name:'ลุ่มน้ำลึกลับ',seed:4171,theme:'water'}};
+ const MAPS={
+  random:{name:'สุ่มแผนที่',description:'สร้างผังใหม่ทุกเกม'},
+  mistwood:{name:'ป่าหมอก',stage:1,seed:1847,theme:'forest',description:'ป่าเขียวสลับภูมิประเทศหลากหลาย'},
+  highlands:{name:'หุบเขาหิน',stage:2,seed:9203,theme:'mountain',description:'แนวภูเขาและร่องรอยสัตว์ลึกลับ'},
+  wetlands:{name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
+  sunlands:{name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
+  shadowfen:{name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
+  crossroads:{name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'}
+ };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
  const copy=v=>JSON.parse(JSON.stringify(v));

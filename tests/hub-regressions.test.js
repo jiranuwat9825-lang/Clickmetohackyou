@@ -147,3 +147,14 @@ test('Steal Cheese sleeping view shows only personal waking hours and hides curr
  h.setRoom(r,'c');h.element('cheeseBody').children=[];h.run('renderCheese(roomState)');html=h.element('cheeseBody').children.map(e=>e.innerHTML).join('');
  assert.match(html,/คุณตื่นแล้ว · ตี 2/);assert.match(html,/NAME_a/);assert.match(html,/หยิบชีส/);
 });
+test('Cryptid stage cards save the selected map, start on that exact layout and are read-only for guests',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='random';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
+ const cards=h.element('cryptidLobbyMapChoices').children;assert.equal(cards.length,7);
+ cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'sunlands');assert.equal(h.element('cryptidLobbySave').disabled,false);
+ assert.match(h.element('cryptidLobbyMapStatus').textContent,/กดบันทึก/);
+ h.run('setTimeout=fn=>fn()');await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby','unsaved choices must not start on the old map');
+ await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidMap,'sunlands');h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');
+ const saved=h.getRoom();assert.equal(saved.cryptid.mapId,'sunlands');assert.deepEqual(plain(saved.cryptid.board),require('../cryptid-engine').mapBoard('sunlands'));
+ r.cryptidMap='shadowfen';h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const card of cards)assert.equal(card.disabled,true);
+ cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'shadowfen');
+});

@@ -3,22 +3,41 @@ const CE=CryptidEngine;
 let cryptidBusy=false,cryptidLobbyBusy=false,cryptidLastAuto=0;
 let cryptidUI={game:'',revision:'',cell:null,target:'',zoom:1,clueOpen:false};
 
+function cryptidMapLabel(mapId){const map=CE.MAPS[mapId];return map?(map.stage?'ด่าน '+map.stage+' · ':'')+map.name:'สุ่มแผนที่';}
+function cryptidMapThumbnail(mapId){
+ const board=CE.mapBoard(mapId);if(!board)return '<span class="cryptid-random-thumbnail" aria-hidden="true">🎲</span>';
+ const colors={forest:'#3b8867',water:'#4294c0',mountain:'#9c96b9',swamp:'#8d9c52',desert:'#d9a16a'};
+ return '<svg viewBox="0 0 250 165" aria-hidden="true">'+board.map(c=>'<rect x="'+(c.col*19+(c.row%2)*9)+'" y="'+(c.row*18)+'" width="17" height="16" rx="4" fill="'+colors[c.terrain]+'"/>').join('')+'</svg>';
+}
+function cryptidMapChoices(prefix,mapId,disabled=false){
+ const root=$(prefix+'MapChoices');if(!root)return;
+ if(!root.children.length){
+  root.setAttribute('role','group');root.setAttribute('aria-label','เลือกด่าน Cryptid หรือสุ่มแผนที่');
+  for(const [id,map] of Object.entries(CE.MAPS)){
+   const button=document.createElement('button');button.type='button';button.className='cryptid-map-choice';button.dataset.mapId=id;
+   button.innerHTML=cryptidMapThumbnail(id)+'<strong>'+esc(cryptidMapLabel(id))+'</strong><small>'+esc(map.description)+'</small>';
+   button.onclick=()=>{if(button.disabled)return;$(prefix+'Map').value=id;$(prefix+'Map').onchange();};root.append(button);
+  }
+ }
+ for(const button of root.children){const selected=button.dataset.mapId===mapId;button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+}
 function cryptidRenderMapPreview(targetId,mapId){
+ const prefix=targetId.replace('MapPreview','');cryptidMapChoices(prefix,mapId,!!$(prefix+'Map')?.disabled);
  const root=$(targetId);if(!root||root.dataset.mapId===mapId)return;root.dataset.mapId=mapId;
  const board=CE.mapBoard(mapId);
  if(!board){root.innerHTML='<div class="cryptid-random-map">🎲 <span><strong>สุ่มแผนที่ใหม่ทุกเกม</strong><small>ผังพื้นที่และตำแหน่งสิ่งปลูกสร้างจะเปลี่ยนไป</small></span></div>';return;}
- const colors={forest:'#3b8867',water:'#4294c0',mountain:'#9c96b9',swamp:'#8d9c52',desert:'#d9a16a'};
- root.innerHTML='<svg viewBox="0 0 250 165" role="img" aria-label="ตัวอย่างแผนที่ '+esc(CE.MAPS[mapId].name)+'">'+board.map(c=>'<rect x="'+(c.col*19+(c.row%2)*9)+'" y="'+(c.row*18)+'" width="17" height="16" rx="4" fill="'+colors[c.terrain]+'"/>').join('')+'</svg><p><strong>'+esc(CE.MAPS[mapId].name)+'</strong><span>ใช้ผังเดิม · สุ่มเบาะแสชุดใหม่ทุกเกม</span></p>';
+ root.innerHTML=cryptidMapThumbnail(mapId)+'<p><strong>เลือก '+esc(cryptidMapLabel(mapId))+'</strong><span>ใช้ผังเดิม · สุ่มเบาะแสและจุดคำตอบใหม่ทุกเกม</span></p>';
 }
 
 function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playerProfiles?.[id])?.name||'ผู้เล่น';}
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
- const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.cryptidCount+':'+(r.cryptidMap||'random');
+ const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random');
  if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';panel.dataset.savedKey=key;}
  select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidRenderMapPreview('cryptidLobbyMapPreview',mapSelect.value);$('cryptidLobbySave').hidden=!isHost;
  $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
+ $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random'):'เปลี่ยนแล้ว · กดบันทึกด่านก่อนเริ่มเกม';
  const players=Object.values(r.players||{}),bots=players.filter(p=>p.bot).length,full=players.length>=Number(r.cryptidCount||3);
  $('cryptidBotTools').hidden=!isHost;$('cryptidBotCount').textContent=`ผู้เล่นจริง ${players.length-bots} คน · บอท ${bots} ตัว · ${players.length}/${r.cryptidCount||3}`;
  $('cryptidAddBot').disabled=$('cryptidFillBots').disabled=cryptidLobbyBusy||full;
@@ -27,6 +46,9 @@ function renderCryptidLobby(r){
 $('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
 $('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPreview',$('cryptidCreateMap').value);
 cryptidRenderMapPreview('cryptidCreateMapPreview','random');
+for(const prefix of ['cryptidCreate','cryptidLobby']){
+ const select=$(prefix+'Map');select.replaceChildren();for(const [id] of Object.entries(CE.MAPS)){const option=document.createElement('option');option.value=id;option.textContent=cryptidMapLabel(id);select.append(option);}select.value='random';
+}
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
  const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
@@ -45,6 +67,7 @@ async function cryptidBots(action){
 for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['cryptidRemoveBots','remove']])$(id).onclick=()=>cryptidBots(action);
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
+ if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกด่านและจำนวนผู้เล่นก่อนเริ่มเกม','error');return;}
  const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
  if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
  cryptidBusy=true;$('startBtn').disabled=true;$('startBtn').textContent='กำลังสร้างปริศนา…';

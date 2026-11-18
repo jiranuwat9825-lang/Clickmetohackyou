@@ -2,9 +2,11 @@
 
 A 3–5 player deduction mode integrated with the existing Party Game Hub. Create a
 Cryptid Beta room, select the player count, then add individual bots or fill the
-remaining seats in the lobby. Choose a named map (Mistwood, Highlands, or
-Wetlands) to retain its layout with fresh clues, or use Random for a new layout
-each game. The lobby shows a map preview. Only the host can manage bots and settings. Bots
+remaining seats in the lobby. Choose one of six numbered map cards (Mistwood,
+Highlands, Wetlands, Sunlands, Shadowfen, or Crossroads) to retain its layout
+with fresh clues, or use Random for a new layout each game. Both creation and
+lobby screens show selectable previews. The host must save lobby changes before
+starting; guests see the saved selection. Only the host can manage settings. Bots
 are marked in the player list; only connected human participants may host.
 
 Mouse wheel zoom is anchored at the pointer (75–300%). Left-button dragging

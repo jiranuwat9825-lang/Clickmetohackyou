@@ -86,7 +86,7 @@ test('90 complete simulated games preserve honest permanent markers and all reac
 });
 
 test('selected maps keep their exact layout while clues and solutions remain valid for 3–5 players',()=>{
- for(const mapId of ['mistwood','highlands','wetlands'])for(const count of [3,4,5])for(let seed=1;seed<=15;seed++){
+ for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random'))for(const count of [3,4,5])for(let seed=1;seed<=15;seed++){
   const p=E.generate(count,seeded(seed),mapId);assert.equal(p.mapId,mapId);assert.deepEqual(p.board,E.mapBoard(mapId));
   const catalogue=E.clueCatalogue(p.board),selected=p.clues.map(c=>catalogue.find(x=>x.id===c.id));assert.deepEqual(p.board.filter(c=>selected.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[p.solution]);
  }
