@@ -3,71 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0a1020">
-<title>Virus</title>
+<meta name="theme-color" content="#f4f3ef">
+<title>Party Game Hub · โต๊ะเกมของเพื่อน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/hacker-favicon.png">
-<link rel="stylesheet" href="style.css?v=cryptid-cell-heading-20261118">
+<link rel="stylesheet" href="style.css?v=club-20261119">
 </head>
 <body>
 <div id="toasts" class="toasts" aria-live="polite"></div>
 <div class="shell">
 <header class="topbar">
-<div class="brand"><img class="logo earthkung-logo" src="assets/hacker-logo.webp" alt="โลโก้แฮกเกอร์ Party Game" width="56" height="56" decoding="async"><div class="brand-copy"><b>PARTY<span>GAME</span></b><small>make by Earthkung And Gpt</small></div></div>
-<div class="top-actions"><span class="online">● MULTIPLAYER</span></div>
+  <div class="brand"><span class="brand-die" aria-hidden="true">⚄</span><b>Party Game Hub</b></div>
+  <button id="guideOpen" type="button" class="btn outline small">คู่มือเกม</button>
 </header>
 <main>
-<section id="homeView" class="home-layout">
-<div class="panel pad profile-card">
-<div class="profile-panel">
-<div class="section-head"><div><small>PLAYER PROFILE</small><h2>ชื่อผู้เล่น</h2></div><span id="profileAvatar" class="panel-emoji avatar-profile tone-orange">🦊</span></div>
-<label for="nameInput">ชื่อเล่นที่เพื่อนจะเห็น</label>
-<div class="name-confirm-row">
-<input id="nameInput" type="text" maxlength="15" placeholder="ใส่ชื่อเล่นของคุณ" autocomplete="nickname">
-<button id="confirmNameBtn" type="button" class="btn primary name-confirm-btn" title="ยืนยันชื่อ" aria-label="ยืนยันชื่อ">ยืนยัน</button>
-</div>
-<p id="nameStatus" class="muted hint">กรอกชื่อแล้วกดปุ่มยืนยัน เพื่อยืนยันชื่อ</p>
-</div>
-<div class="avatar-studio">
-<div class="avatar-studio-head">
-<div><small>CHOOSE YOUR AVATAR</small><h2>เลือกตัวละครประจำตัว</h2><p>เลือกมาสคอตแทนตัวคุณ แล้วเพื่อนจะเห็นตัวละครนี้หน้าชื่อในเกม</p></div>
-<div id="avatarPreview" class="avatar-preview tone-orange" aria-label="ตัวละครที่เลือก">🦊</div>
-</div>
-<div id="avatarFilterBar" class="avatar-filter-bar" role="group" aria-label="ประเภทตัวละคร"></div>
-<div id="avatarPicker" class="avatar-picker" role="group" aria-label="เลือกตัวละคร"></div>
-<p id="avatarSelectedLabel" class="avatar-selected-label">ตัวละครของคุณ: จิ้งจอก</p>
-</div>
-</div>
-<div class="home-side">
-<div class="panel pad join-code-panel">
-<div class="section-head"><div><small>JOIN THE PARTY</small><h2>เข้าร่วมห้องด้วยเลขห้อง</h2></div></div>
-<label for="joinRoomCodeInput">เลขห้อง / รหัสห้อง</label>
-<div class="join-room-row">
-<input id="joinRoomCodeInput" type="text" maxlength="24" placeholder="เช่น 482731" autocomplete="off" inputmode="text">
-<button id="joinRoomCodeBtn" class="btn primary" type="button">เข้าร่วม →</button>
-</div>
-<p class="muted hint">ใส่เลขห้องที่เพื่อนส่งให้ หรือวางรหัสห้องที่คัดลอกมา</p>
-</div>
-<div class="panel pad create-panel">
-<small class="eyebrow">HOST A GAME</small><h2>สร้างปาร์ตี้ของคุณ</h2>
-<p class="muted">เลือกโหมดและหมวดคำ แล้วชวนเพื่อนมาเล่น</p>
-<button id="openCreateBtn" class="btn primary full">＋ สร้างห้องเกมใหม่ <span>→</span></button>
-<button id="openManagerBtn" class="btn soft full"> จัดการหมวดหมู่และคำ</button>
-</div>
-<div class="panel pad">
-<div class="section-head"><div><small>JOIN THE PARTY</small><h2>ห้องที่เปิดอยู่</h2></div><span class="online">● LIVE</span></div>
-<div id="roomList" class="room-list"><p class="muted">กำลังโหลดห้อง…</p></div>
-<p class="muted hint">ห้องไม่มีกิจกรรมเกิน 10 นาทีจะถูกลบเมื่อระบบตรวจพบ</p>
-</div>
-</div>
+<section id="homeView" class="home-layout" aria-label="หน้าแรก">
+  <div class="club-cover">
+    <div class="cover-copy"><h1>ตั้งโต๊ะ<br>เล่นเกมกัน</h1><p>เลือกเกม เปิดห้อง แล้วชวนเพื่อน</p>
+      <button id="openCreateBtn" class="btn primary">สร้างห้อง</button>
+    </div>
+  </div>
+  <div class="home-tools">
+    <section class="panel pad profile-card">
+      <div class="section-head"><h2>ผู้เล่น</h2><span id="profileAvatar" class="panel-emoji avatar-profile">🦊</span></div>
+      <label for="nameInput">ชื่อที่เพื่อนจะเห็น</label>
+      <div class="name-confirm-row"><input id="nameInput" type="text" maxlength="15" placeholder="ชื่อเล่น" autocomplete="nickname"><button id="confirmNameBtn" type="button" class="btn soft">ยืนยัน</button></div>
+      <p id="nameStatus" class="muted hint" role="status"></p>
+      <details class="profile-avatars"><summary>เลือกตัวละคร</summary><div class="avatar-studio">
+        <div class="avatar-studio-head"><p id="avatarSelectedLabel"></p><span id="avatarPreview" class="avatar-preview"></span></div>
+        <div id="avatarFilterBar" class="avatar-filter-bar" role="group" aria-label="ประเภทตัวละคร"></div>
+        <div id="avatarPicker" class="avatar-picker" role="group" aria-label="เลือกตัวละคร"></div>
+      </div></details>
+    </section>
+    <section class="panel pad join-code-panel">
+      <div class="section-head"><h2>เข้าห้องเพื่อน</h2></div>
+      <label for="joinRoomCodeInput">รหัสห้อง</label>
+      <div class="join-room-row"><input id="joinRoomCodeInput" type="text" maxlength="24" placeholder="เช่น 482731" autocomplete="off"><button id="joinRoomCodeBtn" class="btn primary" type="button">เข้าร่วม</button></div>
+    </section>
+  </div>
+  <section class="game-shelf"><div class="section-head"><h2>วิธีเล่นทั้ง 6 เกม</h2></div><div id="guideShelf" class="shelf-grid"></div></section>
+  <section class="room-browser panel pad"><div class="section-head"><h2>ห้องที่เปิดอยู่</h2><button id="openManagerBtn" class="btn outline small">จัดการหมวดคำ</button></div>
+    <div id="roomList" class="room-list"><p class="muted">กำลังโหลดห้อง…</p></div>
+    <p class="hint muted">ห้องที่ไม่มีการใช้งานครบ 10 นาทีจะปิดอัตโนมัติ</p>
+  </section>
 </section>
 <section id="createView" class="panel page" hidden>
-<div class="section-head"><div><small>CREATE YOUR PARTY</small><h2>ตั้งค่าห้องเกม</h2></div></div>
-<p class="muted">เลือกโหมดก่อน แล้วตัวเลือกที่เกี่ยวข้องจะปรากฏ</p>
-<h3 class="step"><b>01</b> ชื่อห้อง (ไม่บังคับ)</h3><input id="roomNameInput" maxlength="20" placeholder="เว้นว่างเพื่อใช้ชื่อ room ตามเลขห้อง" autocomplete="off">
-<p class="muted hint">หากไม่กรอก ระบบจะตั้งชื่อเป็น room ตามด้วยเลขห้องให้อัตโนมัติ</p>
-<h3 class="step"><b>02</b> เลือกโหมดเกม</h3>
+<div class="section-head"><div><h2>ตั้งค่าห้องเกม</h2></div></div>
+
+<h3 class="step"><label for="roomNameInput">ชื่อห้อง <small>(ไม่บังคับ)</small></label></h3><input id="roomNameInput" maxlength="20" placeholder="เว้นว่างเพื่อใช้เลขห้อง" autocomplete="off">
+
+<h3 class="step">เลือกโหมดเกม</h3>
 <div id="modeOptions" class="mode-grid">
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
@@ -77,7 +63,7 @@
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid <em class="cryptid-beta">Beta</em></strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
 </div>
 <div id="spyFormatSection" class="mode-formats" hidden>
-<label>เลือกรูปแบบ Spy fall</label><div class="format-grid">
+<label>รูปแบบ Spyfall</label><div class="format-grid">
 <button class="format-choice" data-spy-format="secret">คำลับต่างกัน</button>
 <button class="format-choice" data-spy-format="aware">Spy รู้ตัวตน</button></div>
 </div>
@@ -86,27 +72,28 @@
 <div class="format-grid">
 <button class="format-choice" data-who-format="whoami_time"> จับเวลาแยกแต่ละคน</button>
 <button class="format-choice" data-who-format="whoami_rounds"> เล่นเป็นรอบ</button>
-<button class="format-choice" data-who-format="whoami_custom">Customize By Player</button>
+<button class="format-choice" data-who-format="whoami_custom">ผู้เล่นตั้งคำเอง</button>
 </div>
 </div>
 <div id="createDetails" hidden>
+<div class="setup-shortcuts"><label for="quickSetup">ตั้งค่าด่วน</label><select id="quickSetup"><option value="">เลือกชุดการตั้งค่า</option></select><p id="presetStatus" class="hint muted" role="status"></p></div>
 <div id="cheeseCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Steal Cheese</h3><label for="cheeseCreateCount">จำนวนผู้เล่น</label><select id="cheeseCreateCount"><option value="4">4 คน</option><option value="5">5 คน</option><option value="6">6 คน</option><option value="7">7 คน</option><option value="8">8 คน</option></select><label for="cheeseCreateDiscuss" class="section-gap">เวลาพูดคุย (นาที)</label><input id="cheeseCreateDiscuss" type="number" min="1" max="15" value="3"><label class="cheese-fall-toggle"><input id="cheeseCreateFall" type="checkbox"> เพิ่มหนูแพะ · ใช้ได้ในเกม 6–8 คน</label><p class="muted hint">ทอยลูกเต๋า · ตื่นกลางคืน · หาขโมยและโหวตพร้อมกัน</p></div>
 <div id="insiderCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderCreatePrep">เวลาคิดคำตอบ (วินาที)<input id="insiderCreatePrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderCreateGuess">เวลาถามและทาย (นาที)<input id="insiderCreateGuess" type="number" min="1" max="30" value="5"></label><label for="insiderCreateAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderCreateAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderCreateVote">เวลาโหวต (วินาที)<input id="insiderCreateVote" type="number" min="30" max="300" step="15" value="120"></label></div><p class="insider-settings-caption">Master ยืนยันคำก่อนหมดเวลาได้ เพื่อเริ่มช่วงถามทันที</p></div>
 <div id="cryptidCreateSettings" class="lobby-category" hidden><h3 id="cryptidCreateCountLabel">จำนวนผู้เล่น Cryptid Beta</h3><input type="hidden" id="cryptidCreateCount" value="3"><div id="cryptidCreateCountChoices" class="cryptid-count-choices" role="group" aria-labelledby="cryptidCreateCountLabel"></div><h3 class="section-gap">เลือกด่านหรือสุ่มแผนที่</h3><input type="hidden" id="cryptidCreateMap" value="random"><div id="cryptidCreateMapChoices" class="cryptid-map-choices"></div><div id="cryptidCreateMapPreview" class="cryptid-map-preview"></div><p class="muted hint">เพิ่มบอททดสอบได้ในล็อบบี้ · เล่นผลัดกัน · ไม่จับเวลา</p></div>
 <div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
-<div id="categoryCreateSection"><h3 class="step"><b>03</b> เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
-<div id="durationCreateSection"><h3 class="step"><b>04</b> <span id="durationLabel">จำนวนรอบ</span></h3>
+<div id="categoryCreateSection"><h3 class="step">เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
+<div id="durationCreateSection"><h3 class="step"><span id="durationLabel">จำนวนรอบ</span></h3>
 <div class="stepper"><button id="minusBtn" aria-label="ลด">−</button><input id="durationInput" type="number" min="1" max="99" value="2"><button id="plusBtn" aria-label="เพิ่ม">+</button></div>
 <p id="durationHelp" class="muted hint"></p></div>
 </div>
 <div class="actions"><button id="createBackBtn" class="btn outline">← ย้อนกลับ</button><button id="createConfirmBtn" class="btn primary" disabled>สร้างห้อง →</button></div>
 </section>
 <section id="managerView" class="panel page" hidden>
-<div class="section-head"><div><small>CONTENT STUDIO</small><h2>จัดการหมวดหมู่เกม</h2></div></div>
-<p class="muted">เพิ่ม แก้ไข และลบหมวดคำส่วนกลาง เมื่อกดบันทึก ทุกคนจะได้รับข้อมูลเดียวกันผ่าน Firebase</p>
-<p id="managerSyncStatus" class="manager-sync-status" role="status">กำลังโหลดหมวดคำจาก Firebase…</p>
-<p class="muted hint">การแก้ไขมีผลกับทุกคนที่เข้าเว็บไซต์ ไม่ใช่เฉพาะเบราว์เซอร์ของคุณ</p>
-<div class="manager-history-toolbar"><button type="button" id="openCategoryHistoryBtn" class="btn soft"> ดูประวัติการแก้ไขหมวดหมู่ <span aria-hidden="true">›</span></button><span class="muted">บันทึกการเพิ่ม แก้ไข และลบหมวดส่วนกลาง</span></div>
+<div class="section-head"><div><h2>จัดการหมวดหมู่เกม</h2></div></div>
+<p class="muted">ทุกคนจะเห็นหมวดคำที่คุณบันทึก</p>
+<p id="managerSyncStatus" class="manager-sync-status" role="status">กำลังโหลดหมวดคำ…</p>
+
+<div class="manager-history-toolbar"><button type="button" id="openCategoryHistoryBtn" class="btn soft"> ประวัติหมวดคำ <span aria-hidden="true">›</span></button></div>
 <div class="manager-layout">
 <aside class="manager-side"><div id="managerList" class="manager-list"></div><button id="newCategoryBtn" class="btn soft full">＋ หมวดใหม่</button></aside>
 <div id="managerEditor" class="manager-editor" hidden>
@@ -126,10 +113,10 @@
 <div class="actions"><button id="managerBackBtn" class="btn outline">← กลับ</button></div>
 </section>
 <section id="roomView" hidden>
-<div class="panel room-banner"><div class="room-heading"><small class="eyebrow">YOUR PARTY ROOM</small><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-banner-right"><div class="room-code"><div><small>ROOM CODE</small><b id="roomCode"></b></div></div><div class="room-banner-buttons"><button id="leaveBtn" class="btn outline small" hidden> ออกจากห้อง</button><button id="deleteRoomBtn" class="btn danger small" hidden>ลบห้อง</button></div></div></div>
+<div class="panel room-banner"><div class="room-heading"><h2 id="roomTitle">ห้องเกม</h2><p id="roomMeta" class="muted"></p></div><div class="room-banner-right"><div class="room-code"><div><small>รหัสห้อง</small><b id="roomCode"></b></div></div><button type="button" class="btn soft small" id="copyCodeBtn">คัดลอกรหัส</button><div class="room-banner-buttons"><button id="leaveBtn" class="btn outline small" hidden> ออกจากห้อง</button><button id="deleteRoomBtn" class="btn danger small" hidden>ลบห้อง</button></div></div></div>
 <div class="game-layout"><div>
 <section id="lobbyScreen" class="panel page" hidden>
-<div class="section-head"><div><small>READY CHECK</small><h2>รอเพื่อนให้พร้อม</h2></div></div>
+<div class="section-head"><div><h2>ผู้เล่นในห้อง</h2></div></div>
 <div id="playerList" class="player-list"></div>
 <div class="lobby-settings-toolbar"><button id="lobbySettingsToggle" type="button" class="btn outline" aria-expanded="true" aria-controls="lobbySettingsBody">ซ่อนการตั้งค่าเกม ▴</button></div>
 <div id="lobbySettingsBody">
@@ -162,7 +149,7 @@
 <div id="lobbyFormatPanel" class="lobby-category" hidden>
 <label for="lobbyFormatSelect">รูปแบบ Who Am I</label>
 <div class="lobby-format-row">
-<select id="lobbyFormatSelect"><option value="whoami_time"> จับเวลาแยกแต่ละคน</option><option value="whoami_rounds"> เล่นเป็นรอบ</option><option value="whoami_custom">Customize By Player</option></select>
+<select id="lobbyFormatSelect"><option value="whoami_time"> จับเวลาแยกแต่ละคน</option><option value="whoami_rounds"> เล่นเป็นรอบ</option><option value="whoami_custom">ผู้เล่นตั้งคำเอง</option></select>
 <input id="lobbySettingInput" type="number" min="1" max="99" value="2" aria-label="จำนวนนาทีต่อคนหรือจำนวนรอบ">
 <button id="lobbyChangeFormatBtn" disabled type="button" class="btn soft">บันทึก</button>
 </div>
@@ -172,16 +159,16 @@
 <p id="lobbyNotice" class="notice">รอหัวหน้าห้องกดเริ่ม</p>
 <button id="startBtn" class="btn primary full" hidden> เริ่มเกม</button>
 <div id="finishMatchPanel" class="finish-match-panel" hidden>
- <div class="finish-match-prompt"><div><strong>เล่นครบแล้วหรือยัง?</strong><p>ถ้าทุกคนพร้อมจบการแข่งขัน กดสรุปผลเพื่อดูอันดับและผู้ชนะจากคะแนนสะสมทุกตา</p></div></div>
+ <div class="finish-match-prompt"><div><strong>คะแนนรวม</strong><p>จบการแข่งขันเพื่อดูอันดับจากคะแนนสะสมทุกตา</p></div></div>
  <button id="finishMatchBtn" type="button" class="btn finish-match-btn full"> จบเกม · สรุปคะแนนและผู้ชนะ</button>
 </div>
 </section>
 <section id="cheeseScreen" class="panel page cheese-page" hidden><div id="cheeseContent"></div></section>
 <section id="cryptidScreen" class="panel page cryptid-page" hidden><div id="cryptidContent"></div></section>
-<section id="avalonScreen" class="panel page avalon-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สงครามแห่งอวาลอน</h2></div></div><div id="avalonContent" aria-live="polite"></div></section>
-<section id="avalonResultsScreen" class="panel page avalon-page avalon-results-page" hidden><div class="section-head"><div><small>THE RESISTANCE · AVALON</small><h2>สรุปผลสงครามแห่งอวาลอน</h2></div></div><div id="avalonResultsContent" aria-live="polite"></div></section>
+<section id="avalonScreen" class="panel page avalon-page" hidden><div class="section-head"><div><h2>สงครามแห่งอวาลอน</h2></div></div><div id="avalonContent" aria-live="polite"></div></section>
+<section id="avalonResultsScreen" class="panel page avalon-page avalon-results-page" hidden><div class="section-head"><div><h2>สรุปผลสงครามแห่งอวาลอน</h2></div></div><div id="avalonResultsContent" aria-live="polite"></div></section>
 <section id="insiderScreen" class="panel page insider-page" hidden>
-<div class="section-head"><div><small>INSIDER · FIND THE ONE WHO KNOWS</small><h2>ใครคือ Insider?</h2></div></div>
+<div class="section-head"><div><h2>ใครคือ Insider?</h2></div></div>
 <div id="insiderProgress" class="game-stats"></div>
 <div class="role-card insider-role"><div id="insiderAvatar" class="game-avatar tone-orange">🦊</div><small>บทบาทของคุณ</small><h2 id="insiderMyRole">—</h2><p id="insiderRoleHint"></p></div>
 <div class="timer-block"><span id="insiderTimerLabel">เวลาที่เหลือ</span><strong id="insiderTimer">01:00</strong></div>
@@ -190,14 +177,14 @@
 <div id="insiderKnownPanel" class="guess-box" hidden><h3>คุณคือ Insider · คำตอบลับ</h3><p class="insider-secret-answer" id="insiderKnownWord"></p><p class="muted hint">อย่าให้คนอื่นรู้ว่าคุณมีคำตอบอยู่แล้ว</p></div>
 <div id="insiderGuessPanel" class="guess-box" hidden><h3>พิมพ์คำตอบของคุณ</h3><p id="insiderRemaining" class="muted hint">เหลือ 5 ครั้ง</p><input id="insiderGuessInput" maxlength="100" autocomplete="off" placeholder="พิมพ์คำตอบ"><button id="insiderGuessSubmit" class="btn primary full">ยืนยันคำตอบ</button><div id="insiderGuessHistory" class="insider-attempts"></div></div>
 <section id="insiderLiveFeedPanel" class="insider-live-feed-panel" hidden aria-label="คำตอบของทุกคน">
- <div class="insider-live-feed-header"><div><small>LIVE ANSWERS</small><h3>คำตอบของทุกคน</h3></div><span id="insiderLiveFeedCount" class="insider-feed-count">0 คำตอบ</span></div>
+ <div class="insider-live-feed-header"><div><h3>คำตอบของทุกคน</h3></div><span id="insiderLiveFeedCount" class="insider-feed-count">0 คำตอบ</span></div>
  <div id="insiderLiveFeed" class="insider-live-feed" role="log" aria-live="polite" aria-relevant="additions text"></div>
 </section>
 <div id="insiderVotePanel" class="guess-box" hidden><h3>โหวตว่าใครคือ Insider</h3><p id="insiderVoteProgress" class="muted hint"></p><div id="insiderVoteChoices" class="vote-list"></div><button id="insiderVoteSubmit" class="btn primary full" disabled>ยืนยันโหวต</button></div>
-<div class="who-note-panel"><div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3>สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="insiderNoteToggle" aria-controls="insiderNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div><div id="insiderNoteBody" class="who-note-body"><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div></div>
+<div class="who-note-panel"><div class="who-note-header"><div><h3>สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="insiderNoteToggle" aria-controls="insiderNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div><div id="insiderNoteBody" class="who-note-body"><p class="muted hint">จดเบาะแสส่วนตัว · เก็บเฉพาะเบราว์เซอร์นี้</p><textarea id="insiderNoteInput" maxlength="3000" rows="4" placeholder="จดคำใบ้ พฤติกรรม หรือคนที่สงสัย..."></textarea><div class="who-note-footer"><span>เห็นเฉพาะเบราว์เซอร์นี้</span><span id="insiderNoteCount">0 / 3000</span></div></div></div>
 </section>
 <section id="spyScreen" class="panel page" hidden>
-<div class="section-head"><div><small>SPYFALL · FIND THE IMPOSTOR</small><h2>ใครคือสายลับ?</h2></div></div>
+<div class="section-head"><div><h2>ใครคือสายลับ?</h2></div></div>
 <div id="spyProgress" class="game-stats"></div>
 <div id="spyRoleCard" class="role-card"><div id="spyMyAvatar" class="game-avatar tone-orange">🦊</div><small id="spyRoleLabel">คำลับของคุณ</small><h2 id="mySpyWord">—</h2><p id="spyRoleHint">จำคำของตัวเองไว้ พูดคุยและจับพิรุธผู้เล่นคนอื่น</p></div>
 <div class="turn-panel"><small id="spyRound">รอบที่ 1</small><h3 id="spySpeaker">กำลังรอ…</h3><button id="spyDoneBtn" class="btn primary full" hidden> พูดจบแล้ว</button></div>
@@ -206,7 +193,7 @@
 <button id="skipSpyBtn" class="btn outline full section-gap" hidden> ข้ามไปโหวต</button>
 </section>
 <section id="whoCustomScreen" class="panel page who-custom-page" hidden>
- <div class="section-head"><div><small>WHO AM I · CUSTOMIZE BY PLAYER</small><h2>คิดคำให้เพื่อน</h2></div></div>
+ <div class="section-head"><div><h2>คิดคำให้เพื่อน</h2></div></div>
  <div id="whoCustomProgress" class="game-stats"></div>
  <div class="timer-block"><span>เวลาตั้งคำให้เพื่อน</span><strong id="whoCustomTimer">01:00</strong></div>
  <div class="who-custom-write-card">
@@ -224,11 +211,11 @@
  </div>
 </section>
 <section id="whoScreen" class="panel page" hidden>
-<div class="section-head"><div><small>WHO AM I? · GUESS YOUR WORD</small><h2>ฉันคือใคร?</h2></div></div>
+<div class="section-head"><div><h2>ฉันคือใคร?</h2></div></div>
 <div id="whoProgress" class="game-stats"></div>
 <button id="whoCustomReviewAlert" type="button" class="who-custom-review-alert" hidden aria-label="มีคำตอบจากเพื่อนรอการตรวจ">📨 มีคำตอบรอตรวจ · กดเปิด</button>
 <div id="whoCustomJudgePanel" class="who-custom-judge-panel" hidden role="status" aria-live="polite">
-  <div class="who-custom-judge-heading"><span aria-hidden="true">📨</span><div><small>ANSWER REVIEW · PLEASE DECIDE</small><h3>เพื่อนส่งคำตอบมาให้คุณตรวจ</h3></div></div>
+  <div class="who-custom-judge-heading"><span aria-hidden="true">📨</span><div><h3>เพื่อนส่งคำตอบมาให้คุณตรวจ</h3></div></div>
   <p>คำตอบจาก <strong id="whoCustomJudgeName">เพื่อนของคุณ</strong></p>
   <div id="whoCustomJudgeAnswer" class="who-custom-judge-answer"></div>
   <p id="whoCustomJudgeStatus" class="muted hint">เลือกผลคำตอบให้เพื่อน</p>
@@ -241,7 +228,7 @@
 <h3>ลำดับการถาม</h3><div id="whoOrder" class="chips"></div>
 <h3 class="section-gap">คำของเพื่อน</h3><div id="otherWords" class="word-grid"></div>
 <div class="who-note-panel">
- <div class="who-note-header"><div><small>PRIVATE GAME NOTES</small><h3> สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="whoNoteToggle" aria-controls="whoNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div>
+ <div class="who-note-header"><div><h3> สมุดโน้ตของฉัน</h3></div><div class="who-note-actions"><span class="who-note-tag">เฉพาะคุณ</span><button type="button" class="note-toggle" id="whoNoteToggle" aria-controls="whoNoteBody" aria-expanded="true">ซ่อนโน้ต <span aria-hidden="true">▴</span></button></div></div>
  <div id="whoNoteBody" class="who-note-body">
  <p class="muted hint">จดเบาะแส คำถาม หรือสิ่งที่เพื่อนตอบไว้ระหว่างเล่น · โน้ตจะล้างอัตโนมัติเมื่อเกมจบ</p>
  <label for="whoNoteInput">โน้ตระหว่างเกม</label>
@@ -252,7 +239,7 @@
 
 </section>
 <section id="voteScreen" class="panel page" hidden>
-<div class="section-head"><div><small>FINAL VOTE · MAKE YOUR CALL</small><h2 id="voteHeading">โหวตหา Spy</h2></div></div>
+<div class="section-head"><div><h2 id="voteHeading">โหวตหา Spy</h2></div></div>
 <div id="voteProgress" class="game-stats"></div>
 <div class="timer-block danger-timer"><span> เหลือเวลาลงคะแนน</span><strong id="voteTimer">02:00</strong></div>
 <p id="voteNote" class="muted"></p><div id="voteChoices" class="vote-list"></div>
@@ -267,13 +254,13 @@
 <p id="spyGuessSubmittedNotice" class="notice" hidden> ส่งคำทายแล้ว รอคนปกติโหวต</p>
 </section>
 <section id="resultsScreen" class="panel page" hidden>
-<div class="section-head"><div><small>MATCH SUMMARY</small><h2> สรุปผลการแข่งขัน</h2></div></div>
+<div class="section-head"><div><h2> สรุปผลการแข่งขัน</h2></div></div>
 <div id="resultContent"></div>
-<div id="resultHostActions" class="actions column" hidden><button id="nextGameBtn" class="btn primary full"> ดูจบแล้ว · กลับล็อบบี้</button><button id="closeAfterBtn" class="btn outline full">ปิดห้องและกลับหน้าแรก</button></div>
+<div id="resultHostActions" class="actions column" hidden><button id="nextGameBtn" class="btn primary full"> กลับล็อบบี้</button><button id="closeAfterBtn" class="btn outline full">ปิดห้องและกลับหน้าแรก</button></div>
 <p id="resultWaiting" class="notice" hidden>รอหัวหน้าห้องกดกลับล็อบบี้เพื่อเริ่มรอบใหม่</p>
 </section>
 <section id="grandFinalScreen" class="panel page grand-final-page" hidden>
- <div class="section-head"><div><small>THE FINAL RESULTS · PARTY GAME HUB</small><h2> สรุปผลการแข่งขันทั้งหมด</h2></div></div>
+ <div class="section-head"><div><h2> สรุปผลการแข่งขันทั้งหมด</h2></div></div>
  <div id="grandFinalContent"></div>
  <div class="grand-final-actions">
   <button type="button" id="grandFinalLeaveBtn" class="btn primary full"> กลับหน้าแรก</button>
@@ -282,16 +269,16 @@
  <p class="muted grand-final-note">เกมจบแล้ว ไม่สามารถเริ่มรอบใหม่ในห้องนี้ได้</p>
 </section>
 </div>
-<aside id="roomScoreboard" class="panel page scoreboard"><div class="section-head"><div><small>LEADERBOARD</small><h2> คะแนนสะสม</h2></div></div><div id="scoreList" class="score-list"></div></aside>
+<aside id="roomScoreboard" class="panel page scoreboard"><div class="section-head"><div><h2> คะแนนสะสม</h2></div></div><div id="scoreList" class="score-list"></div></aside>
 </div>
 </section>
 </main>
-<footer> PARTY GAME HUB · เล่นให้สนุก เคารพเพื่อนร่วมเกม</footer>
+<footer> Party Game Hub · Earthkung &amp; GPT</footer>
 </div>
 <div id="categoryHistoryOverlay" class="dialog-backdrop" hidden>
  <section class="category-history-card" role="dialog" aria-modal="true" aria-labelledby="categoryHistoryTitle">
   <div class="category-history-head">
-   <div><small>CONTENT STUDIO · CHANGE LOG</small><h2 id="categoryHistoryTitle"> ประวัติการแก้ไขหมวดหมู่</h2></div>
+   <div><h2 id="categoryHistoryTitle"> ประวัติการแก้ไขหมวดหมู่</h2></div>
    <button type="button" class="btn outline small" id="closeCategoryHistoryBtn" aria-label="ปิดประวัติ"> ปิด</button>
   </div>
   <p class="muted hint">แสดงรายการบันทึกหมวดที่เกิดขึ้นหลังเปิดใช้ระบบประวัตินี้ และเก็บล่าสุดสูงสุด 100 รายการ</p>
@@ -301,6 +288,11 @@
   <div id="categoryHistoryList" class="category-history-list" aria-live="polite"></div>
  </section>
  </div>
+ <dialog class="guide-dialog" id="gameGuide" aria-labelledby="guideTitle">
+   <div class="section-head"><h2 id="guideTitle">คู่มือเกม</h2><form method="dialog"><button class="btn outline small">ปิด</button></form></div>
+   <label for="guideMode">เกม</label><select id="guideMode"></select>
+   <div id="guideBody" aria-live="polite"></div>
+ </dialog>
  <dialog id="cryptidClueDialog" class="cryptid-clue-dialog" aria-labelledby="cryptidClueDialogTitle" aria-describedby="cryptidClueSummary">
   <div class="cryptid-clue-dialog-head"><h2 id="cryptidClueDialogTitle">ชนิดเบาะแสทั้งหมด</h2><button type="button" id="cryptidCloseClues" class="btn outline" aria-label="ปิดรายการเบาะแส">ปิด ✕</button></div>
   <p id="cryptidClueSummary" class="muted"></p><div id="cryptidClueList"></div>
@@ -308,13 +300,14 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=lobby-settings-toggle-20261118"></script>
+<script src="script.js?v=club-20261119"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=hub-update-20261118"></script>
 <script src="avalon.js?v=hub-update-20261118"></script>
 <script src="cryptid-engine.js?v=cryptid-all-clues-20261118"></script>
-<script src="cryptid.js?v=cryptid-cell-heading-20261118"></script>
+<script src="cryptid.js?v=club-20261119"></script>
 <script src="cheese-engine.js?v=hub-update-20261118"></script>
-<script src="cheese.js?v=dice-stages-clues-20261118"></script>
+<script src="cheese.js?v=club-20261119"></script>
+<script src="game-desk.js?v=club-20261119"></script>
 </body>
 </html>

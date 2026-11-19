@@ -23,11 +23,20 @@ const cheeseKey=r=>[roomId,r.gamesPlayed,r.cheese?.revision].join(':');
 const cheeseRoleLabel=(r,id)=>r.cheese?.followers?.includes(id)?(r.roles?.[id]==='fall'?'หนูแพะ · ถูกเลือกเป็นผู้ช่วย':'ผู้ช่วยขโมย'):({thief:'หนูขโมยชีส',sleepy:'หนูขี้เซา',fall:'หนูแพะ'}[r.roles?.[id]]||'—');
 function cheeseSettings(prefix){return {count:Number($(prefix+'Count').value),minutes:Number($(prefix+'Discuss').value),fall:$(prefix+'Fall').checked};}
 function cheeseSettingsValid(s){return Number.isInteger(s.count)&&s.count>=4&&s.count<=8&&Number.isInteger(s.minutes)&&s.minutes>=1&&s.minutes<=15&&(!s.fall||s.count>=6);}
+function syncFallMouse(prefix,locked=false){
+ const toggle=$(prefix+'Fall');
+ const eligible=Number($(prefix+'Count').value)>=6;
+ if(!eligible)toggle.checked=false;
+ toggle.disabled=locked||!eligible;
+}
+$('cheeseCreateCount').addEventListener('change',()=>syncFallMouse('cheeseCreate'));
+syncFallMouse('cheeseCreate');
 function renderCheeseLobby(r){
  const panel=$('cheeseLobbySettings');panel.hidden=r.gameMode!=='cheese';if(panel.hidden)return;
  const key=roomId+':'+[r.cheeseCount||4,r.cheeseDiscussMinutes||3,!!r.cheeseFall].join(':');
  if(panel.dataset.savedKey!==key){panel.dataset.savedKey=key;$('cheeseLobbyCount').value=String(r.cheeseCount||4);$('cheeseLobbyDiscuss').value=String(r.cheeseDiscussMinutes||3);$('cheeseLobbyFall').checked=!!r.cheeseFall;}
  for(const field of ['Count','Discuss','Fall'])$('cheeseLobby'+field).disabled=!isHost||cheeseBusy;
+ syncFallMouse('cheeseLobby',!isHost||cheeseBusy);
  $('cheeseLobbySave').hidden=!isHost;$('cheeseBotTools').hidden=!isHost;
  $('cheeseLobbySave').disabled=cheeseBusy||JSON.stringify(cheeseSettings('cheeseLobby'))===JSON.stringify({count:Number(r.cheeseCount||4),minutes:Number(r.cheeseDiscussMinutes||3),fall:!!r.cheeseFall});
  const bots=Object.values(r.players||{}).filter(p=>p.bot).length,full=Object.keys(r.players||{}).length>=Number(r.cheeseCount||4);
