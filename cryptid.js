@@ -37,21 +37,13 @@ function cryptidMapChoices(prefix,mapId,disabled=false){
  }
  for(const button of root.children){const selected=button.dataset.mapId===mapId;button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
 }
-function cryptidRenderMapPreview(targetId,mapId){
- const prefix=targetId.replace('MapPreview','');cryptidMapChoices(prefix,mapId,!!$(prefix+'Map')?.disabled);
- const root=$(targetId);if(!root||root.dataset.mapId===mapId)return;root.dataset.mapId=mapId;
- const board=CE.mapBoard(mapId);
- if(!board){root.innerHTML='<div class="cryptid-random-map">🎲 <span><strong>สุ่มแผนที่ใหม่ทุกเกม</strong><small>ผังพื้นที่และตำแหน่งสิ่งปลูกสร้างจะเปลี่ยนไป</small></span></div>';return;}
- root.innerHTML=cryptidMapThumbnail(mapId)+'<p><strong>เลือก '+esc(cryptidMapLabel(mapId))+'</strong><span>ใช้ผังเดิม · สุ่มเบาะแสและจุดคำตอบใหม่ทุกเกม</span></p>';
-}
-
 function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playerProfiles?.[id])?.name||'ผู้เล่น';}
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
  const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+isHost;
  if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';panel.dataset.savedKey=key;}
- select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidRenderMapPreview('cryptidLobbyMapPreview',mapSelect.value);$('cryptidLobbySave').hidden=!isHost;
+ select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidMapChoices('cryptidLobby',mapSelect.value,mapSelect.disabled);$('cryptidLobbySave').hidden=!isHost;
  cryptidCountChoices('cryptidLobby',Number(select.value),!isHost||cryptidLobbyBusy);
  $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
  $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random'):'เปลี่ยนแล้ว · กดบันทึกการตั้งค่าก่อนเริ่มเกม';
@@ -61,9 +53,9 @@ function renderCryptidLobby(r){
  $('cryptidRemoveBots').disabled=cryptidLobbyBusy||!bots;
 }
 $('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
-$('cryptidCreateMap').onchange=()=>cryptidRenderMapPreview('cryptidCreateMapPreview',$('cryptidCreateMap').value);
+$('cryptidCreateMap').onchange=()=>cryptidMapChoices('cryptidCreate',$('cryptidCreateMap').value);
 $('cryptidCreateMap').value='random';
-cryptidRenderMapPreview('cryptidCreateMapPreview','random');
+cryptidMapChoices('cryptidCreate','random');
 cryptidCountChoices('cryptidCreate',3);
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
@@ -238,7 +230,7 @@ function cryptidControls(r){
  const a=r.cryptid,cell=a.board.find(c=>c.id===cryptidUI.cell),active=CE.actor(a),mine=active===myId,done=r.status==='results';
  root.innerHTML=cell?'<h3 class="cryptid-cell-heading"><span>ช่องที่เลือก</span><strong>'+CE.coordinate(cell)+'</strong></h3>':'<h3>เลือกช่องบนแผนที่</h3>';
  if(cell){
-  root.innerHTML+='<p class="cryptid-cell-detail">'+CE.TERRAIN[cell.terrain]+(cell.animal?' · เขต'+(cell.animal==='bear'?'หมี':'เสือพูมา'):'')+(cell.structure?' · '+(cell.structure==='stone'?'เสาหิน':'กระท่อม')+'สี'+({white:'ขาว',green:'เขียว',blue:'น้ำเงิน'}[cell.structureColor]):'')+'</p>';
+  root.innerHTML+='<p class="cryptid-cell-detail"><span class="cryptid-terrain" data-terrain="'+esc(cell.terrain)+'">'+esc(CE.TERRAIN[cell.terrain])+'</span>'+(cell.animal?' · เขต'+(cell.animal==='bear'?'หมี':'เสือพูมา'):'')+(cell.structure?' · '+(cell.structure==='stone'?'เสาหิน':'กระท่อม')+'สี'+({white:'ขาว',green:'เขียว',blue:'น้ำเงิน'}[cell.structureColor]):'')+'</p>';
   root.innerHTML+=a.order.filter(p=>a.markers?.[cell.id]?.[p]).map(p=>'<div class="cryptid-cell-mark">'+cryptidToken(r,p)+esc(cryptidName(r,p))+' <b>'+ (a.markers[cell.id][p]==='yes'?'● วงกลม · ยังเป็นไปได้':'■ สี่เหลี่ยม · อยู่ที่นี่ไม่ได้')+'</b></div>').join('');
  }
  function button(text,action,value,disabled){const b=document.createElement('button');b.type='button';b.className='btn primary full';b.textContent=text;b.disabled=cryptidBusy||disabled;b.onclick=()=>cryptidSend(action,value);root.append(b);}
