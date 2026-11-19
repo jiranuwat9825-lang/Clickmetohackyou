@@ -92,6 +92,22 @@ test('selected maps keep their exact layout while clues and solutions remain val
  }
  const a=E.generate(3,seeded(1),'random'),b=E.generate(3,seeded(2),'random');assert.notDeepEqual(a.board,b.board);
 });
+test('five new Original stages rearrange the same terrain, territories, structures and clue types',()=>{
+ const ids=['island','ridge','fenring','fivezones','relictrail'];
+ const clueIds=E.clueCatalogue(E.mapBoard('mistwood')).map(c=>c.id);
+ const layouts=new Set();
+ for(const [index,id] of ids.entries()){
+  const map=E.MAPS[id],board=E.mapBoard(id);
+  assert.equal(map.stage,index+7);assert.equal(map.collection,'original');assert.equal(board.length,108);
+  assert.deepEqual([...new Set(board.map(c=>c.terrain))].sort(),Object.keys(E.TERRAIN).sort());
+  assert.equal(board.filter(c=>c.structure==='stone').length,3);
+  assert.equal(board.filter(c=>c.structure==='shack').length,3);
+  assert.ok(board.some(c=>c.animal==='bear'));assert.ok(board.some(c=>c.animal==='cougar'));
+  assert.deepEqual(E.clueCatalogue(board).map(c=>c.id),clueIds);
+  layouts.add(board.map(c=>c.terrain).join(','));
+ }
+ assert.equal(layouts.size,5,'each new stage needs a distinct visible terrain layout');
+});
 
 test('negative terrain and distance clues exclude exactly the named cells, including every target and boundary',()=>{
  for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random')){

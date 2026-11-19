@@ -14,7 +14,12 @@
   wetlands:{puzzleCounts:{"3":443,"4":9709,"5":96065},name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
   sunlands:{puzzleCounts:{"3":305,"4":9924,"5":143253},name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
   shadowfen:{puzzleCounts:{"3":253,"4":8491,"5":114443},name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
-  crossroads:{puzzleCounts:{"3":416,"4":11131,"5":130997},name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'}
+  crossroads:{puzzleCounts:{"3":416,"4":11131,"5":130997},name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'},
+  island:{puzzleCounts:{3:351,4:10042,5:122511},name:'เกาะกลางน้ำ',stage:7,seed:7117,layout:'island',collection:'original',description:'ผืนน้ำล้อมป่าและพื้นที่บนเกาะ'},
+  ridge:{puzzleCounts:{3:510,4:12259,5:135321},name:'แนวหินแบ่งแดน',stage:8,seed:8231,layout:'ridge',collection:'original',description:'แนวภูเขาพาดผ่านภูมิประเทศสองฝั่ง'},
+  fenring:{puzzleCounts:{3:399,4:11937,5:145281},name:'วงแหวนหนองบึง',stage:9,seed:9349,layout:'fenring',collection:'original',description:'หนองบึงล้อมพื้นที่กลางแผนที่'},
+  fivezones:{puzzleCounts:{3:270,4:5628,5:59986},name:'ห้าถิ่น',stage:10,seed:10513,layout:'fivezones',collection:'original',description:'ภูมิประเทศทั้งห้าเรียงเป็นเขต'},
+  relictrail:{puzzleCounts:{3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
@@ -22,16 +27,31 @@
  const mix=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
  const coordinate=c=>String.fromCharCode(65+c.col)+(c.row+1);
- function makeBoard(rng,theme){
+ function layoutTerrain(layout,col,row){
+  if(layout==='island'){
+   const edge=((col-5.5)/6.7)**2+((row-4)/5)**2;
+   return edge>=.68?'water':col<4?'swamp':col>7?'mountain':row>=6?'desert':'forest';
+  }
+  if(layout==='ridge')return Math.abs(row-(1.5+col*.47))<=.85?'mountain':row<1.5+col*.47?(col<6?'forest':'swamp'):(col<6?'water':'desert');
+  if(layout==='fenring'){
+   const radius=Math.hypot((col-5.5)/5.8,(row-4)/4.8);
+   return radius>.38&&radius<.72?'swamp':radius<=.38?'water':col<4?'forest':col>8?'mountain':row>5?'desert':'forest';
+  }
+  if(layout==='fivezones')return ['forest','water','mountain','desert','swamp'][Math.min(4,Math.floor((col+row*.7)/3.5))];
+  if(layout==='relictrail')return row<3?'mountain':row>5?'swamp':col<4?'forest':col>7?'desert':'water';
+  return null;
+ }
+ function makeBoard(rng,theme,layout){
   const types=[...Object.keys(TERRAIN),...(theme?[theme,theme]:[])],board=[];
   for(let row=0;row<9;row++)for(let col=0;col<12;col++){
    const previous=col>0?board[board.length-1]:null,above=row>0?board[(row-1)*12+col]:null;
-   const terrain=rng()<.38&&previous?previous.terrain:rng()<.32&&above?above.terrain:types[Math.floor(rng()*types.length)];
+   const terrain=layout?(rng()<.08?types[Math.floor(rng()*types.length)]:layoutTerrain(layout,col,row)):rng()<.38&&previous?previous.terrain:rng()<.32&&above?above.terrain:types[Math.floor(rng()*types.length)];
    board.push({id:'c'+board.length,col,row,q:col-Math.floor(row/2),r:row,terrain});
   }
-  const centers=mix(board,rng).slice(0,2);
+  const centers=layout==='relictrail'?[board[7*12+2],board[1*12+9]]:mix(board,rng).slice(0,2);
   board.forEach(c=>{const animal=centers.findIndex(p=>distance(c,p)<=1);if(animal>=0)c.animal=animal===0?'bear':'cougar';});
-  mix(board,rng).slice(0,6).forEach((c,i)=>{c.structure=i%2===0?'stone':'shack';c.structureColor=['white','green','blue'][Math.floor(i/2)];});
+  const structures=layout==='relictrail'?[[1,1],[3,2],[5,3],[6,5],[8,6],[10,7]].map(([col,row])=>board[row*12+col]):mix(board,rng).slice(0,6);
+  structures.forEach((c,i)=>{c.structure=i%2===0?'stone':'shack';c.structureColor=['white','green','blue'][Math.floor(i/2)];});
   return board;
  }
  const catalogueCache=new WeakMap();
@@ -50,7 +70,7 @@
   for(const [s,label] of [['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']])pair('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง','ไม่อยู่ในระยะ 3 ช่องจากสิ่งปลูกสร้างสี'+label+' (ต้องห่างอย่างน้อย 4 ช่อง)',near(c=>c.structureColor===s,3));
   catalogueCache.set(board,out);return out;
  }
- function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme);}
+ function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme,map.layout);}
  function generate(count,rng=Math.random,mapId='random'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
