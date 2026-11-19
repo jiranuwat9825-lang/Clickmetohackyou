@@ -1,7 +1,7 @@
 // Avalon game state machine. Shared room mutations use RTDB transactions.
 const AVALON_SIZES=[3,4,4,5,5], AVALON_RED=new Set(['Mordred','Assassin','Morgana','Oberon']);
 const avalonSide=role=>AVALON_RED.has(role)?'red':'blue';
-const avalonDeck=n=>[9,10].includes(n)?['Merlin','Percival',...Array(4).fill('Loyal Servant of Arthur'),'Mordred','Assassin','Morgana',...(n===10?['Oberon']:[])]:[];
+const avalonDeck=n=>[8,9,10].includes(n)?['Merlin','Percival',...Array(n===8?3:4).fill('Loyal Servant of Arthur'),'Mordred','Assassin','Morgana',...(n===10?['Oberon']:[])]:[];
 function avalonSetup(r,ids){
  const n=Number(r.avalonCount||9),deck=avalonDeck(n);
  if(r.gameMode!=='avalon'||r.status!=='lobby'||!deck.length||ids.length!==n)return false;
@@ -95,7 +95,7 @@ function refreshAvalonSave(r=roomState){
 for(const id of ['avalonLobbyCount','avalonLobbyAngel'])$(id).addEventListener('change',()=>refreshAvalonSave());
 function avalonManageBots(r,host,action){
  if(!r||r.gameMode!=='avalon'||r.status!=='lobby'||r.hostId!==host||!r.players?.[host]||r.players[host].bot)return false;
- const players=r.players,cap=Number(r.avalonCount||9);if(![9,10].includes(cap))return false;
+ const players=r.players,cap=Number(r.avalonCount||9);if(![8,9,10].includes(cap))return false;
  r.playerProfiles||={};
  if(action==='remove'){
   const bots=Object.keys(players).filter(id=>players[id].bot);if(!bots.length)return false;
@@ -137,7 +137,7 @@ $('avalonLobbySave').onclick=async()=>{
  const count=Number($('avalonLobbyCount').value),angel=$('avalonLobbyAngel').checked;
  avalonSaveBusy=true;refreshAvalonSave();
  try{const res=await getRef().transaction(r=>{
-  if(!r||r.gameMode!=='avalon'||r.status!=='lobby'||r.hostId!==myId||![9,10].includes(count)||Object.keys(r.players||{}).length>count)return;
+  if(!r||r.gameMode!=='avalon'||r.status!=='lobby'||r.hostId!==myId||![8,9,10].includes(count)||Object.keys(r.players||{}).length>count)return;
   r.avalonCount=count;r.avalonAngel=angel;r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);toast(res.committed?'บันทึกการตั้งค่า Avalon แล้ว':'เปลี่ยนไม่ได้ จำนวนผู้เล่นอาจเกินที่เลือก',res.committed?'success':'error');}catch(e){error(e);}finally{avalonSaveBusy=false;refreshAvalonSave();}
 };

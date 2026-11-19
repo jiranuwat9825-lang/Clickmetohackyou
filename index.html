@@ -42,7 +42,7 @@
       <div class="join-room-row"><input id="joinRoomCodeInput" type="text" maxlength="24" placeholder="เช่น 482731" autocomplete="off"><button id="joinRoomCodeBtn" class="btn primary" type="button">เข้าร่วม</button></div>
     </section>
   </div>
-  <section class="game-shelf"><div class="section-head"><h2>วิธีเล่นทั้ง 6 เกม</h2></div><div id="guideShelf" class="shelf-grid"></div></section>
+  <section class="game-shelf"><div class="section-head"><h2>เกมทั้งหมด</h2></div><div id="guideShelf" class="shelf-grid"></div></section>
   <section class="room-browser panel pad"><div class="section-head"><h2>ห้องที่เปิดอยู่</h2><button id="openManagerBtn" class="btn outline small">จัดการหมวดคำ</button></div>
     <div id="roomList" class="room-list"><p class="muted">กำลังโหลดห้อง…</p></div>
     <p class="hint muted">ห้องที่ไม่มีการใช้งานครบ 10 นาทีจะปิดอัตโนมัติ</p>
@@ -59,7 +59,7 @@
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
 <button type="button" class="choice mode" data-mode="cheese"><strong>Steal Cheese</strong><small>หนูขโมยชีส · 4–8 คน</small></button>
-<button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 9–10 คน</small></button>
+<button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 8–10 คน</small></button>
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid</strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
 </div>
 <div id="spyFormatSection" class="mode-formats" hidden>
@@ -76,10 +76,18 @@
 </div>
 </div>
 <div id="createDetails" hidden>
+<div id="whoCustomCreateSettings" class="lobby-category" hidden>
+ <h3>ตั้งค่าผู้เล่นตั้งคำเอง</h3>
+ <div class="insider-settings-grid">
+  <label for="whoCustomCreatePrep">เวลาตั้งคำ (วินาที)<input id="whoCustomCreatePrep" type="number" min="15" max="300" value="60"></label>
+  <label for="whoCustomCreateAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="whoCustomCreateAttempts" type="number" min="1" max="20" value="1"></label>
+ </div>
+</div>
+
 <div id="cheeseCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Steal Cheese</h3><label for="cheeseCreateCount">จำนวนผู้เล่น</label><select id="cheeseCreateCount"><option value="4">4 คน</option><option value="5">5 คน</option><option value="6">6 คน</option><option value="7">7 คน</option><option value="8">8 คน</option></select><label for="cheeseCreateDiscuss" class="section-gap">เวลาพูดคุย (นาที)</label><input id="cheeseCreateDiscuss" type="number" min="1" max="15" value="3"><label class="cheese-fall-toggle"><input id="cheeseCreateFall" type="checkbox"> เพิ่มหนูแพะ · ใช้ได้ในเกม 6–8 คน</label><p class="muted hint">ทอยลูกเต๋า · ตื่นกลางคืน · หาขโมยและโหวตพร้อมกัน</p></div>
 <div id="insiderCreateSettings" class="lobby-category" hidden><h3>ตั้งค่า Insider</h3><div class="insider-settings-grid"><label for="insiderCreatePrep">เวลาคิดคำตอบ (วินาที)<input id="insiderCreatePrep" type="number" min="15" max="300" step="15" value="60"></label><label for="insiderCreateGuess">เวลาถามและทาย (นาที)<input id="insiderCreateGuess" type="number" min="1" max="30" value="5"></label><label for="insiderCreateAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="insiderCreateAttempts" type="number" min="1" max="20" value="5"></label><label for="insiderCreateVote">เวลาโหวต (วินาที)<input id="insiderCreateVote" type="number" min="30" max="300" step="15" value="120"></label></div><p class="insider-settings-caption">Master ยืนยันคำก่อนหมดเวลาได้ เพื่อเริ่มช่วงถามทันที</p></div>
 <div id="cryptidCreateSettings" class="lobby-category" hidden><h3 id="cryptidCreateCountLabel">จำนวนผู้เล่น Cryptid</h3><input type="hidden" id="cryptidCreateCount" value="3"><div id="cryptidCreateCountChoices" class="cryptid-count-choices" role="group" aria-labelledby="cryptidCreateCountLabel"></div><h3 class="section-gap">เลือกด่านหรือสุ่มแผนที่</h3><input type="hidden" id="cryptidCreateMap" value="random"><div id="cryptidCreateMapChoices" class="cryptid-map-choices"></div></div>
-<div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
+<div id="avalonCreateSettings" class="lobby-category avalon-settings" hidden><label for="avalonCreateCount">จำนวนผู้เล่น</label><select id="avalonCreateCount"><option value="8">8 คน · น้ำเงิน 5 / แดง 3</option><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonCreateAngel" checked> เปิด Angel</label></div>
 <div id="categoryCreateSection"><h3 class="step">เลือกหมวดคำ</h3><div id="categoryOptions" class="category-grid"></div></div>
 <div id="durationCreateSection"><h3 class="step"><span id="durationLabel">จำนวนรอบ</span></h3>
 <div class="stepper"><button id="minusBtn" aria-label="ลด">−</button><input id="durationInput" type="number" min="1" max="99" value="2"><button id="plusBtn" aria-label="เพิ่ม">+</button></div>
@@ -128,7 +136,7 @@
  <div id="cryptidBotTools" class="cryptid-bot-tools"><p id="cryptidBotCount" class="muted"></p><div class="cryptid-buttons"><button id="cryptidAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="cryptidFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="cryptidRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">บอทเล่นเองเมื่อถึงตา และใช้เบาะแสของตนกับข้อมูลบนกระดาน</p></div>
  <details class="cryptid-beta-note"><summary>เกี่ยวกับโหมดนี้</summary><p>สำหรับทดสอบกับเพื่อน เบาะแสซ่อนเฉพาะหน้าจอ แต่ข้อมูลยังใช้ระบบห้องร่วมกันของเว็บเดิม จึงยังไม่เหมาะกับการแข่งขันที่ต้องป้องกันการเปิดดูข้อมูล</p></details>
 </div>
-<div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft" disabled>บันทึกการตั้งค่า</button><div id="avalonBotTools" class="avalon-bot-tools" hidden><p id="avalonBotCount" class="muted"></p><div class="avalon-buttons"><button id="avalonAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="avalonFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="avalonRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">สำหรับทดสอบเกม · บอทเล่นอัตโนมัติเมื่อถึงตา คุณยังต้องเล่นบทบาทของคุณเอง</p></div></div>
+<div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="8">8 คน · น้ำเงิน 5 / แดง 3</option><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft" disabled>บันทึกการตั้งค่า</button><div id="avalonBotTools" class="avalon-bot-tools" hidden><p id="avalonBotCount" class="muted"></p><div class="avalon-buttons"><button id="avalonAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="avalonFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="avalonRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">สำหรับทดสอบเกม · บอทเล่นอัตโนมัติเมื่อถึงตา คุณยังต้องเล่นบทบาทของคุณเอง</p></div></div>
 <div id="lobbyCategoryPanel" class="lobby-category">
  <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
  <p id="lobbyCategoryCurrent" class="muted"></p>
@@ -144,6 +152,14 @@
 <select id="lobbySpyFormatSelect"><option value="secret"> คำลับต่างกัน (เดิม)</option><option value="aware"> Spy รู้ตัวตน</option></select>
 <button id="lobbySpyFormatSaveBtn" disabled class="btn soft">บันทึกรูปแบบ</button></div>
 <p id="lobbySpyFormatHint" class="muted hint"></p>
+</div>
+<div id="whoCustomLobbySettings" class="lobby-category" hidden>
+ <h3>ตั้งค่าผู้เล่นตั้งคำเอง</h3>
+ <div class="insider-settings-grid">
+  <label for="whoCustomLobbyPrep">เวลาตั้งคำ (วินาที)<input id="whoCustomLobbyPrep" type="number" min="15" max="300" value="60"></label>
+  <label for="whoCustomLobbyAttempts">จำนวนครั้งที่ตอบได้ / คน<input id="whoCustomLobbyAttempts" type="number" min="1" max="20" value="1"></label>
+ </div>
+ <button id="whoCustomLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button>
 </div>
 <div id="lobbyFormatPanel" class="lobby-category" hidden>
 <label for="lobbyFormatSelect">รูปแบบ Who Am I</label>
@@ -301,14 +317,14 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=streamlined-20261119"></script>
+<script src="script.js?v=who-custom-settings-20261119"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
-<script src="whoami_custom.js?v=hub-update-20261118"></script>
-<script src="avalon.js?v=hub-update-20261118"></script>
+<script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
+<script src="avalon.js?v=avalon-eight-20261119"></script>
 <script src="cryptid-engine.js?v=map-puzzle-counts-20261119"></script>
 <script src="cryptid.js?v=map-puzzle-counts-20261119"></script>
 <script src="cheese-engine.js?v=hub-update-20261118"></script>
 <script src="cheese.js?v=streamlined-20261119"></script>
-<script src="game-desk.js?v=direct-guide-20261119"></script>
+<script src="game-desk.js?v=who-custom-settings-20261119"></script>
 </body>
 </html>

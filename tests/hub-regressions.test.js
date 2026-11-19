@@ -59,8 +59,8 @@ test('aware Spyfall preserves the spy word guess across a tie-break vote',()=>{
 test('Insider ties award only the Insider, while a correct vote awards the other players once',()=>{
  for(const caught of [true,false]){const h=loadHub(),r=base('insider');r.status='insider_voting';r.insiderId='a';r.insiderMasterId='b';r.insiderAnswer='แมว';r.insiderVotes=caught?{a:'b',b:'a',c:'a'}:{a:'b',b:'c',c:'a'};h.setRoom(r);h.run('insiderResolveVotes(testRoom);insiderResolveVotes(testRoom)');assert.equal(h.run('testRoom.scores.a'),caught?0:2);assert.equal(h.run('testRoom.scores.b'),caught?1:0);}
 });
-test('Avalon 9/10 player games with and without Angel run through all phases to a valid result',()=>{
- for(const count of [9,10])for(const angel of [false,true])for(let attempt=0;attempt<5;attempt++){
+test('Avalon 8/9/10 player games with and without Angel run through all phases to a valid result',()=>{
+ for(const count of [8,9,10])for(const angel of [false,true])for(let attempt=0;attempt<5;attempt++){
   const h=loadHub();h.run(`testRoom={gameMode:'avalon',status:'lobby',hostId:'p0',avalonCount:${count},avalonAngel:${angel},players:Object.fromEntries(Array.from({length:${count}},(_,i)=>['p'+i,{name:'Bot '+i,bot:true}]))};avalonSetup(testRoom,Object.keys(testRoom.players));`);
   for(let i=0;i<500&&h.run('testRoom.status')!=='results';i++)assert.equal(h.run('(()=>{const next=avalonNextBotAction(testRoom);return !!next&&avalonApply(testRoom,next.id,next.type,next.value);})()'),true);
   assert.equal(h.run('testRoom.status'),'results');assert.ok(['red','blue'].includes(h.run('testRoom.result.winner')));
@@ -183,4 +183,83 @@ test('Cryptid player-count cards change creation and saved lobby counts and are 
  const r=base('cryptid');r.status='lobby';r.cryptidCount=3;h.setRoom(r);h.run('renderCryptidLobby(roomState)');const buttons=h.element('cryptidLobbyCountChoices').children;
  buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'5');assert.equal(h.element('cryptidLobbySave').disabled,false);await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidCount,5);
  h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'3');
+});
+
+test('custom settings determine preparation time and attempts, freeze per game and default for legacy rooms',()=>{
+ const h=loadHub(),r=base('whoami_custom');r.status='lobby';r.whoCustomSettings={prepSeconds:90,maxGuesses:3};h.setRoom(r);
+ assert.equal(h.run('whoCustomSetup(testRoom,Object.keys(testRoom.players))'),true);
+ assert.equal(h.run('testRoom.whoCustomDeadline'),1_090_000);
+ h.run('testRoom.whoCustomSettings={prepSeconds:15,maxGuesses:20};whoCustomBegin(testRoom)');
+ assert.deepEqual(plain(h.run('testRoom.attempts')),{a:3,b:3,c:3});
+ const legacy=base('whoami_custom');legacy.status='lobby';h.setRoom(legacy);h.run('whoCustomSetup(testRoom,Object.keys(testRoom.players));whoCustomBegin(testRoom)');
+ assert.deepEqual(plain(h.run('testRoom.attempts')),{a:1,b:1,c:1});
+ for(const settings of [{prepSeconds:14,maxGuesses:1},{prepSeconds:301,maxGuesses:1},{prepSeconds:60,maxGuesses:0},{prepSeconds:60,maxGuesses:21},{prepSeconds:60.5,maxGuesses:1}]){
+  h.run('invalidSettings='+JSON.stringify(settings));assert.equal(h.run('whoCustomSettingsValid(invalidSettings)'),false);
+ }
+});
+test('custom retries preserve all reviews, wait for the writer and award points only on the correct guess',async()=>{
+ const h=loadHub(),r=base('whoami_custom');r.whoCustomAssignments={a:'b',b:'c',c:'a'};r.whoCustomRoundSettings={prepSeconds:90,maxGuesses:3};r.attempts.b=3;
+ h.run('confirmBox=async()=>true');
+ for(let attempt=1;attempt<=3;attempt++){
+  h.setRoom(attempt===1?r:h.getRoom(),'b');h.element('guessInput').value='คำตอบ '+attempt;
+  await Promise.all([h.run('whoCustomGuess()'),h.run('whoCustomGuess()')]);
+  let saved=h.getRoom();
+  assert.equal(saved.attempts.b,3-attempt);assert.equal(saved.whoCustomGuesses.b.length,attempt);
+  assert.equal(saved.whoCustomPending.b.attempt,attempt);
+  h.setRoom(saved,'b');h.run('renderWho(roomState)');assert.equal(h.element('guessInputs').hidden,true);
+  h.setRoom(saved,'a');await h.run('whoCustomJudge('+(attempt===3)+')');await h.run('whoCustomJudge(true)');
+  saved=h.getRoom();assert.equal(saved.whoCustomPending.b,undefined);
+  assert.equal(saved.scores.b,attempt===3?2:0);
+  assert.equal(saved.whoCustomGuesses.b.length,attempt);
+  assert.equal(saved.whoCustomGuesses.b[attempt-1].correct,attempt===3);
+  if(attempt<3){
+   assert.ok(saved.turnOrder.includes('b'));
+   h.setRoom(saved,'b');h.run('renderWho(roomState)');assert.equal(h.element('answerReveal').hidden,true);assert.equal(h.element('guessInputs').hidden,false);
+  }else assert.ok(!saved.turnOrder.includes('b'));
+ }
+ assert.deepEqual(h.getRoom().whoCustomGuesses.b.map(g=>g.correct),[false,false,true]);
+});
+test('custom final deadline closes unused attempts but still allows a submitted answer to be judged',async()=>{
+ const h=loadHub(),r=base('whoami_custom');r.status='final_guess';r.finalDeadline=1_010_000;r.whoCustomAssignments={a:'b',b:'c',c:'a'};
+ r.whoCustomRoundSettings={prepSeconds:60,maxGuesses:3};r.attempts={a:0,b:3,c:0};h.setRoom(r,'b');
+ h.run('confirmBox=async()=>true');h.element('guessInput').value='สุนัข';await h.run('whoCustomGuess()');
+ const pending=h.getRoom();h.setRoom(pending,'a');h.now(1_011_000);
+ h.run('markWhoFinalTimeouts(testRoom);whoCustomCompleteIfReady(testRoom)');
+ const timedOut=plain(h.run('testRoom'));assert.equal(timedOut.status,'whoami_review');assert.equal(timedOut.attempts.b,0);
+ h.setRoom(timedOut,'a');await h.run('whoCustomJudge(true)');
+ assert.equal(h.getRoom().status,'results');assert.equal(h.getRoom().scores.b,1);assert.equal(h.getRoom().whoCustomGuesses.b[0].correct,true);
+});
+test('only the host can save custom lobby settings, and saved changes do not alter an active game',async()=>{
+ const h=loadHub(),r=base('whoami_custom');r.status='lobby';h.setRoom(r,'a');h.run('renderWhoCustomLobby(roomState)');
+ h.element('whoCustomLobbyPrep').value='120';h.element('whoCustomLobbyAttempts').value='4';h.run('renderWhoCustomLobby(roomState)');
+ assert.equal(h.element('whoCustomLobbySave').disabled,false);
+ await h.element('whoCustomLobbySave').onclick();assert.deepEqual(plain(h.getRoom().whoCustomSettings),{prepSeconds:120,maxGuesses:4});
+ h.setRoom(h.getRoom(),'b');h.run('renderWhoCustomLobby(roomState)');assert.equal(h.element('whoCustomLobbyPrep').disabled,true);
+ h.element('whoCustomLobbyPrep').value='30';await h.element('whoCustomLobbySave').onclick();assert.equal(h.getRoom().whoCustomSettings.prepSeconds,120);
+ const active=h.getRoom();active.status='playing';h.setRoom(active,'a');h.element('whoCustomLobbyPrep').value='60';
+ await h.element('whoCustomLobbySave').onclick();assert.equal(h.getRoom().whoCustomSettings.prepSeconds,120);
+});
+test('Avalon 8 players removes one Loyal Servant, caps bots at eight and requires exactly eight to start',()=>{
+ const h=loadHub();assert.deepEqual(plain(h.run('avalonDeck(8).filter(role=>role==="Loyal Servant of Arthur")')).length,3);
+ assert.equal(h.run('avalonDeck(8).filter(role=>avalonSide(role)==="blue").length'),5);
+ assert.equal(h.run('avalonDeck(8).filter(role=>avalonSide(role)==="red").length'),3);
+ const r=base('avalon');r.status='lobby';r.avalonCount=8;h.setRoom(r);
+ assert.equal(h.run('avalonManageBots(testRoom,"a","fill")'),true);assert.equal(h.run('Object.keys(testRoom.players).length'),8);
+ assert.equal(h.run('avalonManageBots(testRoom,"a","add")'),false);
+ assert.equal(h.run('avalonSetup(testRoom,Object.keys(testRoom.players).slice(0,7))'),false);
+ assert.equal(h.run('avalonSetup(testRoom,Object.keys(testRoom.players))'),true);
+});
+test('custom settings persist through the create and start buttons, and dirty lobby edits block starting',async()=>{
+ const h=loadHub(),r=base('whoami_custom');r.status='lobby';h.setRoom(r);
+ h.run('selectedMode="whoami_custom";selectedCategory="";generateRoomCode=async()=>"123456"');
+ h.element('durationInput').value='2';h.element('whoCustomCreatePrep').value='150';h.element('whoCustomCreateAttempts').value='4';
+ await h.element('createConfirmBtn').onclick();const saved=h.getRoom();
+ assert.deepEqual(plain(saved.whoCustomSettings),{prepSeconds:150,maxGuesses:4});
+ h.setRoom(saved);h.run('renderRoom(roomState)');
+ h.element('whoCustomLobbyAttempts').value='5';await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'lobby');
+ h.element('whoCustomLobbyAttempts').value='4';h.element('startBtn').disabled=false;
+ // Add a second real participant so the ordinary minimum-player guard is met.
+ const ready=h.getRoom();ready.players.b={name:'B'};h.setRoom(ready);h.run('renderRoom(roomState)');
+ await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'whoami_prepare');
+ assert.equal(h.getRoom().whoCustomDeadline,1_150_000);assert.equal(h.getRoom().whoCustomRoundSettings.maxGuesses,4);
 });
