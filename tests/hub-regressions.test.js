@@ -149,7 +149,7 @@ test('Steal Cheese sleeping view shows only personal waking hours and hides curr
 });
 test('Cryptid stage cards save the selected map, start on that exact layout and are read-only for guests',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='random';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
- const cards=h.element('cryptidLobbyMapChoices').children;assert.equal(cards.length,13);
+ const cards=h.element('cryptidLobbyMapChoices').children;assert.equal(cards.length,Object.keys(require('../cryptid-engine').MAPS).length);
  cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'sunlands');assert.equal(h.element('cryptidLobbySave').disabled,false);
  assert.match(h.element('cryptidLobbyMapStatus').textContent,/กดบันทึก/);
  h.run('setTimeout=fn=>fn()');await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby','unsaved choices must not start on the old map');
@@ -158,13 +158,14 @@ test('Cryptid stage cards save the selected map, start on that exact layout and 
  r.cryptidMap='shadowfen';h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const card of cards)assert.equal(card.disabled,true);
  cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'shadowfen');
 });
-test('Cryptid Creative shows its undersea map and switching tabs remembers each map',()=>{
+test('Cryptid Deep Sea shows all six undersea maps and switching tabs remembers each map',()=>{
  const h=loadHub(),root=h.element('cryptidCreateMapChoices'),tabs=h.element('cryptidCreateCollectionChoices').children;
  assert.deepEqual(tabs.map(b=>b.dataset.collection),['original','creative']);
+ assert.deepEqual(tabs.map(b=>b.textContent),['Original','Deep Sea']);
  assert.equal(root.children.length,Object.keys(require('../cryptid-engine').MAPS).length);
  assert.equal(root.children.filter(card=>!card.hidden).length,12);
  tabs[1].onclick();assert.equal(h.element('cryptidCreateCollection').value,'creative');
- assert.deepEqual(root.children.filter(card=>!card.hidden).map(card=>card.dataset.mapId),['abyss']);
+ assert.deepEqual(root.children.filter(card=>!card.hidden).map(card=>card.dataset.mapId),['abyss','searift','wreckyard','coralcity','kelpmaze','sinkhole']);
  assert.equal(h.element('cryptidCreateMap').value,'abyss');
  assert.equal(h.element('cryptidCreateCollectionEmpty').hidden,true);
  h.run('selectedMode="cryptid";renderCategoryChoices()');assert.equal(h.element('createConfirmBtn').disabled,false);
@@ -178,7 +179,7 @@ test('Cryptid Creative shows its undersea map and switching tabs remembers each 
  lobby[0].onclick();assert.equal(h.element('cryptidLobbyMap').value,'wetlands');
  assert.equal(h.element('cryptidLobbyMapChoices').children.find(card=>card.dataset.mapId==='wetlands').getAttribute('aria-pressed'),'true');
 });
-test('Cryptid requires saving the Creative stage before starting on the selected layout',async()=>{
+test('Cryptid requires saving the Deep Sea stage before starting on the selected layout',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
  h.run('setTimeout=fn=>fn()');h.element('cryptidLobbyCollectionChoices').children[1].onclick();await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby');
  await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidMap,'abyss');

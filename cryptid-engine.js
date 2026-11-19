@@ -21,7 +21,12 @@
   fenring:{puzzleCounts:{3:399,4:11937,5:145281},name:'วงแหวนหนองบึง',stage:9,seed:9349,layout:'fenring',collection:'original',description:'หนองบึงล้อมพื้นที่กลางแผนที่'},
   fivezones:{puzzleCounts:{3:270,4:5628,5:59986},name:'ห้าถิ่น',stage:10,seed:10513,layout:'fivezones',collection:'original',description:'ภูมิประเทศทั้งห้าเรียงเป็นเขต'},
   relictrail:{puzzleCounts:{3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'},
-  abyss:{puzzleCounts:{3:387,4:13787,5:180497},name:'ใต้ทะเลลึก',stage:1,seed:12491,layout:'abyss',collection:'creative',description:'ปะการัง ป่าสาหร่าย ร่องลึก และซากเรือ'}
+  abyss:{puzzleCounts:{3:387,4:13787,5:180497},name:'ใต้ทะเลลึก',stage:1,seed:12491,layout:'abyss',collection:'creative',description:'ปะการัง ป่าสาหร่าย ร่องลึก และซากเรือ'},
+  searift:{puzzleCounts:{3:893,4:18787,5:205203},name:'รอยแยกก้นทะเล',stage:2,seed:13537,layout:'searift',collection:'creative',description:'ร่องลึกพาดกลางระหว่างปล่องน้ำร้อน'},
+  wreckyard:{puzzleCounts:{3:644,4:15781,5:186259},name:'สุสานเรือจม',stage:3,seed:14621,layout:'wreckyard',collection:'creative',description:'ซากเรือกระจุกตัวบนพื้นทรายมืด'},
+  coralcity:{puzzleCounts:{3:543,4:15532,5:205196},name:'เมืองปะการัง',stage:4,seed:15733,layout:'coralcity',collection:'creative',description:'แนวปะการังแบ่งเป็นเขตและทางเชื่อม'},
+  kelpmaze:{puzzleCounts:{3:585,4:13491,5:151341},name:'เขาวงกตสาหร่าย',stage:5,seed:16811,layout:'kelpmaze',collection:'creative',description:'ทางสาหร่ายคดเคี้ยวซ่อนพื้นที่ลับ'},
+  sinkhole:{puzzleCounts:{3:1058,4:21975,5:226780},name:'หลุมลึกกลางสมุทร',stage:6,seed:17903,layout:'sinkhole',collection:'creative',description:'ชั้นภูมิประเทศล้อมร่องลึกใจกลาง'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
@@ -30,15 +35,41 @@
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
  const coordinate=c=>String.fromCharCode(65+c.col)+(c.row+1);
  const isDeepSea=board=>board?.[0]?.biome==='deepsea';
- function makeAbyssBoard(rng){
+ function deepTerrain(layout,col,row){
+  if(layout==='searift'){
+   const line=7-row-col*.45,gap=Math.abs(line);
+   return gap<.65?'trench':gap<1.55?'vent':col<4?'reef':row<4?'kelp':'plain';
+  }
+  if(layout==='wreckyard')return row>=7?'trench':col>=10?'vent':row<=1?'kelp':(col<2||col>8)&&row<5?'reef':'plain';
+  if(layout==='coralcity'){
+   if(row===4||col===5||col===6)return 'plain';
+   if(row>=7)return 'trench';if(col>=10)return 'vent';if(row<=1&&col>6)return 'kelp';return 'reef';
+  }
+  if(layout==='kelpmaze'){
+   if(row===8)return 'trench';if(col===11)return 'vent';if((col+row*2)%7===0)return 'reef';
+   return (col+Math.floor(row/2))%4<2?'kelp':'plain';
+  }
+  if(layout==='sinkhole'){
+   const radius=Math.hypot((col-5.5)/5.7,(row-4)/4.5);
+   return radius<.28?'trench':radius<.46?'vent':radius<.64?'plain':radius<.84?'kelp':'reef';
+  }
+  return row>=6?'trench':col<4?'reef':col>=9?'vent':row<=2?'kelp':'plain';
+ }
+ function makeAbyssBoard(rng,layout='abyss'){
   const board=[],types=Object.keys(DEEP_TERRAIN);
   for(let row=0;row<9;row++)for(let col=0;col<12;col++){
-   const terrain=rng()<.1?types[Math.floor(rng()*types.length)]:row>=6?'trench':col<4?'reef':col>=9?'vent':row<=2?'kelp':'plain';
+   const terrain=rng()<(layout==='abyss'?.1:.08)?types[Math.floor(rng()*types.length)]:deepTerrain(layout,col,row);
    board.push({id:'c'+board.length,col,row,q:col-Math.floor(row/2),r:row,terrain,biome:'deepsea'});
   }
-  const centers=[board[2*12+2],board[6*12+9]];
+  const centersByLayout={searift:[[1,2],[9,6]],wreckyard:[[2,6],[8,2]],coralcity:[[2,2],[9,6]],kelpmaze:[[3,5],[9,2]],sinkhole:[[1,4],[10,4]]};
+  const centers=(centersByLayout[layout]||[[2,2],[9,6]]).map(([col,row])=>board[row*12+col]);
   board.forEach(c=>{const animal=centers.findIndex(p=>distance(c,p)<=1);if(animal>=0)c.animal=animal===0?'jelly':'squid';});
-  [[1,4],[3,7],[5,1],[7,5],[9,2],[10,7]].forEach(([col,row],i)=>{const c=board[row*12+col];c.structure=i%2===0?'wreck':'beacon';c.structureColor=['cyan','violet','amber'][Math.floor(i/2)];});
+  const featuresByLayout={
+   searift:[[1,1],[3,6],[5,2],[7,5],[9,1],[10,7]],wreckyard:[[3,3],[1,1],[5,4],[10,2],[7,5],[10,7]],
+   coralcity:[[1,2],[5,1],[3,6],[6,5],[9,2],[10,7]],kelpmaze:[[1,6],[2,1],[5,3],[7,6],[9,1],[10,5]],
+   sinkhole:[[1,1],[5,2],[2,7],[6,6],[10,1],[10,7]]
+  };
+  (featuresByLayout[layout]||[[1,4],[3,7],[5,1],[7,5],[9,2],[10,7]]).forEach(([col,row],i)=>{const c=board[row*12+col];c.structure=i%2===0?'wreck':'beacon';c.structureColor=['cyan','violet','amber'][Math.floor(i/2)];});
   return board;
  }
  function layoutTerrain(layout,col,row){
@@ -92,7 +123,7 @@
   }
   catalogueCache.set(board,out);return out;
  }
- function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.layout==='abyss'?makeAbyssBoard(rng):makeBoard(rng,map.theme,map.layout);}
+ function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.collection==='creative'?makeAbyssBoard(rng,map.layout):makeBoard(rng,map.theme,map.layout);}
  function generate(count,rng=Math.random,mapId='random'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');

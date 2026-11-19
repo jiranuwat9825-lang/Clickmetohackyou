@@ -109,22 +109,27 @@ test('five new Original stages rearrange the same terrain, territories, structur
  assert.equal(layouts.size,5,'each new stage needs a distinct visible terrain layout');
 });
 
-test('Creative undersea stage uses new terrain, creatures, structures and solvable clues',()=>{
- const map=E.MAPS.abyss,board=E.mapBoard('abyss'),cat=E.clueCatalogue(board);
- assert.equal(map.collection,'creative');assert.equal(map.name,'ใต้ทะเลลึก');assert.equal(board.length,108);
- assert.ok(E.isDeepSea(board));assert.deepEqual([...new Set(board.map(c=>c.terrain))].sort(),Object.keys(E.DEEP_TERRAIN).sort());
- assert.ok(board.every(c=>c.biome==='deepsea'));
- for(const type of ['wreck','beacon'])assert.equal(board.filter(c=>c.structure===type).length,3);
- for(const type of ['jelly','squid'])assert.ok(board.some(c=>c.animal===type));
- assert.equal(cat.length,55);assert.equal(new Set(cat.map(c=>c.id)).size,55);
- assert.ok(cat.some(c=>c.id==='near_vent_two'&&c.text.includes('ปล่องน้ำร้อน')));
- assert.ok(cat.some(c=>c.id==='near_wreck_one'&&c.text.includes('ซากเรือ')));
- assert.ok(cat.every(c=>!c.text.includes('กระท่อม')&&!c.text.includes('เสือพูมา')));
- for(const count of [3,4,5])for(let seed=1;seed<=20;seed++){
-  const puzzle=E.generate(count,seeded(seed),'abyss'),clues=puzzle.clues.map(c=>cat.find(x=>x.id===c.id));
-  assert.ok(clues.every(Boolean));assert.deepEqual(puzzle.board,board);
-  assert.deepEqual(board.filter(c=>clues.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[puzzle.solution]);
+test('six Deep Sea stages have distinct layouts, new features and solvable clues',()=>{
+ const ids=['abyss','searift','wreckyard','coralcity','kelpmaze','sinkhole'],layouts=new Set();
+ for(const [index,id] of ids.entries()){
+  const map=E.MAPS[id],board=E.mapBoard(id),cat=E.clueCatalogue(board);
+  assert.equal(map.collection,'creative');assert.equal(map.stage,index+1);assert.equal(board.length,108);
+  assert.ok(E.isDeepSea(board));assert.deepEqual([...new Set(board.map(c=>c.terrain))].sort(),Object.keys(E.DEEP_TERRAIN).sort());
+  assert.ok(board.every(c=>c.biome==='deepsea'));
+  for(const type of ['wreck','beacon'])assert.equal(board.filter(c=>c.structure===type).length,3);
+  for(const type of ['jelly','squid'])assert.ok(board.some(c=>c.animal===type));
+  assert.equal(cat.length,55);assert.equal(new Set(cat.map(c=>c.id)).size,55);
+  assert.ok(cat.some(c=>c.id==='near_vent_two'&&c.text.includes('ปล่องน้ำร้อน')));
+  assert.ok(cat.some(c=>c.id==='near_wreck_one'&&c.text.includes('ซากเรือ')));
+  assert.ok(cat.every(c=>!c.text.includes('กระท่อม')&&!c.text.includes('เสือพูมา')));
+  layouts.add(board.map(c=>c.terrain).join(','));
+  for(const count of [3,4,5]){
+   const puzzle=E.generate(count,seeded(index*10+count),id),clues=puzzle.clues.map(c=>cat.find(x=>x.id===c.id));
+   assert.ok(clues.every(Boolean));assert.deepEqual(puzzle.board,board);
+   assert.deepEqual(board.filter(c=>clues.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[puzzle.solution]);
+  }
  }
+ assert.equal(layouts.size,ids.length);
 });
 test('negative terrain and distance clues exclude exactly the named cells, including every target and boundary',()=>{
  for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random'&&E.MAPS[id].collection!=='creative')){

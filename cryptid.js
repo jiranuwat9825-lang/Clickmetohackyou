@@ -34,7 +34,7 @@ function cryptidMapThumbnail(mapId){
 function cryptidCollectionFor(mapId){return CE.MAPS[mapId]?.collection||'original';}
 function cryptidCollectionChoices(prefix){
  const input=$(prefix+'Collection'),root=$(prefix+'CollectionChoices'),maps=$(prefix+'MapChoices');if(!input||!root||!maps)return;
- if(!root.children.length)for(const [id,label] of [['original','Original'],['creative','Creative']]){
+ if(!root.children.length)for(const [id,label] of [['original','Original'],['creative','Deep Sea']]){
   const button=document.createElement('button');button.type='button';button.className='cryptid-collection-choice';button.dataset.collection=id;button.textContent=label;
   button.onclick=()=>{
    const mapInput=$(prefix+'Map'),previous=mapInput.value,previousCollection=input.value;
@@ -117,7 +117,7 @@ async function cryptidBots(action){
 for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['cryptidRemoveBots','remove']])$(id).onclick=()=>cryptidBots(action);
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
- if($('cryptidLobbyCollection').value==='creative'&&$('cryptidLobbyCollectionEmpty').hidden===false){toast('ยังไม่มีด่าน Creative · เลือก Original ก่อนเริ่มเกม','error');return;}
+ if($('cryptidLobbyCollection').value==='creative'&&$('cryptidLobbyCollectionEmpty').hidden===false){toast('ยังไม่มีด่าน Deep Sea · เลือก Original ก่อนเริ่มเกม','error');return;}
  if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
  const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
  if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
