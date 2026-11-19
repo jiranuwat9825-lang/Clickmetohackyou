@@ -931,11 +931,11 @@ label, .muted.hint { font-size: 13px; }
 }
 .cryptid-cell-heading > span { font-size: 16px; font-weight: 600; color: var(--muted); }
 .cryptid-cell-heading > strong {
-  display: inline-flex; justify-content: center; min-width: 88px; padding: 8px 16px;
+  display: inline-flex; justify-content: center; min-width: 76px; padding: 6px 12px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text);
-  font: 800 36px/1.2 system-ui, sans-serif; letter-spacing: 1px;
+  font: 800 30px/1.2 system-ui, sans-serif; letter-spacing: 1px;
 }
-#cryptidControls .cryptid-cell-detail { font-size: 18px; line-height: 1.8; margin: 0 0 18px; }
+#cryptidControls .cryptid-cell-detail { font-size: 16px; line-height: 1.8; margin: 0 0 18px; }
 
 /* Selected terrain and a persistent close control for the clue catalogue. */
 .cryptid-terrain {
