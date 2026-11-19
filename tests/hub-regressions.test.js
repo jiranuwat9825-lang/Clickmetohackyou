@@ -158,6 +158,31 @@ test('Cryptid stage cards save the selected map, start on that exact layout and 
  r.cryptidMap='shadowfen';h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const card of cards)assert.equal(card.disabled,true);
  cards.find(e=>e.dataset.mapId==='sunlands').onclick();assert.equal(h.element('cryptidLobbyMap').value,'shadowfen');
 });
+test('Cryptid Original shows every existing map and Creative has a clear empty state',()=>{
+ const h=loadHub(),root=h.element('cryptidCreateMapChoices'),tabs=h.element('cryptidCreateCollectionChoices').children;
+ assert.deepEqual(tabs.map(b=>b.dataset.collection),['original','creative']);
+ assert.equal(root.children.length,Object.keys(require('../cryptid-engine').MAPS).length);
+ assert.ok(root.children.every(card=>!card.hidden));
+ tabs[1].onclick();assert.equal(h.element('cryptidCreateCollection').value,'creative');
+ assert.ok(root.children.every(card=>card.hidden&&card.disabled));
+ assert.equal(h.element('cryptidCreateCollectionEmpty').hidden,false);
+ h.run('selectedMode="cryptid";renderCategoryChoices()');assert.equal(h.element('createConfirmBtn').disabled,true);
+ assert.equal(h.element('cryptidCreateMap').value,'random','browsing an empty collection must preserve the playable map');
+ tabs[0].onclick();assert.ok(root.children.every(card=>!card.hidden&&!card.disabled));
+ assert.equal(h.element('cryptidCreateCollectionEmpty').hidden,true);
+ assert.equal(h.element('createConfirmBtn').disabled,false);
+ const r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='wetlands';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
+ const lobby=h.element('cryptidLobbyCollectionChoices').children;lobby[1].onclick();
+ assert.equal(h.element('cryptidLobbyMap').value,'wetlands');assert.equal(h.element('cryptidLobbySave').disabled,true);
+ assert.equal(h.element('cryptidLobbyCollectionEmpty').hidden,false);
+ h.run('renderCryptidLobby(roomState)');assert.equal(h.element('cryptidLobbyCollection').value,'creative','room refresh should preserve the browsing tab');
+ lobby[0].onclick();assert.equal(h.element('cryptidLobbyMapChoices').children.find(card=>card.dataset.mapId==='wetlands').getAttribute('aria-pressed'),'true');
+});
+test('Cryptid cannot start an Original map while the empty Creative tab is open',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
+ h.run('setTimeout=fn=>fn()');h.element('cryptidLobbyCollectionChoices').children[1].onclick();await h.run('cryptidStart()');assert.equal(h.getRoom().status,'lobby');
+ h.element('cryptidLobbyCollectionChoices').children[0].onclick();await h.run('cryptidStart()');assert.equal(h.getRoom().status,'cryptid_playing');
+});
 test('Cryptid starts legacy Standard rooms with all clue types and has no map dropdown or clue-set selector',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';r.cryptidClueSet='standard';h.setRoom(r);h.run('renderCryptidLobby(roomState);setTimeout=fn=>fn()');
  const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');

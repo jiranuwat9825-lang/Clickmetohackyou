@@ -26,6 +26,20 @@ function cryptidMapThumbnail(mapId){
  const colors={forest:'#3b8867',water:'#4294c0',mountain:'#9c96b9',swamp:'#8d9c52',desert:'#d9a16a'};
  return '<svg viewBox="0 0 250 165" aria-hidden="true">'+board.map(c=>'<rect x="'+(c.col*19+(c.row%2)*9)+'" y="'+(c.row*18)+'" width="17" height="16" rx="4" fill="'+colors[c.terrain]+'"/>').join('')+'</svg>';
 }
+function cryptidCollectionFor(mapId){return CE.MAPS[mapId]?.collection||'original';}
+function cryptidCollectionChoices(prefix){
+ const input=$(prefix+'Collection'),root=$(prefix+'CollectionChoices'),maps=$(prefix+'MapChoices');if(!input||!root||!maps)return;
+ if(!root.children.length)for(const [id,label] of [['original','Original'],['creative','Creative']]){
+  const button=document.createElement('button');button.type='button';button.className='cryptid-collection-choice';button.dataset.collection=id;button.textContent=label;
+  button.onclick=()=>{input.value=id;cryptidMapChoices(prefix,$(prefix+'Map').value,$(prefix+'Map').disabled);};root.append(button);
+ }
+ const collection=input.value==='creative'?'creative':'original';
+ for(const button of root.children){const selected=button.dataset.collection===collection;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+ let visible=0;
+ for(const button of maps.children){button.hidden=cryptidCollectionFor(button.dataset.mapId)!==collection;button.disabled=button.hidden||$(prefix+'Map').disabled;if(!button.hidden)visible++;}
+ $(prefix+'CollectionEmpty').hidden=visible>0;
+ if(prefix==='cryptidCreate'&&selectedMode==='cryptid')renderCategoryChoices();
+}
 function cryptidMapChoices(prefix,mapId,disabled=false){
  const root=$(prefix+'MapChoices');if(!root)return;
  if(!root.children.length){
@@ -37,6 +51,7 @@ function cryptidMapChoices(prefix,mapId,disabled=false){
   }
  }
  for(const button of root.children){const selected=button.dataset.mapId===mapId;button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+ cryptidCollectionChoices(prefix);
  cryptidMapCounts(prefix,Number($(prefix+'Count').value)||3);
 }
 function cryptidMapCounts(prefix,count){
@@ -53,7 +68,7 @@ function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<spa
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
  const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+isHost;
- if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';panel.dataset.savedKey=key;}
+ if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';$('cryptidLobbyCollection').value=cryptidCollectionFor(mapSelect.value);panel.dataset.savedKey=key;}
  select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidMapChoices('cryptidLobby',mapSelect.value,mapSelect.disabled);$('cryptidLobbySave').hidden=!isHost;
  cryptidCountChoices('cryptidLobby',Number(select.value),!isHost||cryptidLobbyBusy);
  $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
@@ -66,6 +81,7 @@ function renderCryptidLobby(r){
 $('cryptidLobbyCount').onchange=$('cryptidLobbyMap').onchange=()=>renderCryptidLobby(roomState);
 $('cryptidCreateMap').onchange=()=>cryptidMapChoices('cryptidCreate',$('cryptidCreateMap').value);
 $('cryptidCreateMap').value='random';
+$('cryptidCreateCollection').value='original';
 cryptidMapChoices('cryptidCreate','random');
 cryptidCountChoices('cryptidCreate',3);
 $('cryptidLobbySave').onclick=async()=>{
@@ -86,6 +102,7 @@ async function cryptidBots(action){
 for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['cryptidRemoveBots','remove']])$(id).onclick=()=>cryptidBots(action);
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
+ if($('cryptidLobbyCollection').value==='creative'&&$('cryptidLobbyCollectionEmpty').hidden===false){toast('ยังไม่มีด่าน Creative · เลือก Original ก่อนเริ่มเกม','error');return;}
  if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
  const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
  if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
