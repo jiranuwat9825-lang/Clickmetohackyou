@@ -38,7 +38,7 @@ function gameFamily(mode) {
 
 function showGuide(mode) {
   const game = deskGames[mode];
-  $('guideMode').value = mode;
+  $('guideTitle').textContent = 'วิธีเล่น '+game.name;
   const steps = document.createElement('ol');
   for (const rule of game.rules) {
     const step = document.createElement('li');
@@ -52,7 +52,6 @@ function showGuide(mode) {
 }
 
 for (const [mode, game] of Object.entries(deskGames)) {
-  $('guideMode').add(new Option(game.name, mode));
   const tile = document.createElement('button');
   tile.type = 'button';
   tile.className = 'shelf-tile';
@@ -65,7 +64,6 @@ for (const [mode, game] of Object.entries(deskGames)) {
   choice.prepend(mark);
 }
 $('guideOpen').onclick = () => showGuide(gameFamily(!$('roomView').hidden ? roomState?.gameMode : !$('createView').hidden ? selectedMode : '') || 'spyfall');
-$('guideMode').onchange = event => showGuide(event.target.value);
 
 $('copyCodeBtn').onclick = async () => {
   const code = roomState?.roomCode || roomId;
