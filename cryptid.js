@@ -1,4 +1,4 @@
-/* Cryptid Beta integration with the existing Party Game Hub room lifecycle. */
+/* Cryptid integration with the existing Party Game Hub room lifecycle. */
 const CE=CryptidEngine;
 let cryptidBusy=false,cryptidLobbyBusy=false,cryptidLastAuto=0;
 let cryptidUI={game:'',revision:'',cell:null,target:'',zoom:1,clueOpen:false};
@@ -95,7 +95,7 @@ async function cryptidStart(){
    const current=Object.keys(r.players||{});if(current.length!==ids.length||!current.every(p=>ids.includes(p))||!CE.setup(r,ids,puzzle,order))return;
    r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);
-  toast(result.committed?'เริ่ม Cryptid Beta แล้ว':'ห้องเปลี่ยนไป กรุณากดเริ่มใหม่',result.committed?'success':'error');
+  toast(result.committed?'เริ่ม Cryptid แล้ว':'ห้องเปลี่ยนไป กรุณากดเริ่มใหม่',result.committed?'success':'error');
  }catch(e){error(e);}finally{cryptidBusy=false;if(id===roomId&&roomState)renderRoom(roomState);}
 }
 async function cryptidSend(action,value){
@@ -126,7 +126,7 @@ async function cryptidReturn(){
 function cryptidBuild(r){
  $('cryptidClueDialog').close?.();
  const root=$('cryptidContent');root.innerHTML=`
- <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid <em class="cryptid-beta">Beta</em></h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed} · ${esc(r.cryptid.mapName||'สุ่มแผนที่')}</span></div>
+ <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid</h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed} · ${esc(r.cryptid.mapName||'สุ่มแผนที่')}</span></div>
  <div id="cryptidResult" hidden></div>
  <div id="cryptidPlayers" class="cryptid-players"></div>
  <p id="cryptidStatus" class="cryptid-status" role="status" aria-live="polite"></p>

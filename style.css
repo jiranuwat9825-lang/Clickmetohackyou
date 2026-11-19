@@ -859,8 +859,8 @@ label, .muted.hint { font-size: 13px; }
 .game-shelf { padding: 6px 0; }
 .shelf-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
 .shelf-tile, #modeOptions .choice.mode {
-  display: grid; align-content: start; justify-items: start; gap: 3px;
-  position: relative; text-align: left; border: 1px solid var(--line);
+  display: grid; align-content: center; justify-items: center; gap: 3px;
+  position: relative; text-align: center; border: 1px solid var(--line);
   background: var(--panel); color: var(--text); border-radius: 12px; padding: 17px;
 }
 .shelf-tile:hover, #modeOptions .choice.mode:hover { border-color: var(--accent); background: #f9faf7; }
