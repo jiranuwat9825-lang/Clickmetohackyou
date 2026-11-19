@@ -1025,3 +1025,61 @@ label, .muted.hint { font-size: 13px; }
   .cryptid-map-choice { padding-top: 32px; }
   .cryptid-map-count { font-size: 11px; padding-inline: 5px; }
 }
+
+
+/* ===== User-selectable dark theme ===== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111318;
+  --panel: #191d25;
+  --surface: #222833;
+  --selected: #303b49;
+  --line: #394352;
+  --text: #edf1f7;
+  --muted: #aab4c2;
+  --accent: #c4d1df;
+  --green: #70c99a;
+  --red: #f08b96;
+  --gold: #e5bd70;
+  --blue: #83b9ed;
+}
+:root[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+:root[data-theme="dark"] .btn.soft,
+:root[data-theme="dark"] .btn.outline { background: var(--surface); color: var(--text); border-color: var(--line); }
+:root[data-theme="dark"] .btn.danger { background: #3a252b; color: #ffabb4; border-color: #70404a; }
+:root[data-theme="dark"] .timer-block,
+:root[data-theme="dark"] .player-timer-panel,
+:root[data-theme="dark"] .player-timer-card,
+:root[data-theme="dark"] .who-custom-judge-panel,
+:root[data-theme="dark"] .who-custom-judge-heading>span,
+:root[data-theme="dark"] .who-custom-judge-answer,
+:root[data-theme="dark"] .who-custom-awaiting,
+:root[data-theme="dark"] .cheese-awake,
+:root[data-theme="dark"] .cheese-witness,
+:root[data-theme="dark"] .avalon-player-percival {
+  background: #332d23;
+  color: #f0d49a;
+  border-color: #78613b;
+}
+:root[data-theme="dark"] .timer-block.danger-timer { background: #3a252b; color: #ffabb4; border-color: #70404a; }
+:root[data-theme="dark"] .manager-sync-status[data-state="error"],
+:root[data-theme="dark"] .lobby-kick-btn { background: #3a252b; color: #ffabb4; }
+:root[data-theme="dark"] .manager-sync-status[data-state="ready"],
+:root[data-theme="dark"] .insider-feed-item.correct,
+:root[data-theme="dark"] .cheese-ready-list span,
+:root[data-theme="dark"] .avalon-proposal-status.approved { background: #20372d; color: #8de0b1; }
+:root[data-theme="dark"] .avalon-mission.blue { background: #243447; }
+:root[data-theme="dark"] .avalon-mission.red,
+:root[data-theme="dark"] .avalon-proposal-status.rejected,
+:root[data-theme="dark"] .avalon-player-known-red,
+:root[data-theme="dark"] .avalon-summary-role.red { background: #3a252b; }
+:root[data-theme="dark"] .avalon-summary-role.blue { background: #243447; }
+:root[data-theme="dark"] .guide-dialog { background: var(--panel); color: var(--text); }
+:root[data-theme="dark"] .topbar-actions { display: flex; align-items: center; gap: 10px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 480px) {
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .btn { padding-inline: 9px; font-size: 11px; }
+  .topbar { gap: 9px; }
+  .brand b { font-size: 17px; }
+}
