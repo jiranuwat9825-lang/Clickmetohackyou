@@ -5,6 +5,7 @@
 (function(root){
  'use strict';
  const TERRAIN={forest:'ป่า',water:'น้ำ',mountain:'ภูเขา',swamp:'หนองบึง',desert:'ทะเลทราย'};
+ const DEEP_TERRAIN={reef:'แนวปะการัง',kelp:'ป่าสาหร่าย',plain:'พื้นทรายใต้ทะเล',vent:'ปล่องน้ำร้อน',trench:'ร่องลึก'};
  // Distinct unordered eligible clue sets with one solution for the seeded layouts.
  // Counts cover 3, 4 and 5 players; swapping the recipients does not add a pattern.
  const MAPS={
@@ -19,7 +20,8 @@
   ridge:{puzzleCounts:{3:510,4:12259,5:135321},name:'แนวหินแบ่งแดน',stage:8,seed:8231,layout:'ridge',collection:'original',description:'แนวภูเขาพาดผ่านภูมิประเทศสองฝั่ง'},
   fenring:{puzzleCounts:{3:399,4:11937,5:145281},name:'วงแหวนหนองบึง',stage:9,seed:9349,layout:'fenring',collection:'original',description:'หนองบึงล้อมพื้นที่กลางแผนที่'},
   fivezones:{puzzleCounts:{3:270,4:5628,5:59986},name:'ห้าถิ่น',stage:10,seed:10513,layout:'fivezones',collection:'original',description:'ภูมิประเทศทั้งห้าเรียงเป็นเขต'},
-  relictrail:{puzzleCounts:{3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'}
+  relictrail:{puzzleCounts:{3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'},
+  abyss:{puzzleCounts:{3:387,4:13787,5:180497},name:'ใต้ทะเลลึก',stage:1,seed:12491,layout:'abyss',collection:'creative',description:'ปะการัง ป่าสาหร่าย ร่องลึก และซากเรือ'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
@@ -27,6 +29,18 @@
  const mix=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
  const coordinate=c=>String.fromCharCode(65+c.col)+(c.row+1);
+ const isDeepSea=board=>board?.[0]?.biome==='deepsea';
+ function makeAbyssBoard(rng){
+  const board=[],types=Object.keys(DEEP_TERRAIN);
+  for(let row=0;row<9;row++)for(let col=0;col<12;col++){
+   const terrain=rng()<.1?types[Math.floor(rng()*types.length)]:row>=6?'trench':col<4?'reef':col>=9?'vent':row<=2?'kelp':'plain';
+   board.push({id:'c'+board.length,col,row,q:col-Math.floor(row/2),r:row,terrain,biome:'deepsea'});
+  }
+  const centers=[board[2*12+2],board[6*12+9]];
+  board.forEach(c=>{const animal=centers.findIndex(p=>distance(c,p)<=1);if(animal>=0)c.animal=animal===0?'jelly':'squid';});
+  [[1,4],[3,7],[5,1],[7,5],[9,2],[10,7]].forEach(([col,row],i)=>{const c=board[row*12+col];c.structure=i%2===0?'wreck':'beacon';c.structureColor=['cyan','violet','amber'][Math.floor(i/2)];});
+  return board;
+ }
  function layoutTerrain(layout,col,row){
   if(layout==='island'){
    const edge=((col-5.5)/6.7)**2+((row-4)/5)**2;
@@ -57,20 +71,28 @@
  const catalogueCache=new WeakMap();
  function clueCatalogue(board){
   if(catalogueCache.has(board))return catalogueCache.get(board);
-  const out=[],types=Object.keys(TERRAIN);
+  const deep=isDeepSea(board),terrainNames=deep?DEEP_TERRAIN:TERRAIN,out=[],types=Object.keys(terrainNames);
+  const creatures=deep?[['jelly','แมงกะพรุน'],['squid','หมึกยักษ์']]:[['bear','หมี'],['cougar','เสือพูมา']];
+  const structures=deep?[['wreck','ซากเรือ'],['beacon','เสาสัญญาณ']]:[['stone','เสาหิน'],['shack','กระท่อม']];
+  const colors=deep?[['cyan','ฟ้า'],['violet','ม่วง'],['amber','ส้ม']]:[['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']];
   function add(id,text,fn,negative=false){out.push({id,text,negative,cells:board.filter(fn).map(c=>c.id)});}
   function pair(id,text,negativeText,fn){add(id,text,fn);add('not_'+id,negativeText,c=>!fn(c),true);}
   function near(filter,n){const targets=board.filter(filter);return c=>targets.some(p=>distance(c,p)<=n);}
-  types.forEach(t=>add('not_terrain_'+t,'ไม่อยู่ใน'+TERRAIN[t],c=>c.terrain!==t,true));
-  for(let i=0;i<types.length;i++)for(let j=i+1;j<types.length;j++)pair('terrain_'+types[i]+'_'+types[j],'อยู่บน'+TERRAIN[types[i]]+' หรือ'+TERRAIN[types[j]],'ไม่อยู่ใน'+TERRAIN[types[i]]+' และไม่อยู่ใน'+TERRAIN[types[j]],c=>[types[i],types[j]].includes(c.terrain));
-  types.forEach(t=>pair('near_'+t,'อยู่ห่างจาก'+TERRAIN[t]+'ไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจาก'+TERRAIN[t]+' (ต้องห่างอย่างน้อย 2 ช่อง)',near(c=>c.terrain===t,1)));
-  pair('animal_any','อยู่ห่างจากเขตหมีหรือเสือพูมาไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจากเขตหมีและเขตเสือพูมา (ต้องห่างอย่างน้อย 2 ช่องจากทั้งสองเขต)',near(c=>!!c.animal,1));
-  for(const [s,label] of [['stone','เสาหิน'],['shack','กระท่อม']])pair('structure_'+s,'อยู่ห่างจาก'+label+'ไม่เกิน 2 ช่อง (สีใดก็ได้)','ไม่อยู่ในระยะ 2 ช่องจาก'+label+'ทุกสี (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.structure===s,2));
-  for(const [s,label] of [['bear','หมี'],['cougar','เสือพูมา']])pair('animal_'+s,'อยู่ห่างจากเขต'+label+'ไม่เกิน 2 ช่อง','ไม่อยู่ในระยะ 2 ช่องจากเขต'+label+' (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.animal===s,2));
-  for(const [s,label] of [['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']])pair('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง','ไม่อยู่ในระยะ 3 ช่องจากสิ่งปลูกสร้างสี'+label+' (ต้องห่างอย่างน้อย 4 ช่อง)',near(c=>c.structureColor===s,3));
+  types.forEach(t=>add('not_terrain_'+t,'ไม่อยู่ใน'+terrainNames[t],c=>c.terrain!==t,true));
+  for(let i=0;i<types.length;i++)for(let j=i+1;j<types.length;j++)pair('terrain_'+types[i]+'_'+types[j],'อยู่บน'+terrainNames[types[i]]+' หรือ'+terrainNames[types[j]],'ไม่อยู่ใน'+terrainNames[types[i]]+' และไม่อยู่ใน'+terrainNames[types[j]],c=>[types[i],types[j]].includes(c.terrain));
+  types.forEach(t=>pair('near_'+t,'อยู่ห่างจาก'+terrainNames[t]+'ไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจาก'+terrainNames[t]+' (ต้องห่างอย่างน้อย 2 ช่อง)',near(c=>c.terrain===t,1)));
+  const creatureLabels=creatures.map(([,label])=>label);
+  pair('animal_any','อยู่ห่างจากเขต'+creatureLabels.join('หรือ')+'ไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจากเขต'+creatureLabels.join('และเขต')+' (ต้องห่างอย่างน้อย 2 ช่องจากทั้งสองเขต)',near(c=>!!c.animal,1));
+  for(const [s,label] of structures)pair('structure_'+s,'อยู่ห่างจาก'+label+'ไม่เกิน 2 ช่อง (สีใดก็ได้)','ไม่อยู่ในระยะ 2 ช่องจาก'+label+'ทุกสี (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.structure===s,2));
+  for(const [s,label] of creatures)pair('animal_'+s,'อยู่ห่างจากเขต'+label+'ไม่เกิน 2 ช่อง','ไม่อยู่ในระยะ 2 ช่องจากเขต'+label+' (ต้องห่างอย่างน้อย 3 ช่อง)',near(c=>c.animal===s,2));
+  for(const [s,label] of colors)pair('color_'+s,'อยู่ห่างจากสิ่งปลูกสร้างสี'+label+'ไม่เกิน 3 ช่อง','ไม่อยู่ในระยะ 3 ช่องจากสิ่งปลูกสร้างสี'+label+' (ต้องห่างอย่างน้อย 4 ช่อง)',near(c=>c.structureColor===s,3));
+  if(deep){
+   pair('near_vent_two','อยู่ห่างจากปล่องน้ำร้อนไม่เกิน 2 ช่อง','อยู่ห่างจากปล่องน้ำร้อนอย่างน้อย 3 ช่อง',near(c=>c.terrain==='vent',2));
+   pair('near_wreck_one','อยู่ห่างจากซากเรือไม่เกิน 1 ช่อง','อยู่ห่างจากซากเรืออย่างน้อย 2 ช่อง',near(c=>c.structure==='wreck',1));
+  }
   catalogueCache.set(board,out);return out;
  }
- function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;return makeBoard(seeded(map.seed),map.theme,map.layout);}
+ function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.layout==='abyss'?makeAbyssBoard(rng):makeBoard(rng,map.theme,map.layout);}
  function generate(count,rng=Math.random,mapId='random'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
@@ -210,6 +232,6 @@
   const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
   return botMove(view,id,rng);
  }
- const api={TERRAIN,COLORS,MAPS,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
+ const api={TERRAIN,DEEP_TERRAIN,COLORS,MAPS,isDeepSea,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CryptidEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

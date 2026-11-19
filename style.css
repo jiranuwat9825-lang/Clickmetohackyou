@@ -1003,6 +1003,15 @@ label, .muted.hint { font-size: 13px; }
 .cryptid-collection-choice:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
 .cryptid-map-choice[hidden] { display:none; }
 .cryptid-collection-empty { border:1px dashed var(--line); border-radius:13px; padding:30px 20px; margin:16px 0; color:var(--muted); font-size:15px; text-align:center; }
+.cryptid-map-choice[data-collection="creative"] { background:linear-gradient(150deg,#f0f6f8,#e5eef1); border-color:#b8cbd2; }
+.cryptid-map-choice[data-collection="creative"]:hover:not(:disabled),.cryptid-map-choice[data-collection="creative"].selected { background:linear-gradient(150deg,#e1f1f4,#d6e7ec); border-color:#446d80; }
+.cryptid-map-choice[data-collection="creative"] .cryptid-map-count { color:#24536b; border-color:#b8cbd2; }
+.cryptid-map-panel.is-deepsea .cryptid-map-viewport { background:#0d2237; }
+.cryptid-terrain[data-terrain="reef"] { color:#87534d; background:#fff0e8; border-color:#e4bcb0; }
+.cryptid-terrain[data-terrain="kelp"] { color:#236550; background:#e9f5ee; border-color:#acd6c2; }
+.cryptid-terrain[data-terrain="plain"] { color:#495968; background:#edf1f5; border-color:#c7d3dd; }
+.cryptid-terrain[data-terrain="vent"] { color:#884a31; background:#fff0e5; border-color:#e6bd9b; }
+.cryptid-terrain[data-terrain="trench"] { color:#334d73; background:#e9eef8; border-color:#b6c6e3; }
 @media (max-width: 600px) {
   .cryptid-map-choice { padding-top: 32px; }
   .cryptid-map-count { font-size: 11px; padding-inline: 5px; }
