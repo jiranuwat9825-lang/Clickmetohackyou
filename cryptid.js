@@ -4,9 +4,10 @@ let cryptidBusy=false,cryptidLobbyBusy=false,cryptidLastAuto=0;
 let cryptidUI={game:'',revision:'',cell:null,target:'',zoom:1,clueOpen:false};
 const CRYPTID_BIOMES={
  original:{terrain:CE.TERRAIN,fill:{forest:'#244d41',water:'#234e73',mountain:'#50536e',swamp:'#4c4d30',desert:'#765738'},preview:{forest:'#3b8867',water:'#4294c0',mountain:'#9c96b9',swamp:'#8d9c52',desert:'#d9a16a'},icons:{forest:'🌲',water:'≈',mountain:'▲',swamp:'♧',desert:'☀'},animals:{bear:'หมี',cougar:'เสือพูมา'},animalIcons:{bear:'🐻',cougar:'🐾'},structures:{stone:'เสาหิน',shack:'กระท่อม'},structureIcons:{stone:'◆',shack:'⌂'},colors:{white:'ขาว',green:'เขียว',blue:'น้ำเงิน'},colorFill:{white:'#fff',green:'#9dff8d',blue:'#8bcfff'},legend:[['▲','สามเหลี่ยม = ภูเข'],['◆','สี่เหลี่ยมข้าวหลามตัด = เสาหิน'],['⌂','รูปบ้าน = กระท่อม'],['🌲','ต้นไม้ = ป่า'],['≈','คลื่น = น้ำ'],['♧','กอพืช = หนองบึง'],['☀','ดวงอาทิตย์ = ทะเลทราย'],['🐻','เขตหมี'],['🐾','เขตเสือพูมา']]},
- deepsea:{terrain:CE.DEEP_TERRAIN,fill:{reef:'#315b71',kelp:'#255657',plain:'#526275',vent:'#804e51',trench:'#162b47'},preview:{reef:'#eb8275',kelp:'#4fa889',plain:'#8b9ba9',vent:'#e09b66',trench:'#30466e'},icons:{reef:'🪸',kelp:'🌿',plain:'·',vent:'♨',trench:'▾'},animals:{jelly:'แมงกะพรุน',squid:'หมึกยักษ์'},animalIcons:{jelly:'🪼',squid:'🐙'},structures:{wreck:'ซากเรือ',beacon:'เสาสัญญาณ'},structureIcons:{wreck:'⚓',beacon:'◈'},colors:{cyan:'ฟ้า',violet:'ม่วง',amber:'ส้ม'},colorFill:{cyan:'#8ce9f6',violet:'#cfb0fa',amber:'#ffd287'},legend:[['🪸','แนวปะการัง'],['🌿','ป่าสาหร่าย'],['·','พื้นทรายใต้ทะเล'],['♨','ปล่องน้ำร้อน'],['▾','ร่องลึก'],['⚓','ซากเรือ'],['◈','เสาสัญญาณ'],['🪼','เขตแมงกะพรุน'],['🐙','เขตหมึกยักษ์']]}
+ deepsea:{terrain:CE.DEEP_TERRAIN,fill:{reef:'#315b71',kelp:'#255657',plain:'#526275',vent:'#804e51',trench:'#162b47'},preview:{reef:'#eb8275',kelp:'#4fa889',plain:'#8b9ba9',vent:'#e09b66',trench:'#30466e'},icons:{reef:'🪸',kelp:'🌿',plain:'·',vent:'♨',trench:'▾'},animals:{jelly:'แมงกะพรุน',squid:'หมึกยักษ์'},animalIcons:{jelly:'🪼',squid:'🐙'},structures:{wreck:'ซากเรือ',beacon:'เสาสัญญาณ'},structureIcons:{wreck:'⚓',beacon:'◈'},colors:{cyan:'ฟ้า',violet:'ม่วง',amber:'ส้ม'},colorFill:{cyan:'#8ce9f6',violet:'#cfb0fa',amber:'#ffd287'},legend:[['🪸','แนวปะการัง'],['🌿','ป่าสาหร่าย'],['·','พื้นทรายใต้ทะเล'],['♨','ปล่องน้ำร้อน'],['▾','ร่องลึก'],['⚓','ซากเรือ'],['◈','เสาสัญญาณ'],['🪼','เขตแมงกะพรุน'],['🐙','เขตหมึกยักษ์']]},
+ volcano:{terrain:CE.VOLCANO_TERRAIN,fill:{lava:'#a62921',basalt:'#33343b',ash:'#5c5352',crater:'#2c1e24',sulfur:'#81762f'},preview:{lava:'#e45536',basalt:'#5c5d64',ash:'#a28d83',crater:'#3a2730',sulfur:'#d6c24e'},icons:{lava:'≈',basalt:'◆',ash:'·',crater:'◉',sulfur:'✦'},animals:{salamander:'กิ้งก่าไฟ',phoenix:'นกเพลิง'},animalIcons:{salamander:'🦎',phoenix:'🦅'},structures:{temple:'วิหารร้าง',tower:'หอสังเกตการณ์'},structureIcons:{temple:'⛩',tower:'♜'},colors:{ember:'แดงเพลิง',obsidian:'ดำออบซิเดียน',gold:'ทอง'},colorFill:{ember:'#ff7665',obsidian:'#b8afc8',gold:'#ffd36a'},legend:[['≈','ธารลาวา'],['◆','ลานหินบะซอลต์'],['·','ทุ่งเถ้าถ่าน'],['◉','ปากปล่อง'],['✦','บ่อกำมะถัน'],['⛩','วิหารร้าง'],['♜','หอสังเกตการณ์'],['🦎','เขตกิ้งก่าไฟ'],['🦅','เขตนกเพลิง']]}
 };
-function cryptidBiome(board){return CE.isDeepSea(board)?CRYPTID_BIOMES.deepsea:CRYPTID_BIOMES.original;}
+function cryptidBiome(board){return CE.isVolcano(board)?CRYPTID_BIOMES.volcano:CE.isDeepSea(board)?CRYPTID_BIOMES.deepsea:CRYPTID_BIOMES.original;}
 
 function cryptidCountChoices(prefix,count=3,disabled=false){
  const root=$(prefix+'CountChoices'),input=$(prefix+'Count');if(!root||!input)return;input.value=String(count);
@@ -34,7 +35,7 @@ function cryptidMapThumbnail(mapId){
 function cryptidCollectionFor(mapId){return CE.MAPS[mapId]?.collection||'original';}
 function cryptidCollectionChoices(prefix){
  const input=$(prefix+'Collection'),root=$(prefix+'CollectionChoices'),maps=$(prefix+'MapChoices');if(!input||!root||!maps)return;
- if(!root.children.length)for(const [id,label] of [['original','Original'],['creative','Deep Sea']]){
+ if(!root.children.length)for(const [id,label] of [['original','Original'],['creative','Deep Sea'],['volcano','Volcano']]){
   const button=document.createElement('button');button.type='button';button.className='cryptid-collection-choice';button.dataset.collection=id;button.textContent=label;
   button.onclick=()=>{
    const mapInput=$(prefix+'Map'),previous=mapInput.value,previousCollection=input.value;
@@ -47,7 +48,7 @@ function cryptidCollectionChoices(prefix){
    if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidMapChoices(prefix,mapInput.value,mapInput.disabled);
   };root.append(button);
  }
- const collection=input.value==='creative'?'creative':'original';
+ const collection=['creative','volcano'].includes(input.value)?input.value:'original';
  for(const button of root.children){const selected=button.dataset.collection===collection;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
  let visible=0;
  for(const button of maps.children){button.hidden=cryptidCollectionFor(button.dataset.mapId)!==collection;button.disabled=button.hidden||$(prefix+'Map').disabled;if(!button.hidden)visible++;}
@@ -160,7 +161,7 @@ async function cryptidReturn(){
 }
 function cryptidBuild(r){
  $('cryptidClueDialog').close?.();
- const visual=cryptidBiome(r.cryptid.board),deep=CE.isDeepSea(r.cryptid.board);
+ const visual=cryptidBiome(r.cryptid.board),deep=CE.isDeepSea(r.cryptid.board),volcano=CE.isVolcano(r.cryptid.board),themeClass=deep?' is-deepsea':volcano?' is-volcano':'';
  const legend=visual.legend.map(([symbol,label])=>'<span><b>'+symbol+'</b>'+esc(label)+'</span>').join('');
  const root=$('cryptidContent');root.innerHTML=`
  <div class="cryptid-heading"><div><small class="eyebrow">THE HIDDEN HABITAT</small><h2>Cryptid</h2></div><span class="cryptid-round">เกมที่ ${r.gamesPlayed} · ${esc(r.cryptid.mapName||'สุ่มแผนที่')}</span></div>
@@ -168,7 +169,7 @@ function cryptidBuild(r){
  <div id="cryptidPlayers" class="cryptid-players"></div>
  <p id="cryptidStatus" class="cryptid-status" role="status" aria-live="polite"></p>
  <div id="cryptidLastMove" class="cryptid-last-move" aria-live="polite" hidden></div>
- <div class="cryptid-workspace"><div class="cryptid-map-panel${deep?' is-deepsea':''}">
+ <div class="cryptid-workspace"><div class="cryptid-map-panel${themeClass}">
   <div class="cryptid-map-toolbar"><span>แผนที่สำรวจ</span><div class="cryptid-buttons"><button type="button" class="btn outline small" id="cryptidZoomOut" aria-label="ย่อแผนที่">−</button><button type="button" class="btn outline small" id="cryptidZoomReset">100%</button><button type="button" class="btn outline small" id="cryptidZoomIn" aria-label="ขยายแผนที่">＋</button></div></div>
   <div id="cryptidMapViewport" class="cryptid-map-viewport" tabindex="0" aria-label="แผนที่ หมุนลูกกลิ้งเพื่อซูม กดเมาส์ซ้ายค้างเพื่อลาก"><svg id="cryptidMap" viewBox="0 0 660 430" role="group" aria-label="แผนที่ Cryptid เลือกช่องเพื่อดูรายละเอียด"></svg></div>
   <section class="cryptid-legend" aria-label="ความหมายของสัญลักษณ์">
@@ -181,7 +182,7 @@ function cryptidBuild(r){
  </div><aside class="cryptid-sidebar">
   <section class="cryptid-card"><div class="cryptid-card-title"><h3>เบาะแสของฉัน</h3><button type="button" class="btn outline small" id="cryptidToggleClue" aria-expanded="false">เปิดดู</button></div><p id="cryptidClue" class="cryptid-clue" hidden></p><p id="cryptidClueMeaning" class="cryptid-clue-meaning" hidden></p><p class="muted hint">เบาะแสของคุณเป็นเพียงส่วนหนึ่งของคำตอบ</p></section>
   <section id="cryptidControls" class="cryptid-card"></section>
-  <details class="cryptid-card"><summary>โน้ตส่วนตัว</summary><label for="cryptidNotes" class="muted hint">บันทึกข้อสังเกตของคุณ</label><textarea id="cryptidNotes" rows="5" maxlength="4000" placeholder="${deep?'เช่น ผู้เล่น 2 น่าจะอยู่ใกล้ซากเรือ…':'เช่น ผู้เล่น 2 น่าจะเกี่ยวกับเสาหิน…'}"></textarea></details>
+  <details class="cryptid-card"><summary>โน้ตส่วนตัว</summary><label for="cryptidNotes" class="muted hint">บันทึกข้อสังเกตของคุณ</label><textarea id="cryptidNotes" rows="5" maxlength="4000" placeholder="${deep?'เช่น ผู้เล่น 2 น่าจะอยู่ใกล้ซากเรือ…':volcano?'เช่น ผู้เล่น 2 น่าจะอยู่ใกล้วิหารร้าง…':'เช่น ผู้เล่น 2 น่าจะเกี่ยวกับเสาหิน…'}"></textarea></details>
  </aside></div>
  <button type="button" id="cryptidOpenClues" class="btn outline full cryptid-open-clues" aria-haspopup="dialog" aria-controls="cryptidClueDialog">ดูชนิดเบาะแสทั้งหมด</button>
  <section class="cryptid-history"><h3>ประวัติการสำรวจ</h3><div id="cryptidHistory"></div></section>

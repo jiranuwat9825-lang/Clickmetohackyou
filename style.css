@@ -996,7 +996,7 @@ label, .muted.hint { font-size: 13px; }
   white-space: nowrap;
 }
 .cryptid-map-choice.selected::after { left: 8px; right: auto; }
-.cryptid-collection-choices { display:flex; gap:8px; margin:12px 0 18px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface); width:max-content; max-width:100%; }
+.cryptid-collection-choices { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 18px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface); width:max-content; max-width:100%; }
 .cryptid-collection-choice { min-width:112px; min-height:42px; padding:7px 16px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--muted); font:inherit; font-size:15px; font-weight:700; cursor:pointer; transition:background .18s ease,color .18s ease,border-color .18s ease; }
 .cryptid-collection-choice:hover { color:var(--text); background:var(--surface); }
 .cryptid-collection-choice.selected { color:var(--text); background:var(--surface); border-color:var(--line); box-shadow:0 1px 3px #00000012; }
@@ -1006,12 +1006,21 @@ label, .muted.hint { font-size: 13px; }
 .cryptid-map-choice[data-collection="creative"] { background:linear-gradient(150deg,#f0f6f8,#e5eef1); border-color:#b8cbd2; }
 .cryptid-map-choice[data-collection="creative"]:hover:not(:disabled),.cryptid-map-choice[data-collection="creative"].selected { background:linear-gradient(150deg,#e1f1f4,#d6e7ec); border-color:#446d80; }
 .cryptid-map-choice[data-collection="creative"] .cryptid-map-count { color:#24536b; border-color:#b8cbd2; }
+.cryptid-map-choice[data-collection="volcano"] { background:linear-gradient(150deg,#fbf0e9,#f2dfd4); border-color:#d8b3a2; }
+.cryptid-map-choice[data-collection="volcano"]:hover:not(:disabled),.cryptid-map-choice[data-collection="volcano"].selected { background:linear-gradient(150deg,#f8e2d5,#efcdbd); border-color:#964635; }
+.cryptid-map-choice[data-collection="volcano"] .cryptid-map-count { color:#873b2d; border-color:#d8b3a2; }
 .cryptid-map-panel.is-deepsea .cryptid-map-viewport { background:#0d2237; }
+.cryptid-map-panel.is-volcano .cryptid-map-viewport { background:#21181a; }
 .cryptid-terrain[data-terrain="reef"] { color:#87534d; background:#fff0e8; border-color:#e4bcb0; }
 .cryptid-terrain[data-terrain="kelp"] { color:#236550; background:#e9f5ee; border-color:#acd6c2; }
 .cryptid-terrain[data-terrain="plain"] { color:#495968; background:#edf1f5; border-color:#c7d3dd; }
 .cryptid-terrain[data-terrain="vent"] { color:#884a31; background:#fff0e5; border-color:#e6bd9b; }
 .cryptid-terrain[data-terrain="trench"] { color:#334d73; background:#e9eef8; border-color:#b6c6e3; }
+.cryptid-terrain[data-terrain="lava"] { color:#9d3024; background:#ffebe5; border-color:#e6aca1; }
+.cryptid-terrain[data-terrain="basalt"] { color:#46464e; background:#eeedf0; border-color:#c7c5cc; }
+.cryptid-terrain[data-terrain="ash"] { color:#665750; background:#f1ece9; border-color:#d2c5bd; }
+.cryptid-terrain[data-terrain="crater"] { color:#542f32; background:#eee6e7; border-color:#c9b6b8; }
+.cryptid-terrain[data-terrain="sulfur"] { color:#716721; background:#f7f2c9; border-color:#d8cc76; }
 @media (max-width: 600px) {
   .cryptid-map-choice { padding-top: 32px; }
   .cryptid-map-count { font-size: 11px; padding-inline: 5px; }

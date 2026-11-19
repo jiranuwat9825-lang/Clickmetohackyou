@@ -6,6 +6,7 @@
  'use strict';
  const TERRAIN={forest:'ป่า',water:'น้ำ',mountain:'ภูเขา',swamp:'หนองบึง',desert:'ทะเลทราย'};
  const DEEP_TERRAIN={reef:'แนวปะการัง',kelp:'ป่าสาหร่าย',plain:'พื้นทรายใต้ทะเล',vent:'ปล่องน้ำร้อน',trench:'ร่องลึก'};
+ const VOLCANO_TERRAIN={lava:'ลาวา',basalt:'ลานหินบะซอลต์',ash:'ทุ่งเถ้าถ่าน',crater:'ปากปล่อง',sulfur:'บ่อกำมะถัน'};
  // Distinct unordered eligible clue sets with one solution for the seeded layouts.
  // Counts cover 3, 4 and 5 players; swapping the recipients does not add a pattern.
  const MAPS={
@@ -26,7 +27,10 @@
   wreckyard:{puzzleCounts:{3:644,4:15781,5:186259},name:'สุสานเรือจม',stage:3,seed:14621,layout:'wreckyard',collection:'creative',description:'ซากเรือกระจุกตัวบนพื้นทรายมืด'},
   coralcity:{puzzleCounts:{3:543,4:15532,5:205196},name:'เมืองปะการัง',stage:4,seed:15733,layout:'coralcity',collection:'creative',description:'แนวปะการังแบ่งเป็นเขตและทางเชื่อม'},
   kelpmaze:{puzzleCounts:{3:585,4:13491,5:151341},name:'เขาวงกตสาหร่าย',stage:5,seed:16811,layout:'kelpmaze',collection:'creative',description:'ทางสาหร่ายคดเคี้ยวซ่อนพื้นที่ลับ'},
-  sinkhole:{puzzleCounts:{3:1058,4:21975,5:226780},name:'หลุมลึกกลางสมุทร',stage:6,seed:17903,layout:'sinkhole',collection:'creative',description:'ชั้นภูมิประเทศล้อมร่องลึกใจกลาง'}
+  sinkhole:{puzzleCounts:{3:1058,4:21975,5:226780},name:'หลุมลึกกลางสมุทร',stage:6,seed:17903,layout:'sinkhole',collection:'creative',description:'ชั้นภูมิประเทศล้อมร่องลึกใจกลาง'},
+  lavavalley:{puzzleCounts:{3:594,4:17033,5:200272},name:'หุบเขาลาวา',stage:1,seed:19013,layout:'lavavalley',collection:'volcano',description:'ธารลาวาตัดผ่านลานหินและเถ้าถ่าน'},
+  craterring:{puzzleCounts:{3:753,4:17181,5:184858},name:'วงแหวนปากปล่อง',stage:2,seed:20117,layout:'craterring',collection:'volcano',description:'ภูมิประเทศเรียงเป็นวงรอบปากปล่อง'},
+  ashentemple:{puzzleCounts:{3:394,4:14555,5:217471},name:'วิหารเถ้าถ่าน',stage:3,seed:21221,layout:'ashentemple',collection:'volcano',description:'วิหารร้างกลางทุ่งเถ้ากับทางลาวา'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
@@ -35,6 +39,7 @@
  const distance=(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
  const coordinate=c=>String.fromCharCode(65+c.col)+(c.row+1);
  const isDeepSea=board=>board?.[0]?.biome==='deepsea';
+ const isVolcano=board=>board?.[0]?.biome==='volcano';
  function deepTerrain(layout,col,row){
   if(layout==='searift'){
    const line=7-row-col*.45,gap=Math.abs(line);
@@ -72,6 +77,34 @@
   (featuresByLayout[layout]||[[1,4],[3,7],[5,1],[7,5],[9,2],[10,7]]).forEach(([col,row],i)=>{const c=board[row*12+col];c.structure=i%2===0?'wreck':'beacon';c.structureColor=['cyan','violet','amber'][Math.floor(i/2)];});
   return board;
  }
+ function volcanoTerrain(layout,col,row){
+  if(layout==='lavavalley'){
+   const gap=Math.abs(row-(1+col*.55));
+   if(gap<.7)return 'lava';if(gap<1.55)return 'basalt';
+   return col<3&&row>4?'crater':col>8&&row<4?'sulfur':'ash';
+  }
+  if(layout==='craterring'){
+   const radius=Math.hypot((col-5.5)/5.7,(row-4)/4.5);
+   return radius<.25?'crater':radius<.44?'lava':radius<.62?'basalt':radius<.82?'sulfur':'ash';
+  }
+  if(row===4||col===5)return 'basalt';
+  if(row>=6)return 'lava';if(col>=9)return 'sulfur';if(row<=1&&col<3)return 'crater';return 'ash';
+ }
+ function makeVolcanoBoard(rng,layout){
+  const board=[],types=Object.keys(VOLCANO_TERRAIN);
+  for(let row=0;row<9;row++)for(let col=0;col<12;col++){
+   const terrain=rng()<.08?types[Math.floor(rng()*types.length)]:volcanoTerrain(layout,col,row);
+   board.push({id:'c'+board.length,col,row,q:col-Math.floor(row/2),r:row,terrain,biome:'volcano'});
+  }
+  const centersByLayout={lavavalley:[[1,2],[10,6]],craterring:[[2,4],[9,4]],ashentemple:[[2,2],[9,6]]};
+  centersByLayout[layout].map(([col,row])=>board[row*12+col]).forEach((center,i)=>board.forEach(c=>{if(distance(c,center)<=1)c.animal=i===0?'salamander':'phoenix';}));
+  const featuresByLayout={
+   lavavalley:[[1,6],[2,1],[4,5],[6,1],[8,6],[10,2]],craterring:[[1,1],[5,2],[2,7],[6,6],[10,1],[10,7]],
+   ashentemple:[[3,3],[1,6],[5,4],[7,1],[8,5],[10,7]]
+  };
+  featuresByLayout[layout].forEach(([col,row],i)=>{const c=board[row*12+col];c.structure=i%2===0?'temple':'tower';c.structureColor=['ember','obsidian','gold'][Math.floor(i/2)];});
+  return board;
+ }
  function layoutTerrain(layout,col,row){
   if(layout==='island'){
    const edge=((col-5.5)/6.7)**2+((row-4)/5)**2;
@@ -102,10 +135,10 @@
  const catalogueCache=new WeakMap();
  function clueCatalogue(board){
   if(catalogueCache.has(board))return catalogueCache.get(board);
-  const deep=isDeepSea(board),terrainNames=deep?DEEP_TERRAIN:TERRAIN,out=[],types=Object.keys(terrainNames);
-  const creatures=deep?[['jelly','แมงกะพรุน'],['squid','หมึกยักษ์']]:[['bear','หมี'],['cougar','เสือพูมา']];
-  const structures=deep?[['wreck','ซากเรือ'],['beacon','เสาสัญญาณ']]:[['stone','เสาหิน'],['shack','กระท่อม']];
-  const colors=deep?[['cyan','ฟ้า'],['violet','ม่วง'],['amber','ส้ม']]:[['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']];
+  const deep=isDeepSea(board),volcano=isVolcano(board),terrainNames=volcano?VOLCANO_TERRAIN:deep?DEEP_TERRAIN:TERRAIN,out=[],types=Object.keys(terrainNames);
+  const creatures=volcano?[['salamander','กิ้งก่าไฟ'],['phoenix','นกเพลิง']]:deep?[['jelly','แมงกะพรุน'],['squid','หมึกยักษ์']]:[['bear','หมี'],['cougar','เสือพูมา']];
+  const structures=volcano?[['temple','วิหารร้าง'],['tower','หอสังเกตการณ์']]:deep?[['wreck','ซากเรือ'],['beacon','เสาสัญญาณ']]:[['stone','เสาหิน'],['shack','กระท่อม']];
+  const colors=volcano?[['ember','แดงเพลิง'],['obsidian','ดำออบซิเดียน'],['gold','ทอง']]:deep?[['cyan','ฟ้า'],['violet','ม่วง'],['amber','ส้ม']]:[['white','ขาว'],['green','เขียว'],['blue','น้ำเงิน']];
   function add(id,text,fn,negative=false){out.push({id,text,negative,cells:board.filter(fn).map(c=>c.id)});}
   function pair(id,text,negativeText,fn){add(id,text,fn);add('not_'+id,negativeText,c=>!fn(c),true);}
   function near(filter,n){const targets=board.filter(filter);return c=>targets.some(p=>distance(c,p)<=n);}
@@ -121,9 +154,13 @@
    pair('near_vent_two','อยู่ห่างจากปล่องน้ำร้อนไม่เกิน 2 ช่อง','อยู่ห่างจากปล่องน้ำร้อนอย่างน้อย 3 ช่อง',near(c=>c.terrain==='vent',2));
    pair('near_wreck_one','อยู่ห่างจากซากเรือไม่เกิน 1 ช่อง','อยู่ห่างจากซากเรืออย่างน้อย 2 ช่อง',near(c=>c.structure==='wreck',1));
   }
+  if(volcano){
+   pair('near_lava_two','อยู่ห่างจากลาวาไม่เกิน 2 ช่อง','อยู่ห่างจากลาวาอย่างน้อย 3 ช่อง',near(c=>c.terrain==='lava',2));
+   pair('near_temple_one','อยู่ห่างจากวิหารร้างไม่เกิน 1 ช่อง','อยู่ห่างจากวิหารร้างอย่างน้อย 2 ช่อง',near(c=>c.structure==='temple',1));
+  }
   catalogueCache.set(board,out);return out;
  }
- function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.collection==='creative'?makeAbyssBoard(rng,map.layout):makeBoard(rng,map.theme,map.layout);}
+ function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.collection==='creative'?makeAbyssBoard(rng,map.layout):map.collection==='volcano'?makeVolcanoBoard(rng,map.layout):makeBoard(rng,map.theme,map.layout);}
  function generate(count,rng=Math.random,mapId='random'){
   if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
@@ -263,6 +300,6 @@
   const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
   return botMove(view,id,rng);
  }
- const api={TERRAIN,DEEP_TERRAIN,COLORS,MAPS,isDeepSea,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
+ const api={TERRAIN,DEEP_TERRAIN,VOLCANO_TERRAIN,COLORS,MAPS,isDeepSea,isVolcano,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CryptidEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

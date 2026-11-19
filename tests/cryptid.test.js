@@ -131,8 +131,30 @@ test('six Deep Sea stages have distinct layouts, new features and solvable clues
  }
  assert.equal(layouts.size,ids.length);
 });
+test('three Volcano stages use volcanic terrain, creatures, structures and unique clues',()=>{
+ const ids=['lavavalley','craterring','ashentemple'],layouts=new Set();
+ for(const [index,id] of ids.entries()){
+  const map=E.MAPS[id],board=E.mapBoard(id),cat=E.clueCatalogue(board);
+  assert.equal(map.collection,'volcano');assert.equal(map.stage,index+1);assert.equal(board.length,108);
+  assert.ok(E.isVolcano(board));assert.deepEqual([...new Set(board.map(c=>c.terrain))].sort(),Object.keys(E.VOLCANO_TERRAIN).sort());
+  assert.ok(board.every(c=>c.biome==='volcano'));
+  for(const type of ['temple','tower'])assert.equal(board.filter(c=>c.structure===type).length,3);
+  for(const type of ['salamander','phoenix'])assert.ok(board.some(c=>c.animal===type));
+  assert.equal(cat.length,55);assert.equal(new Set(cat.map(c=>c.id)).size,55);
+  assert.ok(cat.some(c=>c.id==='near_lava_two'&&c.text.includes('ลาวา')));
+  assert.ok(cat.some(c=>c.id==='near_temple_one'&&c.text.includes('วิหารร้าง')));
+  assert.ok(cat.every(c=>!c.text.includes('ซากเรือ')&&!c.text.includes('เสือพูมา')));
+  layouts.add(board.map(c=>c.terrain).join(','));
+  for(const count of [3,4,5]){
+   const puzzle=E.generate(count,seeded(index*20+count),id),clues=puzzle.clues.map(c=>cat.find(x=>x.id===c.id));
+   assert.ok(clues.every(Boolean));assert.deepEqual(puzzle.board,board);
+   assert.deepEqual(board.filter(c=>clues.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[puzzle.solution]);
+  }
+ }
+ assert.equal(layouts.size,ids.length);
+});
 test('negative terrain and distance clues exclude exactly the named cells, including every target and boundary',()=>{
- for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random'&&E.MAPS[id].collection!=='creative')){
+ for(const mapId of Object.keys(E.MAPS).filter(id=>id!=='random'&&(E.MAPS[id].collection||'original')==='original')){
   const board=E.mapBoard(mapId),cat=E.clueCatalogue(board);assert.equal(cat.length,51);assert.equal(new Set(cat.map(c=>c.id)).size,51);assert.equal(cat.filter(c=>c.negative).length,28);
   for(const positive of cat.filter(c=>!c.negative)){
    const negative=cat.find(c=>c.id==='not_'+positive.id);assert.ok(negative);
@@ -163,7 +185,7 @@ test('all maps use the full clue pool for 3–5 players even when a room has a l
  let negatives=0;
  for(const mapId of Object.keys(E.MAPS))for(const count of [3,4,5])for(let seed=1;seed<=5;seed++){
   const p=E.generate(count,seeded(seed),mapId),pool=E.clueCatalogue(p.board),chosen=p.clues.map(c=>pool.find(x=>x.id===c.id));
-  assert.equal(pool.length,E.MAPS[mapId].collection==='creative'?55:51);assert.ok(chosen.every(Boolean));negatives+=chosen.filter(c=>c.negative).length;
+  assert.equal(pool.length,['creative','volcano'].includes(E.MAPS[mapId].collection)?55:51);assert.ok(chosen.every(Boolean));negatives+=chosen.filter(c=>c.negative).length;
   assert.deepEqual(p.board.filter(c=>chosen.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[p.solution]);
   const ids=Array.from({length:count},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidClueSet:'standard',players:Object.fromEntries(ids.map(id=>[id,{name:id}]))};assert.ok(E.setup(r,ids,p));
   assert.equal(r.cryptidClueSet,undefined);assert.equal(r.cryptid.clueSet,undefined);

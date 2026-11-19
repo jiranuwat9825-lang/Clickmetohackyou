@@ -160,8 +160,8 @@ test('Cryptid stage cards save the selected map, start on that exact layout and 
 });
 test('Cryptid Deep Sea shows all six undersea maps and switching tabs remembers each map',()=>{
  const h=loadHub(),root=h.element('cryptidCreateMapChoices'),tabs=h.element('cryptidCreateCollectionChoices').children;
- assert.deepEqual(tabs.map(b=>b.dataset.collection),['original','creative']);
- assert.deepEqual(tabs.map(b=>b.textContent),['Original','Deep Sea']);
+ assert.deepEqual(tabs.map(b=>b.dataset.collection),['original','creative','volcano']);
+ assert.deepEqual(tabs.map(b=>b.textContent),['Original','Deep Sea','Volcano']);
  assert.equal(root.children.length,Object.keys(require('../cryptid-engine').MAPS).length);
  assert.equal(root.children.filter(card=>!card.hidden).length,12);
  tabs[1].onclick();assert.equal(h.element('cryptidCreateCollection').value,'creative');
@@ -171,6 +171,9 @@ test('Cryptid Deep Sea shows all six undersea maps and switching tabs remembers 
  h.run('selectedMode="cryptid";renderCategoryChoices()');assert.equal(h.element('createConfirmBtn').disabled,false);
  tabs[0].onclick();assert.equal(h.element('cryptidCreateMap').value,'random');assert.equal(root.children.filter(card=>!card.hidden).length,12);
  assert.equal(h.element('cryptidCreateCollectionEmpty').hidden,true);
+ tabs[2].onclick();assert.equal(h.element('cryptidCreateCollection').value,'volcano');
+ assert.deepEqual(root.children.filter(card=>!card.hidden).map(card=>card.dataset.mapId),['lavavalley','craterring','ashentemple']);
+ assert.equal(h.element('cryptidCreateMap').value,'lavavalley');tabs[0].onclick();
  const r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='wetlands';h.setRoom(r);h.run('renderCryptidLobby(roomState)');
  const lobby=h.element('cryptidLobbyCollectionChoices').children;lobby[1].onclick();
  assert.equal(h.element('cryptidLobbyMap').value,'abyss');assert.equal(h.element('cryptidLobbySave').disabled,false);
@@ -186,6 +189,13 @@ test('Cryptid requires saving the Deep Sea stage before starting on the selected
  h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');
  assert.equal(h.getRoom().status,'cryptid_playing');assert.equal(h.getRoom().cryptid.mapId,'abyss');
  assert.ok(h.getRoom().cryptid.board.every(cell=>cell.biome==='deepsea'));
+});
+test('Cryptid saves and starts the selected Volcano stage with volcanic board data',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';h.setRoom(r);h.run('renderCryptidLobby(roomState);setTimeout=fn=>fn()');
+ h.element('cryptidLobbyCollectionChoices').children[2].onclick();
+ const cards=h.element('cryptidLobbyMapChoices').children,temple=cards.find(card=>card.dataset.mapId==='ashentemple');temple.onclick();
+ assert.equal(h.element('cryptidLobbyMap').value,'ashentemple');await h.element('cryptidLobbySave').onclick();h.sync();h.run('renderCryptidLobby(roomState)');
+ await h.run('cryptidStart()');assert.equal(h.getRoom().cryptid.mapId,'ashentemple');assert.ok(h.getRoom().cryptid.board.every(cell=>cell.biome==='volcano'));
 });
 test('Cryptid starts legacy Standard rooms with all clue types and has no map dropdown or clue-set selector',async()=>{
  const h=loadHub(),r=base('cryptid');r.status='lobby';r.cryptidCount=3;r.cryptidMap='mistwood';r.cryptidClueSet='standard';h.setRoom(r);h.run('renderCryptidLobby(roomState);setTimeout=fn=>fn()');
