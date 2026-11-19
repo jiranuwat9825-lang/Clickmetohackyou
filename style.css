@@ -952,7 +952,51 @@ label, .muted.hint { font-size: 13px; }
 .cryptid-terrain[data-terrain="water"] { color: #245c85; background: #e8f3fc; border-color: #adcce3; }
 .cryptid-terrain[data-terrain="mountain"] { color: #594773; background: #f0ebf6; border-color: #cbbddd; }
 .cryptid-terrain[data-terrain="desert"] { color: #7b4f22; background: #faf0df; border-color: #dfc49a; }
-.cryptid-clue-dialog { overflow: hidden; }
-.cryptid-clue-dialog[open] { display: flex; flex-direction: column; }
-.cryptid-clue-dialog-head, #cryptidClueSummary { flex-shrink: 0; }
-#cryptidClueList { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.cryptid-clue-dialog {
+  height: min(85dvh, 860px);
+  padding: 0;
+  overflow: hidden;
+}
+.cryptid-clue-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.cryptid-clue-dialog-header {
+  padding: 24px 24px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+#cryptidClueSummary { margin: 12px 0 0; font-size: 16px; line-height: 1.8; }
+#cryptidClueList {
+  min-height: 0;
+  padding: 0 24px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 540px) {
+  .cryptid-clue-dialog { height: min(88dvh, 860px); }
+  .cryptid-clue-dialog-header { padding: 16px 16px 12px; }
+  #cryptidClueList { padding: 0 16px 16px; }
+}
+
+/* Map-card counts use the upper right; the selection check remains at the left. */
+.cryptid-map-choice { padding-top: 32px; }
+.cryptid-map-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.cryptid-map-choice.selected::after { left: 8px; right: auto; }
+@media (max-width: 600px) {
+  .cryptid-map-choice { padding-top: 32px; }
+  .cryptid-map-count { font-size: 11px; padding-inline: 5px; }
+}

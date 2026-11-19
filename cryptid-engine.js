@@ -5,14 +5,16 @@
 (function(root){
  'use strict';
  const TERRAIN={forest:'ป่า',water:'น้ำ',mountain:'ภูเขา',swamp:'หนองบึง',desert:'ทะเลทราย'};
+ // Distinct unordered eligible clue sets with one solution for the seeded layouts.
+ // Counts cover 3, 4 and 5 players; swapping the recipients does not add a pattern.
  const MAPS={
   random:{name:'สุ่มแผนที่',description:'สร้างผังใหม่ทุกเกม'},
-  mistwood:{name:'ป่าหมอก',stage:1,seed:1847,theme:'forest',description:'ป่าเขียวสลับภูมิประเทศหลากหลาย'},
-  highlands:{name:'หุบเขาหิน',stage:2,seed:9203,theme:'mountain',description:'แนวภูเขาและร่องรอยสัตว์ลึกลับ'},
-  wetlands:{name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
-  sunlands:{name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
-  shadowfen:{name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
-  crossroads:{name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'}
+  mistwood:{puzzleCounts:{"3":391,"4":10413,"5":107191},name:'ป่าหมอก',stage:1,seed:1847,theme:'forest',description:'ป่าเขียวสลับภูมิประเทศหลากหลาย'},
+  highlands:{puzzleCounts:{"3":709,"4":14401,"5":134950},name:'หุบเขาหิน',stage:2,seed:9203,theme:'mountain',description:'แนวภูเขาและร่องรอยสัตว์ลึกลับ'},
+  wetlands:{puzzleCounts:{"3":443,"4":9709,"5":96065},name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
+  sunlands:{puzzleCounts:{"3":305,"4":9924,"5":143253},name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
+  shadowfen:{puzzleCounts:{"3":253,"4":8491,"5":114443},name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
+  crossroads:{puzzleCounts:{"3":416,"4":11131,"5":130997},name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];

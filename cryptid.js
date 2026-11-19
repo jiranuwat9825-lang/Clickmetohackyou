@@ -10,6 +10,7 @@ function cryptidCountChoices(prefix,count=3,disabled=false){
   button.onclick=()=>{if(button.disabled)return;input.value=String(n);if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidCountChoices(prefix,n);};root.append(button);
  }
  for(const button of root.children){const selected=Number(button.dataset.count)===Number(count);button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+ cryptidMapCounts(prefix,count);
 }
 function cryptidOpenClues(){
  const r=roomState;if(r?.gameMode!=='cryptid'||!r.cryptid||!['cryptid_playing','results'].includes(r.status))return;
@@ -31,11 +32,21 @@ function cryptidMapChoices(prefix,mapId,disabled=false){
   root.setAttribute('role','group');root.setAttribute('aria-label','เลือกด่าน Cryptid หรือสุ่มแผนที่');
   for(const [id,map] of Object.entries(CE.MAPS)){
    const button=document.createElement('button');button.type='button';button.className='cryptid-map-choice';button.dataset.mapId=id;
-   button.innerHTML=cryptidMapThumbnail(id)+'<strong>'+esc(cryptidMapLabel(id))+'</strong><small>'+esc(map.description)+'</small>';
+   button.innerHTML='<span class="cryptid-map-count"></span>'+cryptidMapThumbnail(id)+'<strong>'+esc(cryptidMapLabel(id))+'</strong><small>'+esc(map.description)+'</small>';
    button.onclick=()=>{if(button.disabled)return;$(prefix+'Map').value=id;$(prefix+'Map').onchange();};root.append(button);
   }
  }
  for(const button of root.children){const selected=button.dataset.mapId===mapId;button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
+ cryptidMapCounts(prefix,Number($(prefix+'Count').value)||3);
+}
+function cryptidMapCounts(prefix,count){
+ const root=$(prefix+'MapChoices');if(!root)return;
+ for(const button of root.children){
+  const badge=button.querySelector('.cryptid-map-count');
+  const total=CE.MAPS[button.dataset.mapId].puzzleCounts?.[count];
+  badge.textContent=total==null?'ตามแผนที่สุ่ม':total.toLocaleString('en-US')+' แบบ';
+  badge.title=total==null?'จำนวนรูปแบบขึ้นกับผังที่สุ่มได้':'ชุดเบาะแส '+count+' ใบที่ให้คำตอบเดียว ไม่นับการสลับผู้เล่น';
+ }
 }
 function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playerProfiles?.[id])?.name||'ผู้เล่น';}
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}

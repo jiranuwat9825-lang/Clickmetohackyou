@@ -140,3 +140,25 @@ test('bots complete full-pool games even with legacy restricted-round metadata',
   assert.equal(r.status,'results');assert.equal(r.result.cell,r.cryptid.solution);
  }
 });
+
+test('named map puzzle counts match every eligible unordered clue set for 3–5 players',()=>{
+ for(const [mapId,map] of Object.entries(E.MAPS)){
+  if(mapId==='random')continue;
+  const board=E.mapBoard(mapId);
+  const bitByCell=new Map(board.map((cell,index)=>[cell.id,1n<<BigInt(index)]));
+  const masks=E.clueCatalogue(board)
+   .filter(clue=>clue.cells.length>=6&&clue.cells.length<=90)
+   .map(clue=>clue.cells.reduce((mask,id)=>mask|bitByCell.get(id),0n));
+  const counts={3:0,4:0,5:0};
+  function enumerate(start,intersection,size){
+   if(size>=3&&(intersection&(intersection-1n))===0n)counts[size]++;
+   if(size===5)return;
+   for(let index=start;index<masks.length;index++){
+    const common=intersection&masks[index];
+    if(common)enumerate(index+1,common,size+1);
+   }
+  }
+  enumerate(0,(1n<<BigInt(board.length))-1n,0);
+  assert.deepEqual(map.puzzleCounts,counts,mapId);
+ }
+});
