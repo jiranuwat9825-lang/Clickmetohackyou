@@ -2183,6 +2183,28 @@ function renderOrder(target,r,highlight=true){target.replaceChildren();(r.turnOr
 let confirmResolver=null;function confirmBox(title,msg,yes='ยืนยัน'){if(confirmResolver)confirmResolver(false);$('dialogTitle').textContent=title;$('dialogMessage').textContent=msg;$('dialogYes').textContent=yes;$('dialog').hidden=false;$('dialogCancel').focus();return new Promise(resolve=>confirmResolver=resolve);}function dismissConfirm(ok){if(!confirmResolver)return;const r=confirmResolver;confirmResolver=null;$('dialog').hidden=true;r(ok);}
 $('dialogCancel').onclick=()=>dismissConfirm(false);$('dialogYes').onclick=()=>dismissConfirm(true);$('dialog').onclick=e=>{if(e.target===$('dialog'))dismissConfirm(false);};document.addEventListener('keydown',e=>{if(e.key==='Escape')dismissConfirm(false);});
 
+// ===== Light / dark theme preference =====
+const THEME_KEY='party_game_theme_v1';
+function applyTheme(theme, persist=false){
+ const dark=theme==='dark';
+ document.documentElement.dataset.theme=dark?'dark':'light';
+ document.documentElement.style.colorScheme=dark?'dark':'light';
+ const button=$('themeToggle'),icon=$('themeToggleIcon'),label=$('themeToggleLabel');
+ if(button){
+  button.setAttribute('aria-pressed',String(dark));
+  button.setAttribute('aria-label',dark?'เปลี่ยนเป็นธีมสว่าง':'เปลี่ยนเป็นธีมมืด');
+ }
+ if(icon)icon.textContent=dark?'☀️':'🌙';
+ if(label)label.textContent=dark?'ธีมสว่าง':'ธีมมืด';
+ const meta=document.querySelector('meta[name="theme-color"]');
+ if(meta)meta.content=dark?'#111318':'#f4f3ef';
+ if(persist){try{localStorage.setItem(THEME_KEY,dark?'dark':'light');}catch(e){console.warn('Theme preference could not be saved',e);}}
+}
+let savedTheme='light';
+try{savedTheme=localStorage.getItem(THEME_KEY)==='dark'?'dark':'light';}catch(e){}
+applyTheme(savedTheme);
+$('themeToggle')?.addEventListener('click',()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true));
+
 // Player name: localStorage changes ONLY after clicking the check button.
 // On refresh, old saved name is prefilled and editable; it must be confirmed again.
 function renderNameConfirmation(){const input=$('nameInput'),button=$('confirmNameBtn'),status=$('nameStatus');input.value=myName;input.disabled=nameConfirmed;button.disabled=nameConfirmed;input.classList.toggle('name-locked',nameConfirmed);button.classList.toggle('confirmed',nameConfirmed);status.classList.toggle('name-confirmed',nameConfirmed);button.textContent=nameConfirmed?'ยืนยันแล้ว':'ยืนยัน';button.title=nameConfirmed?'ยืนยันชื่อเรียบร้อยแล้ว':'กดยืนยันชื่อ';button.setAttribute('aria-label',button.title);status.textContent=nameConfirmed?`พร้อมเล่นในชื่อ ${myName}`:myName?`แก้ชื่อได้ก่อนกดยืนยัน`:'ตั้งชื่อก่อนสร้างหรือเข้าห้อง';}
