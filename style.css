@@ -852,7 +852,7 @@ label, .muted.hint { font-size: 13px; }
 .profile-card .avatar-studio { padding: 0; border: 0; margin: 10px 0 0; }
 .avatar-preview { flex-basis: 34px; width: 34px; height: 34px; font-size: 22px; border-radius: 50%; }
 .avatar-option small { white-space: normal; line-height: 1.45; font-size: 12px; }
-.avatar-picker { max-height: 260px; overflow-y: auto; grid-template-columns: repeat(auto-fit,minmax(59px,1fr)); }
+.avatar-picker { max-height: 260px; overflow-y: auto; grid-template-columns: repeat(auto-fill,minmax(59px,1fr)); }
 .game-shelf, .room-browser { grid-column: 1/-1; }
 .game-shelf { padding: 6px 0; }
 .shelf-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
