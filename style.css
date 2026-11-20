@@ -1213,3 +1213,10 @@ label, .muted.hint { font-size: 13px; }
 @media(max-width:600px) { .ag-code-grid { gap:5px; }.ag-code-cell { min-height:60px; font-size:12px; padding:4px; }.ag-teams { grid-template-columns:1fr; } }
 .ag-drawing { border:1px solid var(--line); background:var(--surface); border-radius:16px; padding:clamp(12px,2vw,20px); display:grid; gap:12px; min-width:0; }
 .ag-drawing h3,.ag-drawing p { margin:0; }.ag-canvas { width:100%; height:auto; aspect-ratio:900/520; display:block; background:#fffdf9; border:1px solid var(--line); border-radius:10px; touch-action:none; cursor:crosshair; }
+
+/* The two most recent Cryptid moves stay together above the map. */
+.cryptid-last-move{display:grid;gap:8px}
+.cryptid-last-move-row{display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;align-items:baseline}
+.cryptid-last-move-row+.cryptid-last-move-row{border-top:1px solid var(--line);padding-top:8px}
+.cryptid-last-move-row strong{color:var(--accent)}
+.cryptid-last-move-row span{overflow-wrap:anywhere}

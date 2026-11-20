@@ -335,7 +335,10 @@ function renderCryptid(r){
  cryptidUpdateClue(r);cryptidControls(r);cryptidHighlight();
  if(cryptidUI.revision!==revision){
   cryptidUI.revision=revision;cryptidDrawBoard(r);
-  const events=Object.entries(a.history||{}).sort(([x],[y])=>Number(y.slice(1))-Number(x.slice(1))).map(([,event])=>event);$('cryptidLastMove').hidden=!events.length;if(events.length)$('cryptidLastMove').innerHTML='<strong>เหตุการณ์ล่าสุด</strong><span>'+cryptidHistoryText(r,events[0])+'</span>';$('cryptidHistory').innerHTML=events.length?events.map(e=>'<p><small>ตา '+e.turn+'</small>'+cryptidHistoryText(r,e)+'</p>').join(''):'<p class="muted">ประวัติการถามและวางหมากจะแสดงที่นี่</p>';
+  const events=Object.entries(a.history||{}).sort(([x],[y])=>Number(y.slice(1))-Number(x.slice(1))).map(([,event])=>event);
+  $('cryptidLastMove').hidden=!events.length;
+  if(events.length)$('cryptidLastMove').innerHTML=events.slice(0,2).map((event,index)=>'<div class="cryptid-last-move-row"><strong>'+(index?'ก่อนหน้า':'ล่าสุด')+'</strong><span>'+cryptidHistoryText(r,event)+'</span></div>').join('');
+  $('cryptidHistory').innerHTML=events.length?events.map(e=>'<p><small>ตา '+e.turn+'</small>'+cryptidHistoryText(r,e)+'</p>').join(''):'<p class="muted">ประวัติการถามและวางหมากจะแสดงที่นี่</p>';
  }
  $('cryptidResult').hidden=!done;
  if(done){
