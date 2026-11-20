@@ -101,6 +101,7 @@ function renderArcade(r){
  const v=AG.view(r,myId),root=$('arcadeContent');if(!v){root.textContent='กำลังโหลดเกม…';return;}
  const key=arcadeKey(r)+':'+arcadeBusy;if(arcadeRenderKey===key)return;arcadeRenderKey=key;
  if(v.mode==='just_one'){renderArcadeJust(r,v,root);return;}
+ if(v.mode==='wavelength'){renderArcadeWave(r,v,root);return;}
  renderArcadeTake6(r,v,root);
 }
 function arcadeBase(root,title,kicker,progress){
@@ -139,6 +140,31 @@ function renderArcadeJust(r,v,root){
   }else {const t=document.createElement('p');t.className='muted';t.textContent=`คำเฉลย: ${v.word}`;p.append(t);}
  }
  const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>ผู้ทายเลือกเลข 1–5 โดยไม่เห็นคำ คนอื่นเขียนคำใบ้ลับ คำที่ซ้ำหรือคล้ายกันต้องตัดก่อนเปิดให้ผู้ทายดู ทายถูกเก็บ 1 ใบ ข้ามทิ้ง 1 ใบ ทายผิดทิ้ง 2 ใบ</p><p>มี 13 ใบ · ถ้าทายถูกอย่างน้อย 9 ใบ ทุกคนได้ 1 แต้ม</p>';root.append(help);
+ arcadeHostControls(root,r,done);
+}
+function renderArcadeWave(r,v,root){
+ const done=r.status==='results',psychic=v.psychic===myId,setter=v.setter===myId;
+ const p=arcadeBase(root,'Wavelength','หาจุดบนสเกลด้วยคำใบ้',`รอบ ${v.round}/8 · ${v.total} แต้ม`);
+ const info=document.createElement('p');info.className='ag-status';info.textContent=done?`จบเกม · รวม ${v.total} แต้ม`:v.phase==='clue'?`คนใบ้: ${arcadeName(r,v.psychic)}`:v.phase==='dial'?`คนยืนยันหน้าปัด: ${arcadeName(r,v.setter)}`:`เปิดเป้าหมายแล้ว · รอบนี้ +${v.last?.points||0} แต้ม`;p.append(info);
+ const spectrum=document.createElement('div');spectrum.className='ag-spectrum';const left=document.createElement('strong');left.textContent=v.spectrum[0];const right=document.createElement('strong');right.textContent=v.spectrum[1];spectrum.append(left,right);p.append(spectrum);
+ const meter=document.createElement('div');meter.className='ag-meter';p.append(meter);
+ if(v.target!==undefined){const mark=document.createElement('span');mark.className='ag-marker is-target';mark.style.left=v.target+'%';mark.title='เป้าหมาย '+v.target;meter.append(mark);}
+ if(v.dial!==null){const mark=document.createElement('span');mark.className='ag-marker is-dial';mark.style.left=v.dial+'%';mark.title='หน้าปัด '+v.dial;meter.append(mark);}
+ if(!done&&v.phase==='clue'){
+  const t=document.createElement('p');t.textContent=psychic?`เป้าหมายของคุณ: ${v.target}/100 · ยกตัวอย่างสิ่งที่อยู่ตรงตำแหน่งนี้`:'รอคนใบ้ดูตำแหน่งลับและส่งคำใบ้';p.append(t);
+  if(psychic){const input=arcadeInput(p,'คำใบ้หนึ่งคำหรือวลี','เช่น รถไฟเหาะ');arcadeButton(p,'ส่งคำใบ้',()=>arcadeSend('clue',input.value));}
+ }
+ if(!done&&v.phase==='dial'){
+  const t=document.createElement('p');t.textContent=`คำใบ้: ${v.clue}`;t.className='ag-wave-clue';p.append(t);
+  if(psychic){const msg=document.createElement('p');msg.className='muted';msg.textContent='ให้คนอื่นคุยกันแล้วปรับหน้าปัด คุณเป็นคนใบ้ในรอบนี้';p.append(msg);}
+  else {const wrap=document.createElement('label');wrap.className='ag-field';wrap.textContent='ตำแหน่งหน้าปัด';const range=document.createElement('input');range.type='range';range.min='0';range.max='100';range.value=String(v.dial??50);const output=document.createElement('strong');output.textContent=range.value+' / 100';range.oninput=()=>output.textContent=range.value+' / 100';wrap.append(range,output);p.append(wrap);arcadeButton(p,'วางหน้าปัด',()=>arcadeSend('dial',Number(range.value)),true);}
+  if(setter&&v.dial!==null)arcadeButton(p,'เปิดเป้าหมาย',()=>arcadeSend('reveal'));
+ }
+ if(!done&&v.phase==='reveal'){
+  const t=document.createElement('p');t.textContent=`เป้าหมาย ${v.last.target} · หน้าปัด ${v.last.dial} · ได้ ${v.last.points} แต้ม`;p.append(t);
+  if(setter)arcadeButton(p,v.round===8?'ดูผลเกม':'รอบถัดไป',()=>arcadeSend('next'));
+ }
+ const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>คนใบ้เห็นตำแหน่งลับระหว่างสองขั้ว แล้วให้คำใบ้ คนอื่นหารือกันและปรับหน้าปัด คนยืนยันเปิดเฉลย</p><p>โหมดร่วมมือ 8 รอบ ใกล้เป้าหมายได้ 1–4 แต้ม รวมอย่างน้อย 16 แต้ม ทุกคนได้ +1 คะแนนในห้อง</p>';root.append(help);
  arcadeHostControls(root,r,done);
 }
 function arcadeHostControls(root,r,done){

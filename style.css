@@ -1194,3 +1194,8 @@ label, .muted.hint { font-size: 13px; }
 .ag-field input:focus-visible { outline:2px solid var(--accent); }
 .ag-clue-list { display:flex; flex-wrap:wrap; gap:8px; }.ag-clue { display:flex; align-items:center; gap:9px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); overflow-wrap:anywhere; }
 .ag-clue.is-cut { opacity:.62; text-decoration:line-through; }
+.ag-spectrum { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:clamp(16px,2vw,22px); }.ag-spectrum strong:last-child { text-align:right; }
+.ag-meter { height:48px; border-radius:40px; margin:6px 12px 10px; background:linear-gradient(90deg,#568f9b,#d9e4de,#dc997a); border:1px solid var(--line); position:relative; }
+.ag-marker { position:absolute; top:-8px; height:62px; width:5px; border-radius:5px; transform:translateX(-50%); box-shadow:0 2px 8px #0005; }
+.ag-marker.is-target { background:#b84639; }.ag-marker.is-dial { background:#172938; width:8px; }
+.ag-wave-clue { font-size:clamp(19px,2.5vw,25px); font-weight:700; }.ag-field input[type="range"] { padding:0; accent-color:var(--accent); }

@@ -4,9 +4,11 @@
  'use strict';
  const GAMES={
   take6:{name:'6 nimmt!',min:2,max:10,mark:'Ⅵ',tag:'วางไพ่พร้อมกัน · เลี่ยงแต้มลบ',bots:true},
-  just_one:{name:'Just One',min:3,max:7,defaultCount:4,mark:'✎',tag:'ใบ้คำร่วมกัน · คำซ้ำถูกตัด',bots:false,help:'ผู้ทายเลือกเลข 1–5 คนอื่นใบ้หนึ่งคำ · 3–4 คนใบ้คนละสองคำ'}
+  just_one:{name:'Just One',min:3,max:7,defaultCount:4,mark:'✎',tag:'ใบ้คำร่วมกัน · คำซ้ำถูกตัด',bots:false,help:'ผู้ทายเลือกเลข 1–5 คนอื่นใบ้หนึ่งคำ · 3–4 คนใบ้คนละสองคำ'},
+  wavelength:{name:'Wavelength',min:2,max:10,defaultCount:4,mark:'◒',tag:'ใบ้ตำแหน่ง · ปรับหน้าปัด',bots:false,help:'เล่นร่วมกัน 8 รอบ คนใบ้เห็นเป้าหมาย คนอื่นช่วยกันปรับหน้าปัด'}
  };
  const JUST_WORDS='ช้าง,รถไฟ,กาแฟ,ดวงจันทร์,ร่ม,ภูเขา,แมว,ทะเล,นาฬิกา,หุ่นยนต์,จักรยาน,โรงเรียน,ขนมปัง,นักบิน,สะพาน,มะม่วง,กล้อง,พายุ,กระเป๋า,ดอกไม้,คอมพิวเตอร์,ปลาโลมา,หนังสือ,ตู้เย็น,ฟุตบอล,ดวงดาว,เกาะ,ตลาด,เครื่องบิน,ป่า,ผีเสื้อ,น้ำตก,หมวก,เต่า,ช็อกโกแลต,วาฬ,ปราสาท,ลิฟต์,รถเมล์,พิซซ่า,โคมไฟ,สนามบิน,ไอศกรีม,หมาป่า,กีตาร์,สวนสัตว์,ส้ม,เต็นท์,ฝน,หมอน,พัดลม,แม่น้ำ,นักสืบ,เค้ก,มังกร,แมงมุม,โรงหนัง,ลูกโป่ง,โต๊ะ,คีย์บอร์ด,เรือ,รองเท้า,ดินสอ,สายรุ้ง,ปลาหมึก,เสือ,สิงโต,ปรอท,หมากรุก,กล้วย,ท้องฟ้า,รถถัง,ไวโอลิน,โทรศัพท์,น้ำแข็ง,สับปะรด,นักดนตรี,ลูกเต๋า,ประตู,เพชร,กระต่าย,ดาวอังคาร,เรือดำน้ำ,พีระมิด,กังหัน,พรม,อูฐ,หิมะ,สนามเด็กเล่น,เก้าอี้,ปลาวาฬ,แบตเตอรี่,มะเขือเทศ,รถแข่ง,พิพิธภัณฑ์'.split(',');
+ const SPECTRA=[['เงียบ','เสียงดัง'],['ธรรมดา','หรูหรา'],['น่าเบื่อ','ตื่นเต้น'],['โบราณ','ทันสมัย'],['เบา','หนัก'],['ปลอดภัย','เสี่ยง'],['ร้อน','เย็น'],['ราคาถูก','ราคาแพง'],['เล็ก','ใหญ่'],['ช้า','เร็ว'],['คุ้นเคย','แปลกใหม่'],['มีประโยชน์','ไร้ประโยชน์'],['เป็นทางการ','สบาย ๆ'],['ส่วนตัว','สาธารณะ'],['จริงจัง','ขำขัน'],['ธรรมชาติ','ประดิษฐ์'],['ง่าย','ยาก'],['น่ากลัว','น่ารัก'],['สั้น','ยาว'],['หวาน','ขม'],['สะอาด','สกปรก'],['สำคัญน้อย','สำคัญมาก']];
  const norm=s=>String(s||'').normalize('NFC').trim().toLocaleLowerCase().replace(/\s+/g,' ');
  const clone=x=>JSON.parse(JSON.stringify(x));
  const shuffle=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -37,7 +39,27 @@
    a.cards=Array.from({length:13},(_,i)=>words.slice(i*5,i*5+5));
    a.cardIndex=0;a.turn=0;a.won=0;a.discarded=0;a.phase='choose_word';a.picked=null;a.clues={};a.removed=[];
   }
+  if(a.mode==='wavelength'){
+   a.spectra=shuffle(SPECTRA,rng).slice(0,8);a.targets=Array.from({length:8},()=>Math.min(100,Math.floor(rng()*101)));
+   a.round=1;a.total=0;a.dial=null;a.clue='';a.phase='clue';a.last=null;
+  }
   return true;
+ }
+ function waveMove(r,id,type,value){
+  const a=r.arcade,psychic=a.order[(a.round-1)%a.order.length],setter=a.order[a.round%a.order.length];
+  if(a.phase==='clue'&&type==='clue'&&id===psychic&&typeof value==='string'&&norm(value).length>=1&&norm(value).length<=100&&!/\d/.test(value)){
+   a.clue=value.trim();a.phase='dial';log(a,'wave_clue',{by:id,clue:a.clue});return true;
+  }
+  if(a.phase==='dial'&&type==='dial'&&id!==psychic&&Number.isInteger(value)&&value>=0&&value<=100){a.dial=value;return true;}
+  if(a.phase==='dial'&&type==='reveal'&&id===setter&&a.dial!==null){
+   const target=a.targets[a.round-1],delta=Math.abs(a.dial-target),points=delta<=2?4:delta<=6?3:delta<=12?2:delta<=20?1:0;
+   a.total+=points;a.last={target,dial:a.dial,points};a.phase='reveal';log(a,'wave_reveal',{...a.last,round:a.round});return true;
+  }
+  if(a.phase==='reveal'&&type==='next'&&id===setter){
+   if(a.round===8){if(a.total>=16)finish(r,a.order);else{r.status='results';a.phase='finished';r.result={type:'wavelength',winners:[],points:0,total:a.total};log(a,'end',{winners:[]});}}
+   else {a.round++;a.clue='';a.dial=null;a.last=null;a.phase='clue';}return true;
+  }
+  return false;
  }
  function nextJust(r){
   const a=r.arcade;
@@ -136,7 +158,7 @@
   if(type==='abort'&&id!==r.hostId)return false;
   const next=clone(r);
   const valid=type==='abort'?(next.status='results',next.arcade.phase='finished',next.result={type:r.gameMode,aborted:true,points:0},log(next.arcade,'abort'),true):
-   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value));
+   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value));
   if(!valid)return false;
   next.arcade.revision++;
   Object.assign(r,next);return true;
@@ -148,6 +170,11 @@
    return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],guesser,reviewer,number:a.picked===null?null:a.picked+1,word:!isGuesser||r.status==='results'?a.cards[a.cardIndex]?.[a.picked]:undefined,
     card:a.phase==='choose_word'&&isGuesser?['1','2','3','4','5']:undefined,clues:a.phase==='review'&&!isGuesser||a.phase==='guess'||r.status==='results'?allClues.map(c=>({...c,word:a.phase==='review'&&!isGuesser||!c.removed?c.word:'คำถูกตัด'})):[],
     ownSubmitted:Object.hasOwn(a.clues,id),submissions:Object.keys(a.clues).length,required:a.order.length-1,won:a.won,discarded:a.discarded,remaining:13-a.cardIndex,last:a.last||null,result:r.result?clone(r.result):null};
+  }
+  if(a.mode==='wavelength'){
+   const psychic=a.order[(a.round-1)%a.order.length],setter=a.order[a.round%a.order.length];
+   return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],round:a.round,total:a.total,spectrum:[...a.spectra[a.round-1]],psychic,setter,clue:a.clue,dial:a.dial,
+    target:id===psychic||a.phase==='reveal'||a.phase==='finished'?a.targets[a.round-1]:undefined,last:a.last?clone(a.last):null,result:r.result?clone(r.result):null};
   }
   return {mode:a.mode,phase:a.phase,revision:a.revision,round:a.round,step:a.step,order:[...a.order],
    people:Object.fromEntries(a.order.map(p=>[p,{penalty:a.people[p].penalty,count:a.people[p].hand.length,hand:p===id?[...a.people[p].hand]:undefined,chosen:Object.hasOwn(a.picks,p)}])),

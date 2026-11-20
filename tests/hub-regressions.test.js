@@ -117,6 +117,11 @@ test('Just One creates a human room and renders its private word phases',async()
  await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'arcade_playing');
  h.sync();h.run('renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
 });
+test('Wavelength starts in a human room and renders the private dial',()=>{
+ const h=loadHub(),r=base('wavelength');r.status='lobby';r.arcadeCount=3;h.setRoom(r);
+ assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+ h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
+});
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
  const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);

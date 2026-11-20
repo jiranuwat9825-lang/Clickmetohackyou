@@ -84,3 +84,29 @@ test('Just One wrong guesses discard two cards, and thirteen cards finish once',
  assert.equal(r.status,'results');assert.equal(r.arcade.won,11);assert.equal(r.arcade.discarded,2);
  assert.equal(r.result.winners.length,5);assert.equal(Object.values(r.scores).reduce((s,n)=>s+n,0),5);
 });
+test('Wavelength keeps target private, lets teammates set dial and reveals once',()=>{
+ const r=room('wavelength',4);E.setup(r,Object.keys(r.players),()=>.4);
+ const a=r.arcade,psychic=a.order[0],setter=a.order[1],other=a.order[2],target=a.targets[0];
+ assert.equal(E.view(r,other).target,undefined);assert.equal(E.view(r,psychic).target,target);
+ assert.equal(E.apply(r,other,'clue','คำ',0),false);
+ assert.equal(E.apply(r,psychic,'clue','สวนสาธารณะ',0),true);
+ assert.equal(E.apply(r,psychic,'dial',target,1),false);
+ assert.equal(E.apply(r,other,'dial',target,1),true);
+ assert.equal(E.apply(r,other,'reveal',null,2),false);
+ assert.equal(E.apply(r,setter,'reveal',null,2),true);
+ assert.equal(E.view(r,other).target,target);assert.equal(r.arcade.total,4);
+ assert.equal(E.apply(r,setter,'reveal',null,3),false);
+ assert.equal(E.apply(r,setter,'next',null,3),true);assert.equal(r.arcade.round,2);
+});
+test('Wavelength eight rounds produce a single shared award',()=>{
+ const r=room('wavelength',2);E.setup(r,Object.keys(r.players),()=>.2);
+ for(let n=1;n<=8;n++){
+  const a=r.arcade,psychic=a.order[(n-1)%2],setter=a.order[n%2];
+  assert.equal(E.apply(r,psychic,'clue','คำใบ้',a.revision),true);
+  assert.equal(E.apply(r,setter,'dial',a.targets[n-1],r.arcade.revision),true);
+  assert.equal(E.apply(r,setter,'reveal',null,r.arcade.revision),true);
+  assert.equal(E.apply(r,setter,'next',null,r.arcade.revision),true);
+ }
+ assert.equal(r.status,'results');assert.equal(r.arcade.total,32);assert.deepEqual(r.result.winners,r.arcade.order);
+ assert.equal(r.scores.p0,1);assert.equal(r.scores.p1,1);
+});
