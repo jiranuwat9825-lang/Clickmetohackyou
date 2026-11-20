@@ -56,3 +56,31 @@ test('6 nimmt bots complete to 66 with a single award and JSON room state',()=>{
   assert.deepEqual(copy(r),r);
  }
 });
+test('Just One protects the word, removes duplicate clues and allows one answer',()=>{
+ const r=room('just_one',3);assert.equal(E.setup(r,Object.keys(r.players),()=>.53),true);
+ const guesser=r.arcade.order[0],helpers=r.arcade.order.slice(1),answer=r.arcade.cards[0][0];
+ assert.equal(E.apply(r,guesser,'choose_word',0,0),true);
+ assert.equal(E.view(r,guesser).word,undefined);assert.equal(E.view(r,helpers[0]).word,answer);
+ assert.equal(E.apply(r,helpers[0],'clue',['ฟ้า','สี'],1),true);
+ assert.equal(E.view(r,guesser).clues.length,0);
+ assert.equal(E.apply(r,helpers[1],'clue',['ฟ้า','ธรรมชาติ'],2),true);
+ assert.equal(r.arcade.phase,'review');
+ assert.equal(E.apply(r,guesser,'show',null,3),false);
+ const reviewer=helpers[0];assert.equal(E.apply(r,reviewer,'show',null,3),true);
+ assert.deepEqual(E.view(r,guesser).clues.filter(c=>!c.removed).map(c=>c.word),['สี','ธรรมชาติ']);
+ assert.equal(E.apply(r,guesser,'answer',answer,4),true);
+ assert.equal(r.arcade.won,1);assert.equal(r.arcade.cardIndex,1);assert.equal(E.apply(r,guesser,'answer',answer,5),false);
+});
+test('Just One wrong guesses discard two cards, and thirteen cards finish once',()=>{
+ const r=room('just_one',5);E.setup(r,Object.keys(r.players),()=>.27);
+ let turns=0;
+ while(r.status!=='results'&&turns++<15){
+  const a=r.arcade,guesser=a.order[a.turn%a.order.length],helpers=a.order.filter(p=>p!==guesser),answer=a.cards[a.cardIndex][0];
+  assert.equal(E.apply(r,guesser,'choose_word',0,a.revision),true);
+  for(const id of helpers)assert.equal(E.apply(r,id,'clue',['ใบ้'+id],r.arcade.revision),true);
+  assert.equal(E.apply(r,helpers[0],'show',null,r.arcade.revision),true);
+  assert.equal(E.apply(r,guesser,'answer',turns===1?'ผิด':answer,r.arcade.revision),true);
+ }
+ assert.equal(r.status,'results');assert.equal(r.arcade.won,11);assert.equal(r.arcade.discarded,2);
+ assert.equal(r.result.winners.length,5);assert.equal(Object.values(r.scores).reduce((s,n)=>s+n,0),5);
+});

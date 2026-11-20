@@ -1187,3 +1187,10 @@ label, .muted.hint { font-size: 13px; }
 .ag-details ol { margin:10px 0 0; padding-left:23px; max-height:220px; overflow:auto; }.ag-details li { padding:4px 0; border-bottom:1px solid var(--line); }
 .ag-host { display:flex; justify-content:flex-start; }
 @media(max-width:740px) { .ag-layout { grid-template-columns:1fr; }.ag-board,.ag-side { padding:13px; }.ag-row { gap:6px; }.ag-card { width:48px; min-height:64px; }.ag-card b { font-size:17px; }.ag-players { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.ag-panel { border:1px solid var(--line); border-radius:16px; background:var(--surface); padding:clamp(16px,3vw,25px); display:grid; gap:14px; max-width:860px; }
+.ag-panel p { margin:0; }.ag-actions { display:flex; flex-wrap:wrap; gap:9px; }
+.ag-actions .btn { min-width:54px; }.ag-field { display:grid; gap:7px; max-width:440px; font-weight:600; }
+.ag-field input { width:100%; padding:11px 13px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:10px; font:inherit; }
+.ag-field input:focus-visible { outline:2px solid var(--accent); }
+.ag-clue-list { display:flex; flex-wrap:wrap; gap:8px; }.ag-clue { display:flex; align-items:center; gap:9px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); overflow-wrap:anywhere; }
+.ag-clue.is-cut { opacity:.62; text-decoration:line-through; }

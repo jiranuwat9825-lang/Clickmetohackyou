@@ -109,6 +109,14 @@ test('6 nimmt creates a room without categories, fills bots and starts from lobb
  await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'arcade_playing');assert.equal(h.getRoom().arcade.order.length,2);
  h.sync();h.run('renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
 });
+test('Just One creates a human room and renders its private word phases',async()=>{
+ const h=loadHub(),r=base('just_one');r.status='lobby';r.players={a:r.players.a};h.setRoom(r);h.run('chooseMode("just_one")');h.element('arcadeCreateCount').value='3';h.run('generateRoomCode=async()=>"4232"');
+ await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'just_one');assert.equal(h.getRoom().arcadeCount,3);
+ h.sync();h.run('renderArcadeRoom(roomState)');assert.equal(h.element('arcadeBotTools').hidden,true);
+ const filled=h.getRoom();filled.players.b={name:'B'};filled.players.c={name:'C'};h.setRoom(filled);h.run('renderArcadeRoom(roomState)');
+ await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'arcade_playing');
+ h.sync();h.run('renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
+});
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
  const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);

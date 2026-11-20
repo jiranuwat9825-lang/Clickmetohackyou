@@ -100,6 +100,52 @@ function arcadeLog(e,r){
 function renderArcade(r){
  const v=AG.view(r,myId),root=$('arcadeContent');if(!v){root.textContent='กำลังโหลดเกม…';return;}
  const key=arcadeKey(r)+':'+arcadeBusy;if(arcadeRenderKey===key)return;arcadeRenderKey=key;
+ if(v.mode==='just_one'){renderArcadeJust(r,v,root);return;}
+ renderArcadeTake6(r,v,root);
+}
+function arcadeBase(root,title,kicker,progress){
+ root.className='ag-game';root.replaceChildren();
+ const header=document.createElement('header');header.className='ag-heading';header.innerHTML='<div><span class="ag-kicker">'+esc(kicker)+'</span><h2>'+esc(title)+'</h2></div><span class="ag-badge">'+esc(progress)+'</span>';root.append(header);
+ const panel=document.createElement('section');panel.className='ag-panel';root.append(panel);return panel;
+}
+function arcadeButton(parent,label,action,soft=false){const b=document.createElement('button');b.type='button';b.className='btn '+(soft?'soft':'primary');b.textContent=label;b.disabled=arcadeBusy;b.onclick=action;parent.append(b);return b;}
+function arcadeInput(parent,label,placeholder=''){
+ const l=document.createElement('label');l.className='ag-field';l.textContent=label;
+ const input=document.createElement('input');input.type='text';input.maxLength=80;input.placeholder=placeholder;l.append(input);parent.append(l);return input;
+}
+function renderArcadeJust(r,v,root){
+ const done=r.status==='results',mine=v.guesser===myId,p=arcadeBase(root,'Just One','ใบ้คำร่วมกัน · คำซ้ำถูกตัด',`ได้ ${v.won} · เหลือ ${v.remaining} ใบ`);
+ const who=document.createElement('p');who.className='ag-status';who.textContent=done?(v.result?.aborted?'ยุติเกมแล้ว':`จบเกม · ทายถูก ${v.won} ใบ`):`ผู้ทาย: ${arcadeName(r,v.guesser)}${mine?' (คุณ)':''}`;p.append(who);
+ if(v.last){const x=document.createElement('p');x.className='muted';x.textContent=`ใบก่อน: ${v.last.answer} · ${v.last.correct?'ทายถูก':v.last.guess==='ข้าม'?'ข้าม':'ทายผิด'}`;p.append(x);}
+ if(!done&&v.phase==='choose_word'){
+  const x=document.createElement('p');x.textContent=mine?'เลือกเลขหนึ่งช่อง โดยยังไม่เห็นคำ':'รอผู้ทายเลือกเลข 1–5';p.append(x);
+  if(mine){const row=document.createElement('div');row.className='ag-actions';p.append(row);for(let n=1;n<=5;n++)arcadeButton(row,String(n),()=>arcadeSend('choose_word',n-1),true);}
+ }
+ if(!done&&v.phase==='clue'){
+  const x=document.createElement('p');x.textContent=mine?`คุณเลือกช่อง ${v.number} · รอคำใบ้ ${v.submissions}/${v.required} คน`:`คำที่ ${v.number}: ${v.word} · เขียนคำใบ้ ${v.order.length<=4?'2 คำ':'1 คำ'} โดยไม่ให้ผู้ทายเห็น`;p.append(x);
+  if(!mine&&!v.ownSubmitted){const first=arcadeInput(p,'คำใบ้ที่ 1','หนึ่งคำ');let second;if(v.order.length<=4)second=arcadeInput(p,'คำใบ้ที่ 2','หนึ่งคำ');arcadeButton(p,'ส่งคำใบ้',()=>arcadeSend('clue',second?[first.value,second.value]:[first.value]));}
+ }
+ if(!done&&v.phase==='review'){
+  const x=document.createElement('p');x.textContent=mine?'กำลังตัดคำใบ้ที่ซ้ำหรือผิดกติกา':'ตรวจคำใบ้ที่ซ้ำ คล้ายกัน หรือผิดกติกา ก่อนให้ผู้ทายดู';p.append(x);
+  if(!mine){const list=document.createElement('div');list.className='ag-clue-list';p.append(list);
+   for(const c of v.clues){const line=document.createElement('div');line.className='ag-clue'+(c.removed?' is-cut':'');line.textContent=c.word+' · '+arcadeName(r,c.by)+(c.removed?' · ตัดแล้ว':'');if(v.reviewer===myId)arcadeButton(line,c.removed?'คืนคำ':'ตัดคำ',()=>arcadeSend('cancel',c.key),true);list.append(line);}
+   if(v.reviewer===myId)arcadeButton(p,'ให้ผู้ทายดู',()=>arcadeSend('show'));
+  }
+ }
+ if(!done&&v.phase==='guess'){
+  const x=document.createElement('p');x.textContent=mine?'คำใบ้ที่ใช้ได้':'ผู้ทายกำลังตอบ';p.append(x);
+  if(mine){const list=document.createElement('div');list.className='ag-clue-list';for(const c of v.clues.filter(c=>!c.removed)){const t=document.createElement('span');t.className='ag-clue';t.textContent=c.word;list.append(t);}if(!list.children.length)list.textContent='ไม่มีคำใบ้เหลือ';p.append(list);
+   const input=arcadeInput(p,'คำตอบ','พิมพ์คำที่ทาย');const actions=document.createElement('div');actions.className='ag-actions';p.append(actions);arcadeButton(actions,'ตอบ',()=>arcadeSend('answer',input.value));arcadeButton(actions,'ข้าม',()=>arcadeSend('pass'),true);
+  }else {const t=document.createElement('p');t.className='muted';t.textContent=`คำเฉลย: ${v.word}`;p.append(t);}
+ }
+ const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>ผู้ทายเลือกเลข 1–5 โดยไม่เห็นคำ คนอื่นเขียนคำใบ้ลับ คำที่ซ้ำหรือคล้ายกันต้องตัดก่อนเปิดให้ผู้ทายดู ทายถูกเก็บ 1 ใบ ข้ามทิ้ง 1 ใบ ทายผิดทิ้ง 2 ใบ</p><p>มี 13 ใบ · ถ้าทายถูกอย่างน้อย 9 ใบ ทุกคนได้ 1 แต้ม</p>';root.append(help);
+ arcadeHostControls(root,r,done);
+}
+function arcadeHostControls(root,r,done){
+ if(!isHost)return;const tools=document.createElement('div');tools.className='ag-host';root.append(tools);
+ const b=arcadeButton(tools,done?'กลับล็อบบี้':'ยุติเกม · ไม่คิดคะแนน',done?arcadeReturn:async()=>{const id=roomId,key=arcadeKey(roomState);if(await confirmBox('ยุติเกมนี้?','รอบนี้จะไม่คิดคะแนน')&&id===roomId&&key===arcadeKey(roomState))await arcadeSend('abort');},!done);b.classList.toggle('small',!done);
+}
+function renderArcadeTake6(r,v,root){
  const meta=AG.GAMES[v.mode],done=r.status==='results',own=v.people[myId];
  root.className='ag-game';root.replaceChildren();
  const header=document.createElement('header');header.className='ag-heading';header.innerHTML='<div><span class="ag-kicker">'+meta.tag+'</span><h2>'+meta.name+'</h2></div><span class="ag-badge">ยก '+v.round+' · ใบ '+v.step+'/10</span>';root.append(header);
@@ -118,5 +164,5 @@ function renderArcade(r){
  }
  const details=document.createElement('details');details.className='ag-details';details.innerHTML='<summary>วิธีเล่นสั้น ๆ</summary><p>เลือกไพ่พร้อมกันทุกตา ระบบวางไพ่เลขน้อยก่อน ไปต่อท้ายแถวที่เลขต่ำกว่าและใกล้ที่สุด หากเป็นใบที่ 6 ต้องเก็บห้าใบเดิมเป็นแต้มลบ ไพ่ต่ำกว่าทุกแถวเลือกแถวที่จะเก็บเอง</p><p>แจก 10 ใบต่อยก เล่นจนมีคนแต้มลบ 66 ขึ้นไป คนที่มีแต้มลบน้อยที่สุดชนะ</p>';root.append(details);
  const history=document.createElement('details');history.className='ag-details';history.innerHTML='<summary>ประวัติการเล่น</summary><ol>'+v.history.slice().reverse().map(e=>'<li>'+esc(arcadeLog(e,r))+'</li>').join('')+'</ol>';root.append(history);
- if(isHost){const tools=document.createElement('div');tools.className='ag-host';root.append(tools);const b=document.createElement('button');b.type='button';b.className='btn '+(done?'primary':'outline small');b.textContent=done?'กลับล็อบบี้':'ยุติเกม · ไม่คิดคะแนน';b.onclick=done?arcadeReturn:async()=>{const id=roomId,key=arcadeKey(roomState);if(await confirmBox('ยุติเกมนี้?','รอบนี้จะไม่คิดคะแนน')&&id===roomId&&key===arcadeKey(roomState))await arcadeSend('abort');};tools.append(b);}
+ arcadeHostControls(root,r,done);
 }
