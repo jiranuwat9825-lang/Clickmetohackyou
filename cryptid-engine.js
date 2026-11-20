@@ -8,29 +8,29 @@
  const DEEP_TERRAIN={reef:'แนวปะการัง',kelp:'ป่าสาหร่าย',plain:'พื้นทรายใต้ทะเล',vent:'ปล่องน้ำร้อน',trench:'ร่องลึก'};
  const VOLCANO_TERRAIN={lava:'ลาวา',basalt:'ลานหินบะซอลต์',ash:'ทุ่งเถ้าถ่าน',crater:'ปากปล่อง',sulfur:'บ่อกำมะถัน'};
  // Distinct unordered eligible clue sets with one solution for the seeded layouts.
- // Counts cover 3, 4 and 5 players; swapping the recipients does not add a pattern.
+ // Counts cover 2–5 players; swapping the recipients does not add a pattern.
  const MAPS={
   random:{name:'สุ่มแผนที่',description:'สร้างผังใหม่ทุกเกม'},
-  mistwood:{puzzleCounts:{"3":391,"4":10413,"5":107191},name:'ป่าหมอก',stage:1,seed:1847,theme:'forest',description:'ป่าเขียวสลับภูมิประเทศหลากหลาย'},
-  highlands:{puzzleCounts:{"3":709,"4":14401,"5":134950},name:'หุบเขาหิน',stage:2,seed:9203,theme:'mountain',description:'แนวภูเขาและร่องรอยสัตว์ลึกลับ'},
-  wetlands:{puzzleCounts:{"3":443,"4":9709,"5":96065},name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
-  sunlands:{puzzleCounts:{"3":305,"4":9924,"5":143253},name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
-  shadowfen:{puzzleCounts:{"3":253,"4":8491,"5":114443},name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
-  crossroads:{puzzleCounts:{"3":416,"4":11131,"5":130997},name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'},
-  island:{puzzleCounts:{3:351,4:10042,5:122511},name:'เกาะกลางน้ำ',stage:7,seed:7117,layout:'island',collection:'original',description:'ผืนน้ำล้อมป่าและพื้นที่บนเกาะ'},
-  ridge:{puzzleCounts:{3:510,4:12259,5:135321},name:'แนวหินแบ่งแดน',stage:8,seed:8231,layout:'ridge',collection:'original',description:'แนวภูเขาพาดผ่านภูมิประเทศสองฝั่ง'},
-  fenring:{puzzleCounts:{3:399,4:11937,5:145281},name:'วงแหวนหนองบึง',stage:9,seed:9349,layout:'fenring',collection:'original',description:'หนองบึงล้อมพื้นที่กลางแผนที่'},
-  fivezones:{puzzleCounts:{3:270,4:5628,5:59986},name:'ห้าถิ่น',stage:10,seed:10513,layout:'fivezones',collection:'original',description:'ภูมิประเทศทั้งห้าเรียงเป็นเขต'},
-  relictrail:{puzzleCounts:{3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'},
-  abyss:{puzzleCounts:{3:387,4:13787,5:180497},name:'ใต้ทะเลลึก',stage:1,seed:12491,layout:'abyss',collection:'creative',description:'ปะการัง ป่าสาหร่าย ร่องลึก และซากเรือ'},
-  searift:{puzzleCounts:{3:893,4:18787,5:205203},name:'รอยแยกก้นทะเล',stage:2,seed:13537,layout:'searift',collection:'creative',description:'ร่องลึกพาดกลางระหว่างปล่องน้ำร้อน'},
-  wreckyard:{puzzleCounts:{3:644,4:15781,5:186259},name:'สุสานเรือจม',stage:3,seed:14621,layout:'wreckyard',collection:'creative',description:'ซากเรือกระจุกตัวบนพื้นทรายมืด'},
-  coralcity:{puzzleCounts:{3:543,4:15532,5:205196},name:'เมืองปะการัง',stage:4,seed:15733,layout:'coralcity',collection:'creative',description:'แนวปะการังแบ่งเป็นเขตและทางเชื่อม'},
-  kelpmaze:{puzzleCounts:{3:585,4:13491,5:151341},name:'เขาวงกตสาหร่าย',stage:5,seed:16811,layout:'kelpmaze',collection:'creative',description:'ทางสาหร่ายคดเคี้ยวซ่อนพื้นที่ลับ'},
-  sinkhole:{puzzleCounts:{3:1058,4:21975,5:226780},name:'หลุมลึกกลางสมุทร',stage:6,seed:17903,layout:'sinkhole',collection:'creative',description:'ชั้นภูมิประเทศล้อมร่องลึกใจกลาง'},
-  lavavalley:{puzzleCounts:{3:594,4:17033,5:200272},name:'หุบเขาลาวา',stage:1,seed:19013,layout:'lavavalley',collection:'volcano',description:'ธารลาวาตัดผ่านลานหินและเถ้าถ่าน'},
-  craterring:{puzzleCounts:{3:753,4:17181,5:184858},name:'วงแหวนปากปล่อง',stage:2,seed:20117,layout:'craterring',collection:'volcano',description:'ภูมิประเทศเรียงเป็นวงรอบปากปล่อง'},
-  ashentemple:{puzzleCounts:{3:394,4:14555,5:217471},name:'วิหารเถ้าถ่าน',stage:3,seed:21221,layout:'ashentemple',collection:'volcano',description:'วิหารร้างกลางทุ่งเถ้ากับทางลาวา'}
+  mistwood:{puzzleCounts:{2:8,"3":391,"4":10413,"5":107191},name:'ป่าหมอก',stage:1,seed:1847,theme:'forest',description:'ป่าเขียวสลับภูมิประเทศหลากหลาย'},
+  highlands:{puzzleCounts:{2:11,"3":709,"4":14401,"5":134950},name:'หุบเขาหิน',stage:2,seed:9203,theme:'mountain',description:'แนวภูเขาและร่องรอยสัตว์ลึกลับ'},
+  wetlands:{puzzleCounts:{2:10,"3":443,"4":9709,"5":96065},name:'ลุ่มน้ำลึกลับ',stage:3,seed:4171,theme:'water',description:'สายน้ำตัดผ่านพื้นที่สำรวจ'},
+  sunlands:{puzzleCounts:{2:6,"3":305,"4":9924,"5":143253},name:'ทะเลทรายตะวัน',stage:4,seed:7341,theme:'desert',description:'ผืนทรายกว้างกับสิ่งปลูกสร้างปริศนา'},
+  shadowfen:{puzzleCounts:{2:2,"3":253,"4":8491,"5":114443},name:'หนองเงียบ',stage:5,seed:6089,theme:'swamp',description:'พื้นที่ชุ่มน้ำและเขตสัตว์ซ่อนตัว'},
+  crossroads:{puzzleCounts:{2:8,"3":416,"4":11131,"5":130997},name:'ดินแดนรอยต่อ',stage:6,seed:1207,description:'ภูมิประเทศทั้งห้าแบบผสมกัน'},
+  island:{puzzleCounts:{2:7,3:351,4:10042,5:122511},name:'เกาะกลางน้ำ',stage:7,seed:7117,layout:'island',collection:'original',description:'ผืนน้ำล้อมป่าและพื้นที่บนเกาะ'},
+  ridge:{puzzleCounts:{2:11,3:510,4:12259,5:135321},name:'แนวหินแบ่งแดน',stage:8,seed:8231,layout:'ridge',collection:'original',description:'แนวภูเขาพาดผ่านภูมิประเทศสองฝั่ง'},
+  fenring:{puzzleCounts:{2:7,3:399,4:11937,5:145281},name:'วงแหวนหนองบึง',stage:9,seed:9349,layout:'fenring',collection:'original',description:'หนองบึงล้อมพื้นที่กลางแผนที่'},
+  fivezones:{puzzleCounts:{2:7,3:270,4:5628,5:59986},name:'ห้าถิ่น',stage:10,seed:10513,layout:'fivezones',collection:'original',description:'ภูมิประเทศทั้งห้าเรียงเป็นเขต'},
+  relictrail:{puzzleCounts:{2:8,3:372,4:10403,5:115171},name:'เส้นทางโบราณ',stage:11,seed:11621,layout:'relictrail',collection:'original',description:'เสาหินและกระท่อมเรียงตามแนวทาง'},
+  abyss:{puzzleCounts:{2:4,3:387,4:13787,5:180497},name:'ใต้ทะเลลึก',stage:1,seed:12491,layout:'abyss',collection:'creative',description:'ปะการัง ป่าสาหร่าย ร่องลึก และซากเรือ'},
+  searift:{puzzleCounts:{2:23,3:893,4:18787,5:205203},name:'รอยแยกก้นทะเล',stage:2,seed:13537,layout:'searift',collection:'creative',description:'ร่องลึกพาดกลางระหว่างปล่องน้ำร้อน'},
+  wreckyard:{puzzleCounts:{2:17,3:644,4:15781,5:186259},name:'สุสานเรือจม',stage:3,seed:14621,layout:'wreckyard',collection:'creative',description:'ซากเรือกระจุกตัวบนพื้นทรายมืด'},
+  coralcity:{puzzleCounts:{2:11,3:543,4:15532,5:205196},name:'เมืองปะการัง',stage:4,seed:15733,layout:'coralcity',collection:'creative',description:'แนวปะการังแบ่งเป็นเขตและทางเชื่อม'},
+  kelpmaze:{puzzleCounts:{2:13,3:585,4:13491,5:151341},name:'เขาวงกตสาหร่าย',stage:5,seed:16811,layout:'kelpmaze',collection:'creative',description:'ทางสาหร่ายคดเคี้ยวซ่อนพื้นที่ลับ'},
+  sinkhole:{puzzleCounts:{2:29,3:1058,4:21975,5:226780},name:'หลุมลึกกลางสมุทร',stage:6,seed:17903,layout:'sinkhole',collection:'creative',description:'ชั้นภูมิประเทศล้อมร่องลึกใจกลาง'},
+  lavavalley:{puzzleCounts:{2:10,3:594,4:17033,5:200272},name:'หุบเขาลาวา',stage:1,seed:19013,layout:'lavavalley',collection:'volcano',description:'ธารลาวาตัดผ่านลานหินและเถ้าถ่าน'},
+  craterring:{puzzleCounts:{2:13,3:753,4:17181,5:184858},name:'วงแหวนปากปล่อง',stage:2,seed:20117,layout:'craterring',collection:'volcano',description:'ภูมิประเทศเรียงเป็นวงรอบปากปล่อง'},
+  ashentemple:{puzzleCounts:{2:5,3:394,4:14555,5:217471},name:'วิหารเถ้าถ่าน',stage:3,seed:21221,layout:'ashentemple',collection:'volcano',description:'วิหารร้างกลางทุ่งเถ้ากับทางลาวา'}
  };
  function seeded(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};}
  const COLORS=['#66d9ef','#ffbd69','#c4a1ff','#76e3a0','#ff8ea8'];
@@ -133,8 +133,8 @@
   return board;
  }
  const catalogueCache=new WeakMap();
- function clueCatalogue(board){
-  if(catalogueCache.has(board))return catalogueCache.get(board);
+ function clueCatalogue(board,count=3){
+  const key=count===2?2:3,cached=catalogueCache.get(board);if(cached?.[key])return cached[key];
   const deep=isDeepSea(board),volcano=isVolcano(board),terrainNames=volcano?VOLCANO_TERRAIN:deep?DEEP_TERRAIN:TERRAIN,out=[],types=Object.keys(terrainNames);
   const creatures=volcano?[['salamander','กิ้งก่าไฟ'],['phoenix','นกเพลิง']]:deep?[['jelly','แมงกะพรุน'],['squid','หมึกยักษ์']]:[['bear','หมี'],['cougar','เสือพูมา']];
   const structures=volcano?[['temple','วิหารร้าง'],['tower','หอสังเกตการณ์']]:deep?[['wreck','ซากเรือ'],['beacon','เสาสัญญาณ']]:[['stone','เสาหิน'],['shack','กระท่อม']];
@@ -143,6 +143,7 @@
   function pair(id,text,negativeText,fn){add(id,text,fn);add('not_'+id,negativeText,c=>!fn(c),true);}
   function near(filter,n){const targets=board.filter(filter);return c=>targets.some(p=>distance(c,p)<=n);}
   types.forEach(t=>add('not_terrain_'+t,'ไม่อยู่ใน'+terrainNames[t],c=>c.terrain!==t,true));
+  if(count===2)types.forEach(t=>add('duo_terrain_'+t,'อยู่บน'+terrainNames[t],c=>c.terrain===t));
   for(let i=0;i<types.length;i++)for(let j=i+1;j<types.length;j++)pair('terrain_'+types[i]+'_'+types[j],'อยู่บน'+terrainNames[types[i]]+' หรือ'+terrainNames[types[j]],'ไม่อยู่ใน'+terrainNames[types[i]]+' และไม่อยู่ใน'+terrainNames[types[j]],c=>[types[i],types[j]].includes(c.terrain));
   types.forEach(t=>pair('near_'+t,'อยู่ห่างจาก'+terrainNames[t]+'ไม่เกิน 1 ช่อง','ไม่อยู่ในระยะ 1 ช่องจาก'+terrainNames[t]+' (ต้องห่างอย่างน้อย 2 ช่อง)',near(c=>c.terrain===t,1)));
   const creatureLabels=creatures.map(([,label])=>label);
@@ -158,15 +159,19 @@
    pair('near_lava_two','อยู่ห่างจากลาวาไม่เกิน 2 ช่อง','อยู่ห่างจากลาวาอย่างน้อย 3 ช่อง',near(c=>c.terrain==='lava',2));
    pair('near_temple_one','อยู่ห่างจากวิหารร้างไม่เกิน 1 ช่อง','อยู่ห่างจากวิหารร้างอย่างน้อย 2 ช่อง',near(c=>c.structure==='temple',1));
   }
-  catalogueCache.set(board,out);return out;
+  catalogueCache.set(board,{...(cached||{}),[key]:out});return out;
  }
  function mapBoard(mapId){const map=MAPS[mapId];if(!map||mapId==='random')return null;const rng=seeded(map.seed);return map.collection==='creative'?makeAbyssBoard(rng,map.layout):map.collection==='volcano'?makeVolcanoBoard(rng,map.layout):makeBoard(rng,map.theme,map.layout);}
  function generate(count,rng=Math.random,mapId='random'){
-  if(![3,4,5].includes(count))throw new Error('Cryptid รองรับ 3–5 คน');
+  if(![2,3,4,5].includes(count))throw new Error('Cryptid รองรับ 2–5 คน');
   if(!MAPS[mapId])throw new Error('ไม่พบแผนที่ที่เลือก');
   const fixedBoard=mapBoard(mapId);
   for(let map=0;map<40;map++){
-   const board=fixedBoard||makeBoard(rng),catalogue=clueCatalogue(board).filter(c=>c.cells.length>=6&&c.cells.length<=90);
+   const board=fixedBoard||makeBoard(rng),catalogue=clueCatalogue(board,count).filter(c=>c.cells.length>=6&&c.cells.length<=90);
+   if(count===2){
+    const pairs=[];for(let i=0;i<catalogue.length;i++)for(let j=i+1;j<catalogue.length;j++){const common=catalogue[i].cells.filter(cell=>catalogue[j].cells.includes(cell));if(common.length===1)pairs.push({clues:[catalogue[i],catalogue[j]],solution:common[0]});}
+    if(pairs.length){const pair=pairs[Math.floor(rng()*pairs.length)];return {mapId,mapName:MAPS[mapId].name,board,clues:mix(pair.clues,rng).map(({id,text})=>({id,text})),solution:pair.solution};}continue;
+   }
    for(let attempt=0;attempt<180;attempt++){
     const target=board[Math.floor(rng()*board.length)].id;
     const eligible=mix(catalogue.filter(c=>c.cells.includes(target)),rng);if(eligible.length<count)continue;
@@ -177,21 +182,21 @@
   }
   throw new Error('สร้างปริศนาไม่สำเร็จ กรุณากดเริ่มใหม่');
  }
- function clueFor(a,id){return clueCatalogue(a.board).find(c=>c.id===a.clues?.[id]?.id);}
+ function clueFor(a,id){return clueCatalogue(a.board,a.order?.length).find(c=>c.id===a.clues?.[id]?.id);}
  function allows(a,id,cell){return !!clueFor(a,id)?.cells.includes(cell);}
  function blocked(a,cell){return Object.values(a.markers?.[cell]||{}).includes('no');}
  function legalCells(a,id,yes){return a.board.filter(c=>!blocked(a,c.id)&&!a.markers?.[c.id]?.[id]&&allows(a,id,c.id)===yes).map(c=>c.id);}
  function log(a,type,data={}){a.eventNo=(a.eventNo||0)+1;a.history||={};a.history['e'+a.eventNo]={type,turn:a.turn||0,...data};}
  function mark(a,id,cell,yes){a.markers||={};a.markers[cell]||={};a.markers[cell][id]=yes?'yes':'no';}
  function setup(r,ids,puzzle,order=ids){
-  if(!r||r.status!=='lobby'||r.gameMode!=='cryptid'||![3,4,5].includes(ids.length)||puzzle?.clues?.length!==ids.length||order.length!==ids.length||new Set(order).size!==ids.length||!order.every(id=>ids.includes(id)))return false;
-  const cat=clueCatalogue(puzzle.board),chosen=puzzle.clues.map(c=>cat.find(v=>v.id===c.id));
+  if(!r||r.status!=='lobby'||r.gameMode!=='cryptid'||![2,3,4,5].includes(ids.length)||puzzle?.clues?.length!==ids.length||order.length!==ids.length||new Set(order).size!==ids.length||!order.every(id=>ids.includes(id)))return false;
+  const cat=clueCatalogue(puzzle.board,ids.length),chosen=puzzle.clues.map(c=>cat.find(v=>v.id===c.id));
   if(chosen.some(c=>!c)||new Set(chosen.map(c=>c.id)).size!==ids.length)return false;
   const common=puzzle.board.filter(c=>chosen.every(clue=>clue.cells.includes(c.id)));
   if(common.length!==1||common[0].id!==puzzle.solution)return false;
   r.gamePlayers=copy(r.players);r.playerProfiles={...(r.playerProfiles||{}),...copy(r.players)};
   r.gamesPlayed=(Number(r.gamesPlayed)||0)+1;r.result=null;r.status='cryptid_playing';delete r.cryptidClueSet;
-  r.cryptid={version:1,mapId:puzzle.mapId||'random',mapName:puzzle.mapName||'สุ่มแผนที่',board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
+  r.cryptid={version:1,botDifficulty:r.cryptidBotDifficulty==='hard'?'hard':'normal',mapId:puzzle.mapId||'random',mapName:puzzle.mapName||'สุ่มแผนที่',board:copy(puzzle.board),clues:Object.fromEntries(order.map((id,i)=>[id,copy(puzzle.clues[i])])),solution:puzzle.solution,order:[...order],ready:{},phase:'ready',revision:0,initialIndex:0,turnIndex:0,turn:1,markers:{},history:{},eventNo:0};
   return true;
  }
  function actor(a){return a.phase==='initial'?a.order[(a.initialIndex||0)%a.order.length]:a.order[a.turnIndex||0];}
@@ -255,7 +260,7 @@
  }
  function manageBots(r,host,action){
   if(!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==host||!r.players?.[host]||r.players[host].bot)return false;
-  const cap=Number(r.cryptidCount||3);if(![3,4,5].includes(cap))return false;
+  const cap=Number(r.cryptidCount||3);if(![2,3,4,5].includes(cap))return false;
   r.playerProfiles||={};r.scores||={};
   if(action==='remove'){
    const bots=Object.keys(r.players).filter(p=>r.players[p].bot);if(!bots.length)return false;
@@ -271,7 +276,8 @@
  // The bot receives its own clue plus the public board/markers, never the solution
  // or another player's actual clue. Infer each opponent's possible clues from marks.
  function botMove(view,id,rng=Math.random){
-  const a=view,cat=clueCatalogue(a.board),own=cat.find(c=>c.id===a.clues?.[id]?.id);if(!own)return null;
+  const a=view,cat=clueCatalogue(a.board,a.order.length),own=cat.find(c=>c.id===a.clues?.[id]?.id);if(!own)return null;
+  if(a.botDifficulty==='hard')return hardBotMove(a,id,cat,own,rng);
   const pick=xs=>xs.length?xs[Math.floor(rng()*xs.length)]:null;
   if(['initial','penalty','extra'].includes(a.phase)){
    const cell=pick(legalCells(a,id,a.phase==='extra'));return cell?{id,type:a.phase==='extra'?'extra':a.phase,value:cell}:null;
@@ -291,13 +297,41 @@
   }
   return bestScore>0?best:{id,type:'search',value:pick(possible)};
  }
+ function hardBotMove(a,id,catalogue,own,rng){
+  const cat=catalogue.filter(c=>c.cells.length>=6&&c.cells.length<=90),marks=Object.entries(a.markers||{}),sets=new Map(cat.map(c=>[c.id,new Set(c.cells)]));
+  const matches=p=>cat.filter(c=>marks.every(([cell,m])=>!m[p]||sets.get(c.id).has(cell)===(m[p]==='yes')));
+  const choose=xs=>xs[Math.floor(rng()*xs.length)];
+  if(['initial','penalty','extra'].includes(a.phase)){
+   const yes=a.phase==='extra',legal=legalCells(a,id,yes),possible=matches(id);let best=[],score=-1;
+   for(const cell of legal){const remaining=possible.filter(c=>sets.get(c.id).has(cell)===yes).length;if(remaining>score){score=remaining;best=[cell];}else if(remaining===score)best.push(cell);}
+   return best.length?{id,type:a.phase,value:choose(best)}:null;
+  }
+  if(a.phase!=='action')return null;
+  const opponents=a.order.filter(p=>p!==id),options=Object.fromEntries(opponents.map(p=>[p,matches(p).filter(c=>c.id!==own.id)]));
+  let cells=own.cells.filter(cell=>!blocked(a,cell)&&opponents.every(p=>options[p].some(c=>sets.get(c.id).has(cell))));
+  if(!cells.length)cells=own.cells.filter(cell=>!blocked(a,cell));if(!cells.length)return null;
+  const support=Object.fromEntries(opponents.map(p=>[p,cells.map(cell=>options[p].filter(c=>sets.get(c.id).has(cell)))]));
+  let weights=cells.map((cell,i)=>opponents.reduce((w,p)=>w*(support[p][i].length/Math.max(1,options[p].length)),1));
+  let total=weights.reduce((s,w)=>s+w,0);if(!total){weights=cells.map(()=>1);total=cells.length;}weights=weights.map(w=>w/total);
+  const entropy=ws=>{const sum=ws.reduce((s,w)=>s+w,0);return sum?ws.reduce((h,w)=>w?h-w/sum*Math.log2(w/sum):h,0):0;};
+  const bestWeight=Math.max(...weights),bestCells=cells.filter((_,i)=>Math.abs(weights[i]-bestWeight)<1e-10);
+  if(cells.length===1||bestWeight>=.85)return {id,type:'search',value:choose(bestCells)};
+  const prior=entropy(weights);let best=[],bestGain=0;
+  for(const q of a.board.filter(c=>!blocked(a,c.id)))for(const target of opponents){
+   if(a.markers?.[q.id]?.[target]||!options[target].length)continue;
+   const yes=weights.map((w,i)=>{const clues=support[target][i];return w*(clues.length?clues.filter(c=>sets.get(c.id).has(q.id)).length/clues.length:0);});
+   const no=weights.map((w,i)=>w-yes[i]),probYes=yes.reduce((s,w)=>s+w,0),gain=prior-probYes*entropy(yes)-(1-probYes)*entropy(no);
+   if(gain>bestGain+1e-10){bestGain=gain;best=[{id,type:'question',value:{cell:q.id,target}}];}else if(gain>1e-10&&Math.abs(gain-bestGain)<1e-10)best.push({id,type:'question',value:{cell:q.id,target}});
+  }
+  return best.length?choose(best):{id,type:'search',value:choose(bestCells)};
+ }
  function nextBotAction(r,rng=Math.random){
   if(r?.gameMode!=='cryptid'||r.status!=='cryptid_playing')return null;
   const a=r.cryptid,bot=p=>!!r.players?.[p]?.bot;
   if(a.phase==='search')return {id:r.hostId,type:'reveal'};
   if(a.phase==='ready'){const id=a.order.find(p=>bot(p)&&!a.ready?.[p]);return id?{id,type:'ready'}:null;}
   const id=actor(a);if(!bot(id))return null;
-  const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,clues:{[id]:a.clues[id]}};
+  const view={board:a.board,markers:a.markers||{},order:a.order,phase:a.phase,botDifficulty:a.botDifficulty||'normal',clues:{[id]:a.clues[id]}};
   return botMove(view,id,rng);
  }
  const api={TERRAIN,DEEP_TERRAIN,VOLCANO_TERRAIN,COLORS,MAPS,isDeepSea,isVolcano,mapBoard,distance,coordinate,clueCatalogue,generate,setup,apply,allows,blocked,legalCells,actor,manageBots,botMove,nextBotAction,mix};

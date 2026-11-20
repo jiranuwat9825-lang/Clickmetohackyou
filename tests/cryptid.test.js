@@ -219,6 +219,22 @@ test('named map puzzle counts match every eligible unordered clue set for 3–5 
    }
   }
   enumerate(0,(1n<<BigInt(board.length))-1n,0);
-  assert.deepEqual(map.puzzleCounts,counts,mapId);
+  const duo=E.clueCatalogue(board,2).filter(c=>c.cells.length>=6&&c.cells.length<=90);let pairs=0;
+  for(let i=0;i<duo.length;i++)for(let j=i+1;j<duo.length;j++)if(duo[i].cells.filter(cell=>duo[j].cells.includes(cell)).length===1)pairs++;
+  assert.deepEqual(map.puzzleCounts,{2:pairs,...counts},mapId);
+ }
+});
+test('two-player Cryptid has exactly one shared answer on every map and honors duo clues',()=>{
+ for(const mapId of Object.keys(E.MAPS)){
+  const p=E.generate(2,seeded(15),mapId),pool=E.clueCatalogue(p.board,2),clues=p.clues.map(c=>pool.find(x=>x.id===c.id));
+  assert.ok(clues.every(Boolean));assert.deepEqual(p.board.filter(c=>clues.every(clue=>clue.cells.includes(c.id))).map(c=>c.id),[p.solution]);
+  const r={gameMode:'cryptid',status:'lobby',hostId:'a',players:{a:{name:'A'},b:{name:'B'}}};assert.ok(E.setup(r,['a','b'],p));assert.ok(E.allows(r.cryptid,'a',p.solution));assert.ok(E.allows(r.cryptid,'b',p.solution));
+ }
+});
+test('both Cryptid bot levels freeze difficulty and complete all themes at 2–5 players',()=>{
+ for(const difficulty of ['normal','hard'])for(const map of ['mistwood','abyss','lavavalley'])for(const n of [2,3,4,5])for(let seed=1;seed<=2;seed++){
+  const ids=Array.from({length:n},(_,i)=>'p'+i),r={gameMode:'cryptid',status:'lobby',hostId:'p0',cryptidBotDifficulty:difficulty,players:Object.fromEntries(ids.map(id=>[id,{name:id,bot:true}]))};assert.ok(E.setup(r,ids,E.generate(n,seeded(seed),map)));r.cryptidBotDifficulty=difficulty==='hard'?'normal':'hard';assert.equal(r.cryptid.botDifficulty,difficulty);
+  const rng=seeded(seed+800);for(let step=0;step<1200&&r.status!=='results';step++){const move=E.nextBotAction(r,rng);assert.ok(move,`${map}/${n}/${seed}/${r.cryptid.phase}`);act(r,move.id,move.type,move.value);validMarkers(r);}
+  assert.equal(r.status,'results');assert.equal(r.result.cell,r.cryptid.solution);
  }
 });
