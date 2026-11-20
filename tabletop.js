@@ -87,7 +87,7 @@ function renderTabletop(r){
    const actions=document.createElement('div');actions.className='tt-action-grid';controls.append(actions);
    for(const [id,rule] of Object.entries(TT.ACTIONS)){if(id==='income'||id==='aid'||id==='tax'||id==='exchange'){button(actions,rule.label+(rule.amount?' +'+rule.amount:'')+(rule.role?' · '+TT.ROLES[rule.role].name:''),'action',{action:id},me.coins>=10);}}
    const label=document.createElement('label');label.textContent='เลือกเป้าหมาย';label.htmlFor='ttTarget';controls.append(label);const target=document.createElement('select');target.id='ttTarget';const enemies=v.alive.filter(id=>id!==myId);if(!enemies.includes(tabletopUI.target))tabletopUI.target=enemies[0];for(const id of enemies){const o=document.createElement('option');o.value=id;o.textContent=tabletopName(r,id);target.append(o);}target.value=tabletopUI.target;target.onchange=()=>tabletopUI.target=target.value;controls.append(target);
-   for(const action of ['steal','assassinate','coup']){const rule=TT.ACTIONS[action],b=button(controls,rule.label+' · '+rule.cost+' เหรียญ','action',null,me.coins<rule.cost||me.coins>=10&&action!=='coup');b.onclick=()=>tabletopSend('action',{action,target:target.value});}
+   for(const action of ['steal','assassinate','coup']){const rule=TT.ACTIONS[action],label=action==='steal'?'ขโมย 2 เหรียญจากเป้าหมาย':rule.label+' · '+rule.cost+' เหรียญ',b=button(controls,label,'action',null,me.coins<rule.cost||me.coins>=10&&action!=='coup');b.onclick=()=>tabletopSend('action',{action,target:target.value});}
    if(me.coins>=10){const p=document.createElement('p');p.className='tt-hint';p.textContent='มีตั้งแต่ 10 เหรียญ ต้องรัฐประหาร';controls.append(p);}
   }
   if(!done&&v.responders.includes(myId)&&!v.pending.passed?.[myId]){
