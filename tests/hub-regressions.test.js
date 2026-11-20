@@ -101,6 +101,14 @@ test('new room codes use four digits and skip an existing code',async()=>{
  h.run('testRoom.roomCode="123456"');h.setRoom(h.run('testRoom'));
  assert.equal(await h.run('generateRoomCode()'),'1000','an older six-digit room does not block four-digit codes');
 });
+test('6 nimmt creates a room without categories, fills bots and starts from lobby controls',async()=>{
+ const h=loadHub(),r=base('take6');r.status='lobby';r.players={a:r.players.a};r.arcadeCount=2;h.setRoom(r);
+ h.run('chooseMode("take6")');h.element('arcadeCreateCount').value='2';h.element('durationInput').value='2';h.run('generateRoomCode=async()=>"4231"');
+ await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'take6');assert.equal(h.getRoom().categoryPack,null);assert.equal(h.getRoom().arcadeCount,2);
+ h.sync();await h.element('arcadeFillBots').onclick();h.sync();h.run('renderArcadeRoom(roomState)');
+ await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'arcade_playing');assert.equal(h.getRoom().arcade.order.length,2);
+ h.sync();h.run('renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
+});
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
  const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);

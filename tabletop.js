@@ -59,7 +59,7 @@ function renderTabletopRoom(r){
  showScreen(r.status==='lobby'?'lobbyScreen':'tabletopScreen');
  if(r.status!=='lobby'){renderTabletop(r);return;}
  renderLobbySettingsToggle();renderTabletopLobby(r);
- for(const id of ['cheeseLobbySettings','cryptidLobbySettings','avalonLobbySettings','insiderLobbySettings','whoCustomLobbySettings','lobbyCategoryPanel','lobbyFormatPanel','lobbySpyFormatPanel'])$(id).hidden=true;
+ for(const id of ['arcadeLobbySettings','cheeseLobbySettings','cryptidLobbySettings','avalonLobbySettings','insiderLobbySettings','whoCustomLobbySettings','lobbyCategoryPanel','lobbyFormatPanel','lobbySpyFormatPanel'])$(id).hidden=true;
  const ids=Object.keys(r.players||{});$('playerList').replaceChildren();
  ids.forEach((id,i)=>{const el=document.createElement('div');el.className='player-row';el.innerHTML='<span class="player-rank">'+(i+1)+'</span>'+playerLabelHTML(id,r)+(id===r.hostId?'<span class="host-tag">HOST</span>':'');if(isHost&&id!==myId){const b=document.createElement('button');b.type='button';b.className='lobby-kick-btn';b.textContent='เตะออก';b.onclick=()=>kickLobbyPlayer(id);el.append(b);}$('playerList').append(el);});
  const count=Number(r.tabletopCount||4);$('startBtn').hidden=!isHost;$('startBtn').disabled=tabletopBusy||ids.length!==count;$('startBtn').textContent=ids.length===count?'เริ่มเกม':`ต้องมีผู้เล่น ${count} คน (${ids.length}/${count})`;
