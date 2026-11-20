@@ -7,6 +7,16 @@ function room(mode='take6',count=2){
  return {gameMode:mode,status:'lobby',hostId:'p0',arcadeCount:count,players,scores:{},gamesPlayed:0};
 }
 const copy=x=>JSON.parse(JSON.stringify(x));
+// Match RTDB's wire format: empty arrays/objects and null children disappear.
+function stored(x){
+ if(x==null)return undefined;
+ if(Array.isArray(x)){const values=x.map(stored);return values.length?values:undefined;}
+ if(typeof x==='object'){
+  const entries=Object.entries(x).map(([k,v])=>[k,stored(v)]).filter(([,v])=>v!==undefined);
+  return entries.length?Object.fromEntries(entries):undefined;
+ }
+ return x;
+}
 test('6 nimmt deals unique numbered cards and hides opponents and pending picks',()=>{
  const r=room();assert.equal(E.setup(r,Object.keys(r.players),()=>.31),true);
  const a=r.arcade,all=[...a.rows.flat(),...a.order.flatMap(id=>a.people[id].hand)];
@@ -56,6 +66,17 @@ test('6 nimmt bots complete to 66 with a single award and JSON room state',()=>{
   assert.deepEqual(copy(r),r);
  }
 });
+test('6 nimmt plays an entire bot match after every Firebase-shaped snapshot',()=>{
+ let n=919;const rng=()=>((n=(1664525*n+1013904223)>>>0)/4294967296);
+ let r=room('take6',4);E.setup(r,Object.keys(r.players),rng);r=stored(r);
+ assert.equal(E.view(r,'p0').people.p0.count,10);
+ for(let i=0;i<2500&&r.status!=='results';i++){
+  const move=E.nextBotAction(r,rng);assert.ok(move);
+  assert.equal(E.apply(r,move.id,move.type,move.value,r.arcade.revision,rng),true);
+  r=stored(r);
+ }
+ assert.equal(r.status,'results');assert.ok(r.result.winners.length);
+});
 test('Just One protects the word, removes duplicate clues and allows one answer',()=>{
  const r=room('just_one',3);assert.equal(E.setup(r,Object.keys(r.players),()=>.53),true);
  const guesser=r.arcade.order[0],helpers=r.arcade.order.slice(1),answer=r.arcade.cards[0][0];
@@ -84,6 +105,18 @@ test('Just One wrong guesses discard two cards, and thirteen cards finish once',
  assert.equal(r.status,'results');assert.equal(r.arcade.won,11);assert.equal(r.arcade.discarded,2);
  assert.equal(r.result.winners.length,5);assert.equal(Object.values(r.scores).reduce((s,n)=>s+n,0),5);
 });
+test('Just One survives missing clue containers through all thirteen cards',()=>{
+ let r=room('just_one',3);E.setup(r,Object.keys(r.players),()=>.21);r=stored(r);
+ for(let turn=0;turn<13;turn++){
+  const a=r.arcade,guesser=a.order[turn%3],helpers=a.order.filter(id=>id!==guesser),word=a.cards[a.cardIndex][0];
+  assert.equal(E.view(r,guesser).number,null);
+  assert.equal(E.apply(r,guesser,'choose_word',0,a.revision),true);r=stored(r);
+  for(const [i,id] of helpers.entries()){assert.equal(E.apply(r,id,'clue',['คำใบ้'+i,'อีกคำ'+i],r.arcade.revision),true);r=stored(r);}
+  assert.equal(E.apply(r,helpers[0],'show',null,r.arcade.revision),true);r=stored(r);
+  assert.equal(E.apply(r,guesser,'answer',word,r.arcade.revision),true);r=stored(r);
+ }
+ assert.equal(r.status,'results');assert.equal(r.arcade.won,13);
+});
 test('Wavelength keeps target private, lets teammates set dial and reveals once',()=>{
  const r=room('wavelength',4);E.setup(r,Object.keys(r.players),()=>.4);
  const a=r.arcade,psychic=a.order[0],setter=a.order[1],other=a.order[2],target=a.targets[0];
@@ -110,6 +143,17 @@ test('Wavelength eight rounds produce a single shared award',()=>{
  assert.equal(r.status,'results');assert.equal(r.arcade.total,32);assert.deepEqual(r.result.winners,r.arcade.order);
  assert.equal(r.scores.p0,1);assert.equal(r.scores.p1,1);
 });
+test('Wavelength survives omitted dial and clue fields after Firebase round trips',()=>{
+ let r=room('wavelength',2);E.setup(r,Object.keys(r.players),()=>.16);r=stored(r);
+ for(let round=1;round<=8;round++){
+  const a=r.arcade,psychic=a.order[(round-1)%2],setter=a.order[round%2];
+  assert.equal(E.view(r,setter).dial,null);
+  for(const [id,type,value] of [[psychic,'clue','สวน'],[setter,'dial',a.targets[round-1]],[setter,'reveal',null],[setter,'next',null]]){
+   assert.equal(E.apply(r,id,type,value,r.arcade.revision),true);r=stored(r);
+  }
+ }
+ assert.equal(r.status,'results');
+});
 test('Codenames has a balanced secret board and restricts who may clue and guess',()=>{
  const r=room('codenames',4);E.setup(r,Object.keys(r.players),()=>.37);
  const a=r.arcade,master=a.spymasters.red,guesser=a.teams.red.find(id=>id!==master),blue=a.teams.blue.find(id=>id!==a.spymasters.blue);
@@ -133,6 +177,14 @@ test('Codenames assassin ends immediately and awards only the opposing team',()=
  assert.equal(r.status,'results');assert.deepEqual(r.result.winners,a.teams.blue);
  for(const id of a.order)assert.equal(r.scores[id]||0,a.teams.blue.includes(id)?1:0);
  assert.equal(E.apply(r,guesser,'code_guess',0,2),false);
+});
+test('Codenames restores an empty revealed list from Firebase',()=>{
+ let r=room('codenames',4);E.setup(r,Object.keys(r.players),()=>.32);r=stored(r);
+ const a=r.arcade,master=a.spymasters.red,guesser=a.teams.red.find(id=>id!==master),own=a.keys.indexOf('red');
+ assert.equal(E.view(r,guesser).cells[own].key,undefined);
+ assert.equal(E.apply(r,master,'code_clue',{word:'สัตว์',number:1},r.arcade.revision),true);r=stored(r);
+ assert.equal(E.apply(r,guesser,'code_guess',own,r.arcade.revision),true);r=stored(r);
+ assert.equal(E.view(r,guesser).cells[own].key,'red');
 });
 function fakeReady(){
  const r=room('fake_artist',5);E.setup(r,Object.keys(r.players),()=>.23);
@@ -169,4 +221,14 @@ test('Fake Artist survives a vote miss or a correct final guess',()=>{
   assert.equal(r.status,'results');assert.deepEqual(r.result.winners,[a.master,fake]);
   assert.equal(r.scores[a.master],1);assert.equal(r.scores[fake],1);
  }
+});
+test('Fake Artist restores empty strokes and votes from Firebase',()=>{
+ let r=room('fake_artist',5);E.setup(r,Object.keys(r.players),()=>.26);r=stored(r);
+ const master=r.arcade.master,fake=r.arcade.fake,artists=r.arcade.artists;
+ assert.equal(E.view(r,fake).strokes.length,0);
+ assert.equal(E.apply(r,master,'topic',{category:'สัตว์',secret:'วาฬ'},r.arcade.revision),true);r=stored(r);
+ for(let i=0;i<artists.length*2;i++){assert.equal(E.apply(r,artists[i%artists.length],'draw',[[10,10],[20,20]],r.arcade.revision),true);r=stored(r);}
+ for(const id of artists){assert.equal(E.apply(r,id,'vote',id===fake?artists.find(p=>p!==fake):fake,r.arcade.revision),true);r=stored(r);}
+ assert.equal(r.arcade.phase,'fake_guess');assert.equal(E.apply(r,fake,'fake_guess','วาฬ',r.arcade.revision),true);
+ assert.equal(r.status,'results');
 });

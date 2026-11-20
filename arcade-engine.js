@@ -13,6 +13,24 @@
  const SPECTRA=[['เงียบ','เสียงดัง'],['ธรรมดา','หรูหรา'],['น่าเบื่อ','ตื่นเต้น'],['โบราณ','ทันสมัย'],['เบา','หนัก'],['ปลอดภัย','เสี่ยง'],['ร้อน','เย็น'],['ราคาถูก','ราคาแพง'],['เล็ก','ใหญ่'],['ช้า','เร็ว'],['คุ้นเคย','แปลกใหม่'],['มีประโยชน์','ไร้ประโยชน์'],['เป็นทางการ','สบาย ๆ'],['ส่วนตัว','สาธารณะ'],['จริงจัง','ขำขัน'],['ธรรมชาติ','ประดิษฐ์'],['ง่าย','ยาก'],['น่ากลัว','น่ารัก'],['สั้น','ยาว'],['หวาน','ขม'],['สะอาด','สกปรก'],['สำคัญน้อย','สำคัญมาก']];
  const norm=s=>String(s||'').normalize('NFC').trim().toLocaleLowerCase().replace(/\s+/g,' ');
  const clone=x=>JSON.parse(JSON.stringify(x));
+ // Realtime Database omits empty arrays, objects and nulls. Restore the
+ // transient containers after every snapshot, including before bot decisions.
+ function hydrate(a){
+  a.history||={};a.eventNo||=0;
+  if(a.mode==='take6'){
+   a.picks||={};a.queue||=[];a.waiting??=null;
+   for(const id of a.order){const p=a.people[id];p.hand||=[];p.taken||=[];}
+  }else if(a.mode==='just_one'){
+   a.clues||={};a.removed||=[];a.picked??=null;
+  }else if(a.mode==='wavelength'){
+   a.dial??=null;a.clue??='';a.last??=null;
+  }else if(a.mode==='codenames'){
+   a.revealed||=[];a.clue??=null;a.guesses||=0;
+  }else if(a.mode==='fake_artist'){
+   a.strokes||=[];a.votes||={};a.category??='';a.secret??='';a.last??=null;
+  }
+  return a;
+ }
  const shuffle=(xs,rng=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const bullheads=n=>n===55?7:n%11===0?5:n%10===0?3:n%5===0?2:1;
  const log=(a,type,data={})=>{a.eventNo++;a.history['e'+a.eventNo]={type,...data};};
@@ -217,6 +235,7 @@
   if(type!=='abort'&&!r.arcade.order.includes(id))return false;
   if(type==='abort'&&id!==r.hostId)return false;
   const next=clone(r);
+  hydrate(next.arcade);
   const valid=type==='abort'?(next.status='results',next.arcade.phase='finished',next.result={type:r.gameMode,aborted:true,points:0},log(next.arcade,'abort'),true):
    (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value)||next.arcade.mode==='codenames'&&codeMove(next,id,type,value)||next.arcade.mode==='fake_artist'&&fakeMove(next,id,type,value));
   if(!valid)return false;
@@ -224,7 +243,8 @@
   Object.assign(r,next);return true;
  }
  function view(r,id){
-  const a=r?.arcade;if(!a||!GAMES[a.mode])return null;
+  if(!r?.arcade||!GAMES[r.arcade.mode])return null;
+  const a=hydrate(clone(r.arcade));
   if(a.mode==='just_one'){
    const guesser=a.order[a.turn%a.order.length],reviewer=a.order.find(p=>p!==guesser),isGuesser=id===guesser,allClues=Object.entries(a.clues).flatMap(([p,list])=>list.map((word,i)=>({key:p+':'+i,by:p,word,removed:a.removed.includes(p+':'+i)})));
    return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],guesser,reviewer,number:a.picked===null?null:a.picked+1,word:!isGuesser||r.status==='results'?a.cards[a.cardIndex]?.[a.picked]:undefined,

@@ -3,11 +3,32 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const loadHub=require('./hub-harness');
 const plain=v=>JSON.parse(JSON.stringify(v));
+function databaseShape(value){
+ if(value==null)return undefined;
+ if(Array.isArray(value)){const list=value.map(databaseShape);return list.length?list:undefined;}
+ if(typeof value==='object'){
+  const entries=Object.entries(value).map(([k,v])=>[k,databaseShape(v)]).filter(([,v])=>v!==undefined);
+  return entries.length?Object.fromEntries(entries):undefined;
+ }
+ return value;
+}
 function base(mode='whoami_time'){
  const players={a:{name:'A'},b:{name:'B'},c:{name:'C'}};
  return {gameMode:mode,status:'playing',hostId:'a',players,gamePlayers:structuredClone(players),playerProfiles:structuredClone(players),roles:{a:'แมว',b:'สุนัข',c:'ช้าง'},scores:{a:0,b:0,c:0},gamesPlayed:1,turnOrder:['a','b','c'],currentTurnIndex:0,currentRound:1,totalRounds:2,settingValue:1,attempts:{a:1,b:1,c:1},whoTimeRemaining:{a:60000,b:60000,c:60000},turnStartedAt:990000,lastActivityAt:1_000_000};
 }
 test('all game scripts initialize without a splash screen or missing element errors',()=>{const h=loadHub();assert.equal(h.run('typeof renderCryptid'), 'function');assert.deepEqual(h.errors,[]);});
+test('all five arcade screens render after Firebase drops empty children',()=>{
+ for(const [mode,count] of [['take6',4],['just_one',3],['wavelength',2],['codenames',4],['fake_artist',5]]){
+  const h=loadHub(),r=base(mode);r.status='lobby';r.arcadeCount=count;
+  r.players=Object.fromEntries(Array.from({length:count},(_,i)=>[String.fromCharCode(97+i),{name:'Player '+i}]));
+  h.setRoom(r);assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+  h.setRoom(databaseShape(plain(h.run('testRoom'))));
+  h.run('renderArcadeRoom(roomState)');
+  assert.equal(h.element('arcadeScreen').hidden,false,mode);
+  assert.ok(h.element('arcadeContent').children.length>0,mode);
+  assert.deepEqual(h.errors,[],mode);
+ }
+});
 test('room browser names all new games before optional game scripts load',()=>{
  const h=loadHub({addons:false});
  for(const [mode,title] of [['take6','6 nimmt!'],['just_one','Just One'],['wavelength','Wavelength'],['codenames','Codenames'],['fake_artist','A Fake Artist Goes to New York']])assert.equal(h.run(`modeTitle(${JSON.stringify(mode)})`),title);
