@@ -217,11 +217,22 @@ test('Cryptid catalogue button always lists all 51 clues, ignores legacy set met
  }
 });
 test('Cryptid player-count cards change creation and saved lobby counts and are host-only',async()=>{
- const h=loadHub(),create=h.element('cryptidCreateCountChoices').children;assert.equal(create.length,3);assert.deepEqual(create.map(b=>b.dataset.count),['3','4','5']);
- create[2].onclick();assert.equal(h.element('cryptidCreateCount').value,'5');h.run('nameConfirmed=true;myName="Test"');h.element('openCreateBtn').onclick();assert.equal(h.element('cryptidCreateCount').value,'3');
+ const h=loadHub(),create=h.element('cryptidCreateCountChoices').children;assert.equal(create.length,4);assert.deepEqual(create.map(b=>b.dataset.count),['2','3','4','5']);
+ create[3].onclick();assert.equal(h.element('cryptidCreateCount').value,'5');h.run('nameConfirmed=true;myName="Test"');h.element('openCreateBtn').onclick();assert.equal(h.element('cryptidCreateCount').value,'3');
  const r=base('cryptid');r.status='lobby';r.cryptidCount=3;h.setRoom(r);h.run('renderCryptidLobby(roomState)');const buttons=h.element('cryptidLobbyCountChoices').children;
- buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'5');assert.equal(h.element('cryptidLobbySave').disabled,false);await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidCount,5);
- h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[2].onclick();assert.equal(h.element('cryptidLobbyCount').value,'3');
+ buttons[3].onclick();assert.equal(h.element('cryptidLobbyCount').value,'5');assert.equal(h.element('cryptidLobbySave').disabled,false);await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidCount,5);
+ h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');for(const b of buttons)assert.equal(b.disabled,true);buttons[3].onclick();assert.equal(h.element('cryptidLobbyCount').value,'3');
+});
+test('Cryptid difficulty is saved by host, applied to two-player games and read-only for guests',async()=>{
+ const h=loadHub(),r=base('cryptid');r.status='lobby';delete r.players.c;r.cryptidCount=2;r.cryptidMap='fenring';h.setRoom(r);h.run('renderCryptidLobby(roomState);setTimeout=fn=>fn()');
+ const choices=h.element('cryptidLobbyBotDifficultyChoices').children;assert.equal(h.element('cryptidLobbyBotDifficulty').value,'normal');choices[1].onclick();assert.equal(h.element('cryptidLobbySave').disabled,false);await h.element('cryptidLobbySave').onclick();assert.equal(h.getRoom().cryptidBotDifficulty,'hard');h.sync();h.run('renderCryptidLobby(roomState)');await h.run('cryptidStart()');assert.equal(h.getRoom().cryptid.order.length,2);assert.equal(h.getRoom().cryptid.botDifficulty,'hard');
+ h.setRoom(r,'b');h.run('renderCryptidLobby(roomState)');assert.ok(choices.every(c=>c.disabled));choices[1].onclick();assert.equal(h.element('cryptidLobbyBotDifficulty').value,'normal');
+});
+test('three new games create rooms without categories, save counts, fill bots and start from real UI handlers',async()=>{
+ for(const mode of ['coup','liar_deck','liar_dice']){
+  const h=loadHub(),r=base(mode);r.status='lobby';h.setRoom(r);h.run('chooseMode("'+mode+'")');h.element('tabletopCreateCount').value='2';h.element('durationInput').value='2';h.run('generateRoomCode=async()=>"123456"');await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,mode);assert.equal(h.getRoom().tabletopCount,2);assert.equal(h.getRoom().categoryPack,null);
+  const lobby=h.getRoom();h.setRoom(lobby);h.run('renderRoom(roomState)');h.element('tabletopLobbyCount').value='3';await h.element('tabletopLobbySave').onclick();assert.equal(h.getRoom().tabletopCount,3);h.sync();await h.element('tabletopFillBots').onclick();assert.equal(Object.keys(h.getRoom().players).length,3);h.sync();h.run('renderRoom(roomState)');await h.element('startBtn').onclick();assert.equal(h.getRoom().status,'tabletop_playing');assert.equal(h.getRoom().tabletop.order.length,3);assert.deepEqual(h.errors,[]);
+ }
 });
 
 test('custom settings determine preparation time and attempts, freeze per game and default for legacy rooms',()=>{

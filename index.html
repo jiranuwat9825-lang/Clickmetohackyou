@@ -65,6 +65,9 @@
 <button type="button" class="choice mode" data-mode="cheese"><strong>Steal Cheese</strong><small>หนูขโมยชีส · 4–8 คน</small></button>
 <button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 8–10 คน</small></button>
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid</strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
+<button type="button" class="choice mode" data-mode="coup"><strong>Coup</strong><small>บลัฟบทบาท · ชิงอำนาจ</small></button>
+<button type="button" class="choice mode" data-mode="liar_deck"><strong>Liar’s Deck</strong><small>ลงไพ่คว่ำ · จับคำโกหก</small></button>
+<button type="button" class="choice mode" data-mode="liar_dice"><strong>Liar’s Dice</strong><small>ทอยลับ · ประมูลหน้าเต๋า</small></button>
 </div>
 <div id="spyFormatSection" class="mode-formats" hidden>
 <label>รูปแบบ Spyfall</label><div class="format-grid">
@@ -80,6 +83,7 @@
 </div>
 </div>
 <div id="createDetails" hidden>
+<div id="tabletopCreateSettings" class="lobby-category" hidden><h3 id="tabletopCreateTitle">ตั้งค่าเกม</h3><label for="tabletopCreateCount">จำนวนผู้เล่น</label><select id="tabletopCreateCount"><option value="2">2 คน</option><option value="3">3 คน</option><option value="4" selected>4 คน</option></select><p id="tabletopCreateSummary" class="muted hint"></p></div>
 <div id="whoCustomCreateSettings" class="lobby-category" hidden>
  <h3>ตั้งค่าผู้เล่นตั้งคำเอง</h3>
  <div class="insider-settings-grid">
@@ -142,6 +146,11 @@
  <div id="cryptidBotTools" class="cryptid-bot-tools"><p id="cryptidBotCount" class="muted"></p><div class="cryptid-buttons"><button id="cryptidAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="cryptidFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="cryptidRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">บอทเล่นเองเมื่อถึงตา และใช้เบาะแสของตนกับข้อมูลบนกระดาน</p></div>
  <details class="cryptid-beta-note"><summary>เกี่ยวกับโหมดนี้</summary><p>สำหรับทดสอบกับเพื่อน เบาะแสซ่อนเฉพาะหน้าจอ แต่ข้อมูลยังใช้ระบบห้องร่วมกันของเว็บเดิม จึงยังไม่เหมาะกับการแข่งขันที่ต้องป้องกันการเปิดดูข้อมูล</p></details>
 </div>
+<div id="tabletopLobbySettings" class="lobby-category" hidden>
+ <h3 id="tabletopLobbyTitle">ตั้งค่าโต๊ะ</h3><label for="tabletopLobbyCount">จำนวนผู้เล่น</label><select id="tabletopLobbyCount"></select>
+ <button id="tabletopLobbySave" type="button" class="btn soft">บันทึกการตั้งค่า</button>
+ <div id="tabletopBotTools" class="tabletop-bot-tools"><p id="tabletopBotCount" class="muted"></p><div class="tabletop-buttons"><button id="tabletopAddBot" type="button" class="btn soft">เพิ่มบอท 1 ตัว</button><button id="tabletopFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="tabletopRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div></div>
+</div>
 <div id="avalonLobbySettings" class="lobby-category avalon-settings" hidden><label for="avalonLobbyCount">จำนวนผู้เล่น Avalon</label><select id="avalonLobbyCount"><option value="8">8 คน · น้ำเงิน 5 / แดง 3</option><option value="9">9 คน · น้ำเงิน 6 / แดง 3</option><option value="10">10 คน · น้ำเงิน 6 / แดง 4</option></select><label class="avalon-switch"><input type="checkbox" id="avalonLobbyAngel"> เปิด Angel</label><button id="avalonLobbySave" type="button" class="btn soft" disabled>บันทึกการตั้งค่า</button><div id="avalonBotTools" class="avalon-bot-tools" hidden><p id="avalonBotCount" class="muted"></p><div class="avalon-buttons"><button id="avalonAddBot" type="button" class="btn soft">＋ เพิ่มบอท 1 ตัว</button><button id="avalonFillBots" type="button" class="btn primary">เติมบอทให้ครบ</button><button id="avalonRemoveBots" type="button" class="btn outline">ลบบอททั้งหมด</button></div><p class="muted hint">สำหรับทดสอบเกม · บอทเล่นอัตโนมัติเมื่อถึงตา คุณยังต้องเล่นบทบาทของคุณเอง</p></div></div>
 <div id="lobbyCategoryPanel" class="lobby-category">
  <label for="lobbyCategorySelect">หมวดคำสำหรับเกมนี้</label>
@@ -186,6 +195,7 @@
 </section>
 <section id="cheeseScreen" class="panel page cheese-page" hidden><div id="cheeseContent"></div></section>
 <section id="cryptidScreen" class="panel page cryptid-page" hidden><div id="cryptidContent"></div></section>
+<section id="tabletopScreen" class="panel page tabletop-page" hidden><div id="tabletopContent"></div></section>
 <section id="avalonScreen" class="panel page avalon-page" hidden><div class="section-head"><div><h2>สงครามแห่งอวาลอน</h2></div></div><div id="avalonContent" aria-live="polite"></div></section>
 <section id="avalonResultsScreen" class="panel page avalon-page avalon-results-page" hidden><div class="section-head"><div><h2>สรุปผลสงครามแห่งอวาลอน</h2></div></div><div id="avalonResultsContent" aria-live="polite"></div></section>
 <section id="insiderScreen" class="panel page insider-page" hidden>
@@ -294,7 +304,7 @@
 </div>
 </section>
 </main>
-<footer> Party Game Hub · Earthkung &amp; GPT</footer>
+<footer>Party Game Hub · Make by Ai</footer>
 </div>
 <div id="categoryHistoryOverlay" class="dialog-backdrop" hidden>
  <section class="category-history-card" role="dialog" aria-modal="true" aria-labelledby="categoryHistoryTitle">
@@ -323,14 +333,16 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=cryptid-duo-settings-20261120"></script>
+<script src="script.js?v=table-games-20261120"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
 <script src="avalon.js?v=avalon-eight-20261119"></script>
-<script src="cryptid-engine.js?v=cryptid-duo-20261120"></script>
-<script src="cryptid.js?v=cryptid-duo-settings-20261120"></script>
+<script src="cryptid-engine.js?v=table-games-20261120"></script>
+<script src="cryptid.js?v=table-games-20261120"></script>
 <script src="cheese-engine.js?v=hub-update-20261118"></script>
 <script src="cheese.js?v=streamlined-20261119"></script>
-<script src="game-desk.js?v=cryptid-duo-settings-20261120"></script>
+<script src="tabletop-engine.js?v=table-games-20261120"></script>
+<script src="tabletop.js?v=table-games-20261120"></script>
+<script src="game-desk.js?v=table-games-20261120"></script>
 </body>
 </html>
