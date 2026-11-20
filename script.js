@@ -2455,8 +2455,9 @@ async function generateRoomCode(){
  const snap=await db.ref('rooms').once('value');
  const rooms=snap.val()||{};
  const used=new Set(Object.values(rooms).filter(Boolean).map(r=>String(r.roomCode||'')));
- for(let attempt=0;attempt<80;attempt++){
-  const code=String(Math.floor(100000+Math.random()*900000));
+ const start=Math.floor(Math.random()*9000);
+ for(let attempt=0;attempt<9000;attempt++){
+  const code=String(1000+(start+attempt)%9000);
   if(!used.has(code))return code;
  }
  throw new Error('ไม่สามารถสร้างเลขห้องที่ไม่ซ้ำได้ กรุณาลองอีกครั้ง');

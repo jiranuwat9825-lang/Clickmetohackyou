@@ -94,6 +94,14 @@ test('creating a room snapshots the chosen mode across asynchronous room-code lo
  await h.element('createConfirmBtn').onclick();assert.equal(h.getRoom().gameMode,'cryptid');assert.equal(h.getRoom().cryptidClueSet,undefined);
 });
 
+test('new room codes use four digits and skip an existing code',async()=>{
+ const h=loadHub(),r=base('spyfall');r.roomCode='1000';h.setRoom(r);
+ h.run('Math=Object.create(Math);Math.random=()=>0');
+ assert.equal(await h.run('generateRoomCode()'),'1001');
+ h.run('testRoom.roomCode="123456"');h.setRoom(h.run('testRoom'));
+ assert.equal(await h.run('generateRoomCode()'),'1000','an older six-digit room does not block four-digit codes');
+});
+
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
  const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);
  assert.equal(h.run('insiderSetup(testRoom,Object.keys(testRoom.players))'),true);assert.equal(h.run('testRoom.insiderDeadline'),1_090_000);
