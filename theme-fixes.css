@@ -1,0 +1,23 @@
+/* Keep button foreground and background paired in every interaction state. */
+:root { --primary-bg:#252823; --primary-ink:#fff; --hover-surface:#e7eae4; }
+:root[data-theme="dark"] { --primary-bg:#d8e3ee; --primary-ink:#17212c; --hover-surface:#303d4e; }
+.btn.primary,.btn.finish-match-btn { background:var(--primary-bg); color:var(--primary-ink); border-color:var(--primary-bg); }
+.btn { transition:transform .15s,filter .15s; }
+.btn.primary:not(:disabled):hover,.btn.finish-match-btn:not(:disabled):hover { background:var(--primary-bg); color:var(--primary-ink); filter:brightness(.92); }
+:root[data-theme="dark"] :is(.btn.soft,.btn.outline):not(:disabled):hover { color:var(--text); background:var(--hover-surface); border-color:var(--accent); filter:none; }
+:root[data-theme="dark"] :is(.choice,.format-choice,.shelf-tile,.cryptid-count-choice,.cryptid-collection-choice,.avatar-option,.manager-item,.vote-choice,.lobby-format-choice,.avatar-filter,.avatar-filter-btn,.spy-word-option) { color:var(--text); background:var(--surface); border-color:var(--line); }
+:root[data-theme="dark"] :is(.choice,.format-choice,.shelf-tile,.cryptid-count-choice,.cryptid-collection-choice,.avatar-option,.manager-item,.vote-choice,.lobby-format-choice,.avatar-filter,.avatar-filter-btn,.spy-word-option):hover:not(:disabled),
+:root[data-theme="dark"] :is(.choice,.format-choice,.cryptid-count-choice,.cryptid-collection-choice,.avatar-option,.manager-item,.vote-choice,.lobby-format-choice,.avatar-filter,.avatar-filter-btn,.spy-word-option).selected { color:var(--text); background:var(--hover-surface); border-color:var(--accent); }
+:root[data-theme="dark"] :is(.choice,.format-choice,.shelf-tile,.manager-item,.vote-choice) :is(strong,b,span) { color:inherit; }
+:root[data-theme="dark"] .cryptid-map-choice[data-collection] { background:var(--surface); color:var(--text); border-color:var(--line); }
+:root[data-theme="dark"] .cryptid-map-choice[data-collection]:hover:not(:disabled),:root[data-theme="dark"] .cryptid-map-choice[data-collection].selected { background:var(--hover-surface); color:var(--text); border-color:var(--accent); }
+:root[data-theme="dark"] .cryptid-map-count { background:var(--panel); color:var(--text)!important; border-color:var(--line)!important; }
+:root[data-theme="dark"] .game-mark { background:var(--surface); color:var(--text); border-color:var(--line); }
+:root[data-theme="dark"] .btn.danger:hover:not(:disabled) { color:#ffd1d7; background:#512e38; filter:none; }
+:root[data-theme="dark"] #modeOptions .choice.mode,
+:root[data-theme="dark"] #modeOptions .choice.mode.selected,
+:root[data-theme="dark"] #modeOptions .choice.mode:hover { background:var(--surface); color:var(--text); border-color:var(--line); }
+:root[data-theme="dark"] #modeOptions .choice.mode.selected,
+:root[data-theme="dark"] #modeOptions .choice.mode:hover:not(:disabled) { background:var(--hover-surface); border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+:root[data-theme="dark"] #modeOptions .choice.mode .game-mark { background:var(--panel); color:var(--text); border-color:var(--line); }
+#gameGuide { overflow:hidden; }#guideBody { max-height:65dvh; overflow:auto; padding-right:8px; }#guideBody a { color:var(--blue); }
