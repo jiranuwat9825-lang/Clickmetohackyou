@@ -2230,7 +2230,7 @@ $('roomView').addEventListener('pointerdown',touch);$('roomView').addEventListen
 setInterval(()=>touch(),30000);
 
 // ===== Create room and category selection =====
-$('openCreateBtn').onclick=()=>{if(!ensureName())return;selectedMode='';selectedCategory='';selectedSpyVariant='secret';if(typeof whoCustomWriteSettings==='function')whoCustomWriteSettings('whoCustomCreate',WHO_CUSTOM_DEFAULT_SETTINGS);$('whoCustomCreateSettings').hidden=true;$('durationInput').value=2;$('avalonCreateCount').value='9';$('avalonCreateAngel').checked=true;$('avalonCreateSettings').hidden=true;$('cheeseCreateSettings').hidden=true;$('cheeseCreateCount').value='4';$('cheeseCreateDiscuss').value='3';$('cheeseCreateFall').checked=false;$('cheeseCreateFall').disabled=true;$('insiderCreateSettings').hidden=true;if(typeof insiderWriteSettings==='function')insiderWriteSettings('insiderCreate',INSIDER_DEFAULT_SETTINGS);$('cryptidCreateSettings').hidden=true;$('cryptidCreateCount').value='3';if(typeof cryptidCountChoices==='function')cryptidCountChoices('cryptidCreate',3);$('cryptidCreateMap').value='random';$('cryptidCreateCollection').value='original';if(typeof cryptidMapChoices==='function')cryptidMapChoices('cryptidCreate','random');$('createDetails').hidden=true;renderModeChoices();showOnly('createView');};
+$('openCreateBtn').onclick=()=>{if(!ensureName())return;selectedMode='';selectedCategory='';selectedSpyVariant='secret';if(typeof whoCustomWriteSettings==='function')whoCustomWriteSettings('whoCustomCreate',WHO_CUSTOM_DEFAULT_SETTINGS);$('whoCustomCreateSettings').hidden=true;$('durationInput').value=2;$('avalonCreateCount').value='9';$('avalonCreateAngel').checked=true;$('avalonCreateSettings').hidden=true;$('cheeseCreateSettings').hidden=true;$('cheeseCreateCount').value='4';$('cheeseCreateDiscuss').value='3';$('cheeseCreateFall').checked=false;$('cheeseCreateFall').disabled=true;$('insiderCreateSettings').hidden=true;if(typeof insiderWriteSettings==='function')insiderWriteSettings('insiderCreate',INSIDER_DEFAULT_SETTINGS);$('cryptidCreateSettings').hidden=true;$('cryptidCreateCount').value='3';if(typeof cryptidDifficultyChoices==='function')cryptidDifficultyChoices('cryptidCreate','normal');if(typeof cryptidCountChoices==='function')cryptidCountChoices('cryptidCreate',3);$('cryptidCreateMap').value='random';$('cryptidCreateCollection').value='original';if(typeof cryptidMapChoices==='function')cryptidMapChoices('cryptidCreate','random');$('createDetails').hidden=true;renderModeChoices();showOnly('createView');};
 $('createBackBtn').onclick=()=>showOnly('homeView');
 function chooseMode(mode){
  if(!modeReady(mode)){toast('กำลังโหลดโหมดนี้ กรุณาลองอีกครั้ง','info');return;}
@@ -2460,7 +2460,7 @@ async function generateRoomCode(){
 $('createConfirmBtn').onclick=async()=>{
  if(createRoomBusy||!ensureName())return;
  const mode=selectedMode,category=selectedCategory,spyVariant=selectedSpyVariant;
- const avalonCount=Number($('avalonCreateCount').value),avalonAngel=$('avalonCreateAngel').checked,cryptidCount=Number($('cryptidCreateCount').value),cryptidMap=$('cryptidCreateMap').value||'random';
+ const avalonCount=Number($('avalonCreateCount').value),avalonAngel=$('avalonCreateAngel').checked,cryptidCount=Number($('cryptidCreateCount').value),cryptidMap=$('cryptidCreateMap').value||'random',cryptidBotDifficulty=$('cryptidCreateBotDifficulty').value==='hard'?'hard':'normal';
  if(!modeReady(mode)){toast('กำลังโหลดโหมดนี้ กรุณาลองอีกครั้ง','info');return;}
  const cheeseOptions=mode==='cheese'?cheeseSettings('cheeseCreate'):null;
  const insiderSettings=mode==='insider'?insiderReadSettings('insiderCreate'):null;
@@ -2473,7 +2473,7 @@ $('createConfirmBtn').onclick=async()=>{
  if(mode==='whoami_custom'&&!whoCustomSettingsValid(whoCustomSettings)){toast('เวลาตั้งคำ 15–300 วินาที และตอบได้ 1–20 ครั้ง','error');return;}
  if(mode==='insider'&&!insiderSettingsValid(insiderSettings)){toast('ตรวจสอบเวลาและจำนวนครั้งของ Insider ตามช่วงที่กำหนด','error');return;}
  if(mode==='cryptid'&&$('cryptidCreateCollection').value==='creative'&&!$('cryptidCreateCollectionEmpty').hidden){toast('ยังไม่มีด่าน Creative · เลือก Original ก่อนสร้างห้อง','error');return;}
- if(mode==='cryptid'&&(![3,4,5].includes(cryptidCount)||!CryptidEngine.MAPS[cryptidMap])){toast('เลือกจำนวนผู้เล่น 3–5 คน','error');return;}
+ if(mode==='cryptid'&&(![2,3,4,5].includes(cryptidCount)||!CryptidEngine.MAPS[cryptidMap])){toast('เลือกจำนวนผู้เล่น 2–5 คน','error');return;}
  if(mode==='avalon'&&![8,9,10].includes(avalonCount)){toast('เลือกจำนวนผู้เล่น 8, 9 หรือ 10 คน','error');return;}
  if(!Number.isInteger(n)||n<1||n>99){toast('จำนวนรอบ/นาทีต้องอยู่ระหว่าง 1–99','error');return;}
  if(mode==='spyfall'&&!Object.values(pack.groups).some(g=>new Set(g.map(norm)).size>=2)){toast('หมวดนี้ต้องมีกลุ่มที่มีคำไม่ซ้ำอย่างน้อย 2 คำสำหรับ Spyfall','error');return;}
@@ -2487,7 +2487,7 @@ $('createConfirmBtn').onclick=async()=>{
   if(!id)throw new Error('Firebase did not return a room key');
   const roomData={
    roomName,roomCode,hostId:myId,gameMode:mode,category:category,
-   categoryPack:['insider','whoami_custom','avalon','cryptid','cheese'].includes(mode)?null:firebaseSafePack(pack),settingValue:n,...(mode==='cheese'?{cheeseCount:cheeseOptions.count,cheeseDiscussMinutes:cheeseOptions.minutes,cheeseFall:cheeseOptions.fall}:{}),...(mode==='insider'?{insiderSettings}:{}),...(mode==='whoami_custom'?{whoCustomSettings}:{}),...(mode==='cryptid'?{cryptidCount,cryptidMap}:{}),...(mode==='avalon'?{avalonCount:avalonCount,avalonAngel:avalonAngel}:{}),spyVariant:mode==='spyfall'?spyVariant:'secret',status:'lobby',
+   categoryPack:['insider','whoami_custom','avalon','cryptid','cheese'].includes(mode)?null:firebaseSafePack(pack),settingValue:n,...(mode==='cheese'?{cheeseCount:cheeseOptions.count,cheeseDiscussMinutes:cheeseOptions.minutes,cheeseFall:cheeseOptions.fall}:{}),...(mode==='insider'?{insiderSettings}:{}),...(mode==='whoami_custom'?{whoCustomSettings}:{}),...(mode==='cryptid'?{cryptidCount,cryptidMap,cryptidBotDifficulty}:{}),...(mode==='avalon'?{avalonCount:avalonCount,avalonAngel:avalonAngel}:{}),spyVariant:mode==='spyfall'?spyVariant:'secret',status:'lobby',
    players:{[myId]:{name:myName,avatar:myAvatar}},playerProfiles:{[myId]:{name:myName,avatar:myAvatar}},scores:{[myId]:0},
    createdAt:TIMESTAMP(),lastActivityAt:TIMESTAMP(),gamesPlayed:0
   };

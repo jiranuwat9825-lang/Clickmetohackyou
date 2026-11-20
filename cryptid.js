@@ -11,16 +11,21 @@ function cryptidBiome(board){return CE.isVolcano(board)?CRYPTID_BIOMES.volcano:C
 
 function cryptidCountChoices(prefix,count=3,disabled=false){
  const root=$(prefix+'CountChoices'),input=$(prefix+'Count');if(!root||!input)return;input.value=String(count);
- if(!root.children.length)for(const n of [3,4,5]){
+ if(!root.children.length)for(const n of [2,3,4,5]){
   const button=document.createElement('button');button.type='button';button.className='choice cryptid-count-choice';button.dataset.count=String(n);button.innerHTML='<strong>'+n+' คน</strong>';
   button.onclick=()=>{if(button.disabled)return;input.value=String(n);if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidCountChoices(prefix,n);};root.append(button);
  }
  for(const button of root.children){const selected=Number(button.dataset.count)===Number(count);button.disabled=disabled;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));}
  cryptidMapCounts(prefix,count);
 }
+function cryptidDifficultyChoices(prefix,value='normal',disabled=false){
+ const input=$(prefix+'BotDifficulty'),root=$(prefix+'BotDifficultyChoices');if(!input||!root)return;input.value=value==='hard'?'hard':'normal';
+ if(!root.children.length)for(const [id,label] of [['normal','ปกติ'],['hard','ยาก']]){const b=document.createElement('button');b.type='button';b.className='choice cryptid-difficulty-choice';b.dataset.difficulty=id;b.textContent=label;b.onclick=()=>{if(b.disabled)return;input.value=id;if(prefix==='cryptidLobby')renderCryptidLobby(roomState);else cryptidDifficultyChoices(prefix,id);};root.append(b);}
+ for(const b of root.children){b.disabled=disabled;b.classList.toggle('selected',b.dataset.difficulty===input.value);b.setAttribute('aria-pressed',String(b.dataset.difficulty===input.value));}
+}
 function cryptidOpenClues(){
  const r=roomState;if(r?.gameMode!=='cryptid'||!r.cryptid||!['cryptid_playing','results'].includes(r.status))return;
- const clues=CE.clueCatalogue(r.cryptid.board);
+ const clues=CE.clueCatalogue(r.cryptid.board,r.cryptid.order.length);
  $('cryptidClueSummary').textContent='เบาะแสทั้งหมด '+clues.length+' ชนิด';
  $('cryptidClueList').innerHTML='<ol class="cryptid-clue-catalogue">'+clues.map(c=>'<li>'+esc(c.text)+'</li>').join('')+'</ol>';
  const dialog=$('cryptidClueDialog');if(!dialog.open)dialog.showModal();
@@ -83,11 +88,12 @@ function cryptidName(r,id){return (r.players?.[id]||r.gamePlayers?.[id]||r.playe
 function cryptidToken(r,id){const i=r.cryptid?.order.indexOf(id)||0;return '<span class="cryptid-token" style="--token-color:'+CE.COLORS[i]+'">'+(i+1)+'</span>';}
 function renderCryptidLobby(r){
  const panel=$('cryptidLobbySettings');panel.hidden=r.gameMode!=='cryptid';if(panel.hidden)return;
- const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+isHost;
- if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';$('cryptidLobbyCollection').value=cryptidCollectionFor(mapSelect.value);panel.dataset.savedKey=key;}
+ const select=$('cryptidLobbyCount'),mapSelect=$('cryptidLobbyMap'),difficulty=$('cryptidLobbyBotDifficulty'),savedDifficulty=r.cryptidBotDifficulty==='hard'?'hard':'normal',key=roomId+':'+r.gamesPlayed+':'+r.cryptidCount+':'+(r.cryptidMap||'random')+':'+savedDifficulty+':'+isHost;
+ if(panel.dataset.savedKey!==key){select.value=String(r.cryptidCount||3);mapSelect.value=r.cryptidMap||'random';difficulty.value=savedDifficulty;$('cryptidLobbyCollection').value=cryptidCollectionFor(mapSelect.value);panel.dataset.savedKey=key;}
  select.disabled=mapSelect.disabled=!isHost||cryptidLobbyBusy;cryptidMapChoices('cryptidLobby',mapSelect.value,mapSelect.disabled);$('cryptidLobbySave').hidden=!isHost;
  cryptidCountChoices('cryptidLobby',Number(select.value),!isHost||cryptidLobbyBusy);
- $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random'));
+ cryptidDifficultyChoices('cryptidLobby',difficulty.value,!isHost||cryptidLobbyBusy);
+ $('cryptidLobbySave').disabled=cryptidLobbyBusy||(Number(select.value)===Number(r.cryptidCount||3)&&mapSelect.value===(r.cryptidMap||'random')&&difficulty.value===savedDifficulty);
  $('cryptidLobbyMapStatus').textContent=!isHost?'Host เป็นผู้เลือกด่านให้ทั้งห้อง':cryptidLobbyBusy?'กำลังบันทึก…':$('cryptidLobbySave').disabled?'ด่านที่บันทึก: '+cryptidMapLabel(r.cryptidMap||'random'):'เปลี่ยนแล้ว · กดบันทึกการตั้งค่าก่อนเริ่มเกม';
  const players=Object.values(r.players||{}),bots=players.filter(p=>p.bot).length,full=players.length>=Number(r.cryptidCount||3);
  $('cryptidBotTools').hidden=!isHost;$('cryptidBotCount').textContent=`ผู้เล่นจริง ${players.length-bots} คน · บอท ${bots} ตัว · ${players.length}/${r.cryptidCount||3}`;
@@ -100,12 +106,13 @@ $('cryptidCreateMap').value='random';
 $('cryptidCreateCollection').value='original';
 cryptidMapChoices('cryptidCreate','random');
 cryptidCountChoices('cryptidCreate',3);
+cryptidDifficultyChoices('cryptidCreate');
 $('cryptidLobbySave').onclick=async()=>{
  if(!isHost||cryptidLobbyBusy||!roomId)return;
- const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
+ const count=Number($('cryptidLobbyCount').value),mapId=$('cryptidLobbyMap').value,botDifficulty=$('cryptidLobbyBotDifficulty').value,id=roomId;cryptidLobbyBusy=true;renderCryptidLobby(roomState);
  try{const result=await getRef().transaction(r=>{
-  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![3,4,5].includes(count)||!CE.MAPS[mapId]||Object.keys(r.players||{}).length>count)return;
-  r.cryptidCount=count;r.cryptidMap=mapId;delete r.cryptidClueSet;r.lastActivityAt=TIMESTAMP();return r;
+  if(id!==roomId||!r||r.gameMode!=='cryptid'||r.status!=='lobby'||r.hostId!==myId||![2,3,4,5].includes(count)||!['normal','hard'].includes(botDifficulty)||!CE.MAPS[mapId]||Object.keys(r.players||{}).length>count)return;
+  r.cryptidCount=count;r.cryptidMap=mapId;r.cryptidBotDifficulty=botDifficulty;delete r.cryptidClueSet;r.lastActivityAt=TIMESTAMP();return r;
  },undefined,false);toast(result.committed?'บันทึกการตั้งค่า Cryptid แล้ว':'บันทึกไม่ได้ ตรวจสอบจำนวนผู้เล่นและสถานะห้อง',result.committed?'success':'error');}
  catch(e){error(e);}finally{cryptidLobbyBusy=false;if(id===roomId&&roomState)renderCryptidLobby(roomState);}
 };
@@ -119,15 +126,15 @@ for(const [id,action] of [['cryptidAddBot','add'],['cryptidFillBots','fill'],['c
 async function cryptidStart(){
  if(cryptidBusy||roomState?.status!=='lobby')return;
  if($('cryptidLobbyCollection').value==='creative'&&$('cryptidLobbyCollectionEmpty').hidden===false){toast('ยังไม่มีด่าน Deep Sea · เลือก Original ก่อนเริ่มเกม','error');return;}
- if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
- const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
- if(![3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
+ if(cryptidLobbyBusy||$('cryptidLobbyMap').value!==(roomState.cryptidMap||'random')||Number($('cryptidLobbyCount').value)!==Number(roomState.cryptidCount||3)||$('cryptidLobbyBotDifficulty').value!==(roomState.cryptidBotDifficulty==='hard'?'hard':'normal')){toast('บันทึกการตั้งค่า Cryptid ก่อนเริ่มเกม','error');return;}
+ const id=roomId,count=Number(roomState.cryptidCount||3),mapId=roomState.cryptidMap||'random',botDifficulty=roomState.cryptidBotDifficulty==='hard'?'hard':'normal',ids=Object.keys(roomState.players||{}),game=Number(roomState.gamesPlayed)||0;
+ if(![2,3,4,5].includes(count)||ids.length!==count){toast(`ต้องมีผู้เล่นรวมบอท ${count} คนก่อนเริ่ม`,'error');return;}
  cryptidBusy=true;$('startBtn').disabled=true;$('startBtn').textContent='กำลังสร้างปริศนา…';
  try{
   // Generate once, outside the RTDB retry callback, so retries use the same puzzle.
   await new Promise(resolve=>setTimeout(resolve,0));const puzzle=CE.generate(count,Math.random,mapId),order=CE.mix(ids);
   const result=await getRef().transaction(r=>{
-   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(r.cryptidMap||'random')!==mapId||(Number(r.gamesPlayed)||0)!==game)return;
+   if(id!==roomId||!r||r.gameMode!=='cryptid'||r.hostId!==myId||Number(r.cryptidCount||3)!==count||(r.cryptidMap||'random')!==mapId||(r.cryptidBotDifficulty==='hard'?'hard':'normal')!==botDifficulty||(Number(r.gamesPlayed)||0)!==game)return;
    const current=Object.keys(r.players||{});if(current.length!==ids.length||!current.every(p=>ids.includes(p))||!CE.setup(r,ids,puzzle,order))return;
    r.lastActivityAt=TIMESTAMP();return r;
   },undefined,false);

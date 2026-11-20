@@ -1,11 +1,11 @@
 # Cryptid Beta
 
-A 3–5 player deduction mode integrated with the existing Party Game Hub. Create a
-Cryptid Beta room, select the player count, then add individual bots or fill the
-remaining seats in the lobby. Choose one of six numbered map cards (Mistwood,
-Highlands, Wetlands, Sunlands, Shadowfen, or Crossroads) to retain its layout
-with fresh clues, or use Random for a new layout each game. Both creation and
-lobby screens show selectable previews. Player counts use 3/4/5-player buttons;
+A 2–5 player deduction mode integrated with the existing Party Game Hub. Create a
+Cryptid room, select the player count, then add individual bots or fill the
+remaining seats in the lobby. Original has eleven fixed stages plus Random;
+Deep Sea has six fixed stages and Volcano has three. Fixed layouts receive
+fresh private clues each game. Both creation and
+lobby screens show selectable previews. Player counts use 2/3/4/5-player buttons;
 maps are selected directly with stage cards. The host must save lobby changes before
 starting; guests see the saved selection. Only the host can manage settings. Bots
 are marked in the player list; only connected human participants may host.
@@ -23,7 +23,11 @@ extra disclosures, results, and cumulative scoring are supported. A win awards
 one point; a host-aborted game awards none. Return to the lobby for another map.
 
 
-Every game uses the full pool of 51 clue patterns (23 positive and 28 exclusions).
+Original games for 3–5 players use 51 clue patterns (23 positive and 28 exclusions).
+Deep Sea and Volcano have 55 themed patterns. Two-player games add five positive
+single-terrain clues to their theme pool, then enumerate valid pairs to guarantee
+a unique answer on every fixed stage. This two-player adaptation is described in
+the guide. Stage badges count eligible unordered sets for the selected player count.
 There is no clue-set selector; legacy room preferences are ignored and cleared
 when starting a new round. The exclusions include
 not in one terrain, not in either of two terrains, and outside the terrain,
@@ -43,7 +47,15 @@ The host runs bot actions and sequential search reveals using RTDB transactions.
 Each command checks the game number, revision, phase and actor to reject stale or
 duplicate submissions. Bot inference receives only its own clue and public
 markers; it does not read the solution or other players' assigned clues. Bots
-currently provide one testing difficulty. A disconnected human's seat and clue
+have two difficulties, selected for the whole table before starting and frozen
+in the round state. Normal retains the original random legal placements and
+occasional early search. Hard chooses placements that reveal less about its clue,
+weights possible answer cells from opponent clue hypotheses, and evaluates the
+expected answer entropy after both outcomes of every legal question, including
+questions outside its own candidate cells. It searches when one candidate remains,
+the highest estimated probability reaches 85%, or no useful question remains.
+These are probability estimates from public evidence, not knowledge of the answer.
+Ties still use randomness. A disconnected human's seat and clue
 are retained and their manual action waits for reconnection. The host can abort
 if a participant cannot return. Host reassignment uses the hub's existing logic.
 
