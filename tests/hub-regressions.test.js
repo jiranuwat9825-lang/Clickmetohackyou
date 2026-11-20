@@ -8,6 +8,10 @@ function base(mode='whoami_time'){
  return {gameMode:mode,status:'playing',hostId:'a',players,gamePlayers:structuredClone(players),playerProfiles:structuredClone(players),roles:{a:'แมว',b:'สุนัข',c:'ช้าง'},scores:{a:0,b:0,c:0},gamesPlayed:1,turnOrder:['a','b','c'],currentTurnIndex:0,currentRound:1,totalRounds:2,settingValue:1,attempts:{a:1,b:1,c:1},whoTimeRemaining:{a:60000,b:60000,c:60000},turnStartedAt:990000,lastActivityAt:1_000_000};
 }
 test('all game scripts initialize without a splash screen or missing element errors',()=>{const h=loadHub();assert.equal(h.run('typeof renderCryptid'), 'function');assert.deepEqual(h.errors,[]);});
+test('room browser names all new games before optional game scripts load',()=>{
+ const h=loadHub({addons:false});
+ for(const [mode,title] of [['take6','6 nimmt!'],['just_one','Just One'],['wavelength','Wavelength'],['codenames','Codenames'],['fake_artist','A Fake Artist Goes to New York']])assert.equal(h.run(`modeTitle(${JSON.stringify(mode)})`),title);
+});
 test('connected rooms keep alive while players talk without pointer or keyboard input',async()=>{
  const h=loadHub(),r=base('spyfall');h.setRoom(r);h.now(1_050_000);
  for(const tick of h.intervals)await tick();
@@ -126,6 +130,13 @@ test('Codenames renders a team board without exposing other modes',()=>{
  const h=loadHub(),r=base('codenames');r.status='lobby';r.players.d={name:'D'};r.arcadeCount=4;h.setRoom(r);
  assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
  h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
+});
+test('Fake Artist starts a human room and renders topic and drawing safely',()=>{
+ const h=loadHub(),r=base('fake_artist');r.status='lobby';r.players.d={name:'D'};r.players.e={name:'E'};r.arcadeCount=5;h.setRoom(r);
+ assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+ h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
+ h.run('ArcadeEngine.apply(testRoom,testRoom.arcade.master,"topic",{category:"สัตว์",secret:"วาฬ"},testRoom.arcade.revision);roomState=testRoom;renderArcadeRoom(roomState)');
+ assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
 });
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{

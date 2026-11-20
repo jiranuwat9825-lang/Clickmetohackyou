@@ -134,3 +134,39 @@ test('Codenames assassin ends immediately and awards only the opposing team',()=
  for(const id of a.order)assert.equal(r.scores[id]||0,a.teams.blue.includes(id)?1:0);
  assert.equal(E.apply(r,guesser,'code_guess',0,2),false);
 });
+function fakeReady(){
+ const r=room('fake_artist',5);E.setup(r,Object.keys(r.players),()=>.23);
+ const a=r.arcade;assert.equal(E.apply(r,a.master,'topic',{category:'สัตว์',secret:'นกเพนกวิน'},0),true);
+ return r;
+}
+test('Fake Artist hides the word and fake identity, then collects two drawing passes',()=>{
+ const r=fakeReady(),a=r.arcade,fake=a.fake,real=a.artists.find(id=>id!==fake);
+ assert.equal(E.view(r,fake).secret,undefined);assert.equal(E.view(r,real).secret,'นกเพนกวิน');
+ assert.equal(E.view(r,real).fake,undefined);assert.equal(E.view(r,a.master).fake,fake);
+ assert.equal(E.apply(r,a.master,'draw',[[0,0],[10,10]],1),false);
+ assert.equal(E.apply(r,a.artists[1],'draw',[[0,0],[10,10]],1),false);
+ assert.equal(E.apply(r,a.artists[0],'draw',[[0,0],[1001,10]],1),false);
+ for(let i=0;i<a.artists.length*2;i++)assert.equal(E.apply(r,a.artists[i%a.artists.length],'draw',[[10,i],[50,i]],r.arcade.revision),true);
+ assert.equal(r.arcade.phase,'vote');assert.equal(r.arcade.strokes.length,8);
+ assert.equal(E.apply(r,a.artists[0],'draw',[[1,1],[2,2]],r.arcade.revision),false);
+});
+test('Fake Artist voting catches the fake but a wrong final guess awards real artists',()=>{
+ const r=fakeReady(),a=r.arcade,fake=a.fake;
+ for(let i=0;i<a.artists.length*2;i++)E.apply(r,a.artists[i%a.artists.length],'draw',[[10,10],[20,20]],r.arcade.revision);
+ for(const id of a.artists){const vote=id===fake?a.artists.find(p=>p!==fake):fake;assert.equal(E.apply(r,id,'vote',vote,r.arcade.revision),true);}
+ assert.equal(r.arcade.phase,'fake_guess');assert.equal(E.view(r,a.artists.find(p=>p!==fake)).fake,fake);
+ assert.equal(E.apply(r,a.master,'fake_guess','ผิด',r.arcade.revision),false);
+ assert.equal(E.apply(r,fake,'fake_guess','ผิด',r.arcade.revision),true);
+ assert.equal(r.status,'results');assert.deepEqual(r.result.winners,a.artists.filter(p=>p!==fake));
+ assert.equal(E.view(r,fake).secret,'นกเพนกวิน');
+});
+test('Fake Artist survives a vote miss or a correct final guess',()=>{
+ for(const caught of [false,true]){
+  const r=fakeReady(),a=r.arcade,fake=a.fake,other=a.artists.find(p=>p!==fake);
+  for(let i=0;i<a.artists.length*2;i++)E.apply(r,a.artists[i%a.artists.length],'draw',[[10,10],[20,20]],r.arcade.revision);
+  for(const id of a.artists){const vote=caught?(id===fake?other:fake):(id===other?fake:other);E.apply(r,id,'vote',vote===id?fake:vote,r.arcade.revision);}
+  if(caught)E.apply(r,fake,'fake_guess','นกเพนกวิน',r.arcade.revision);
+  assert.equal(r.status,'results');assert.deepEqual(r.result.winners,[a.master,fake]);
+  assert.equal(r.scores[a.master],1);assert.equal(r.scores[fake],1);
+ }
+});

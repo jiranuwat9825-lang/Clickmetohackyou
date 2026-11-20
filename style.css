@@ -1210,3 +1210,5 @@ label, .muted.hint { font-size: 13px; }
 .ag-code-cell.is-open { opacity:.74; box-shadow:inset 0 0 0 2px var(--line); }
 :root[data-theme="dark"] .ag-code-cell.is-red { background:#9a4c48;color:#fff; }:root[data-theme="dark"] .ag-code-cell.is-blue { background:#476f91;color:#fff; }
 @media(max-width:600px) { .ag-code-grid { gap:5px; }.ag-code-cell { min-height:60px; font-size:12px; padding:4px; }.ag-teams { grid-template-columns:1fr; } }
+.ag-drawing { border:1px solid var(--line); background:var(--surface); border-radius:16px; padding:clamp(12px,2vw,20px); display:grid; gap:12px; min-width:0; }
+.ag-drawing h3,.ag-drawing p { margin:0; }.ag-canvas { width:100%; height:auto; aspect-ratio:900/520; display:block; background:#fffdf9; border:1px solid var(--line); border-radius:10px; touch-action:none; cursor:crosshair; }

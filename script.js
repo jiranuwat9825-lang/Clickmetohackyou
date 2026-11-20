@@ -6,7 +6,7 @@ const MODES=['spyfall','whoami_time','whoami_rounds','insider'],CATEGORIES_KEY='
 const serverNow=()=>Date.now()+serverOffset,esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isTabletopMode=mode=>['coup','liar_deck','liar_dice'].includes(mode);
 const isArcadeMode=mode=>typeof ArcadeEngine!=='undefined'&&!!ArcadeEngine.GAMES[mode];
-const modeTitle=m=>isArcadeMode(m)?ArcadeEngine.GAMES[m].name:({spyfall:'Spyfall',whoami_time:'Who Am I · จับเวลา',whoami_rounds:'Who Am I · นับรอบ',whoami_custom:'Who Am I · ผู้เล่นตั้งคำเอง',insider:'Insider',avalon:'Avalon',cryptid:'Cryptid',cheese:'Steal Cheese',coup:'Coup',liar_deck:'Liar’s Deck',liar_dice:'Liar’s Dice'}[m]||'Spyfall');
+const modeTitle=m=>({spyfall:'Spyfall',whoami_time:'Who Am I · จับเวลา',whoami_rounds:'Who Am I · นับรอบ',whoami_custom:'Who Am I · ผู้เล่นตั้งคำเอง',insider:'Insider',avalon:'Avalon',cryptid:'Cryptid',cheese:'Steal Cheese',coup:'Coup',liar_deck:'Liar’s Deck',liar_dice:'Liar’s Dice',take6:'6 nimmt!',just_one:'Just One',wavelength:'Wavelength',codenames:'Codenames',fake_artist:'A Fake Artist Goes to New York'}[m]||'เกม');
 const random=a=>a[Math.floor(Math.random()*a.length)],shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const getRef=()=>db.ref(`rooms/${roomId}`),copyPack=v=>JSON.parse(JSON.stringify(v)),wordsOf=p=>[...new Set(Object.values(p?.groups||{}).flat().filter(x=>typeof x==='string'&&x.trim()))],norm=s=>String(s??'').trim().toLocaleLowerCase();
 function gameParticipantIds(r){

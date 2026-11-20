@@ -6,7 +6,8 @@
   take6:{name:'6 nimmt!',min:2,max:10,mark:'Ⅵ',tag:'วางไพ่พร้อมกัน · เลี่ยงแต้มลบ',bots:true},
   just_one:{name:'Just One',min:3,max:7,defaultCount:4,mark:'✎',tag:'ใบ้คำร่วมกัน · คำซ้ำถูกตัด',bots:false,help:'ผู้ทายเลือกเลข 1–5 คนอื่นใบ้หนึ่งคำ · 3–4 คนใบ้คนละสองคำ'},
   wavelength:{name:'Wavelength',min:2,max:10,defaultCount:4,mark:'◒',tag:'ใบ้ตำแหน่ง · ปรับหน้าปัด',bots:false,help:'เล่นร่วมกัน 8 รอบ คนใบ้เห็นเป้าหมาย คนอื่นช่วยกันปรับหน้าปัด'},
-  codenames:{name:'Codenames',min:4,max:10,defaultCount:4,mark:'▦',tag:'ใบ้คำ · ค้นหาสายลับ',bots:false,help:'แบ่งสองทีมอัตโนมัติ ทีมละหนึ่งหัวหน้าสายลับ · ผู้ทายผลัดกันเปิดคำ'}
+  codenames:{name:'Codenames',min:4,max:10,defaultCount:4,mark:'▦',tag:'ใบ้คำ · ค้นหาสายลับ',bots:false,help:'แบ่งสองทีมอัตโนมัติ ทีมละหนึ่งหัวหน้าสายลับ · ผู้ทายผลัดกันเปิดคำ'},
+  fake_artist:{name:'A Fake Artist Goes to New York',min:5,max:10,defaultCount:5,mark:'✽',tag:'วาดรูป · ตามหาคนไม่รู้คำ',bots:false,help:'หนึ่งคนเป็นผู้จัดคำ · คนอื่นวาดคนละหนึ่งเส้นสองรอบ แล้วโหวตหาศิลปินปลอม'}
  };
  const JUST_WORDS='ช้าง,รถไฟ,กาแฟ,ดวงจันทร์,ร่ม,ภูเขา,แมว,ทะเล,นาฬิกา,หุ่นยนต์,จักรยาน,โรงเรียน,ขนมปัง,นักบิน,สะพาน,มะม่วง,กล้อง,พายุ,กระเป๋า,ดอกไม้,คอมพิวเตอร์,ปลาโลมา,หนังสือ,ตู้เย็น,ฟุตบอล,ดวงดาว,เกาะ,ตลาด,เครื่องบิน,ป่า,ผีเสื้อ,น้ำตก,หมวก,เต่า,ช็อกโกแลต,วาฬ,ปราสาท,ลิฟต์,รถเมล์,พิซซ่า,โคมไฟ,สนามบิน,ไอศกรีม,หมาป่า,กีตาร์,สวนสัตว์,ส้ม,เต็นท์,ฝน,หมอน,พัดลม,แม่น้ำ,นักสืบ,เค้ก,มังกร,แมงมุม,โรงหนัง,ลูกโป่ง,โต๊ะ,คีย์บอร์ด,เรือ,รองเท้า,ดินสอ,สายรุ้ง,ปลาหมึก,เสือ,สิงโต,ปรอท,หมากรุก,กล้วย,ท้องฟ้า,รถถัง,ไวโอลิน,โทรศัพท์,น้ำแข็ง,สับปะรด,นักดนตรี,ลูกเต๋า,ประตู,เพชร,กระต่าย,ดาวอังคาร,เรือดำน้ำ,พีระมิด,กังหัน,พรม,อูฐ,หิมะ,สนามเด็กเล่น,เก้าอี้,ปลาวาฬ,แบตเตอรี่,มะเขือเทศ,รถแข่ง,พิพิธภัณฑ์'.split(',');
  const SPECTRA=[['เงียบ','เสียงดัง'],['ธรรมดา','หรูหรา'],['น่าเบื่อ','ตื่นเต้น'],['โบราณ','ทันสมัย'],['เบา','หนัก'],['ปลอดภัย','เสี่ยง'],['ร้อน','เย็น'],['ราคาถูก','ราคาแพง'],['เล็ก','ใหญ่'],['ช้า','เร็ว'],['คุ้นเคย','แปลกใหม่'],['มีประโยชน์','ไร้ประโยชน์'],['เป็นทางการ','สบาย ๆ'],['ส่วนตัว','สาธารณะ'],['จริงจัง','ขำขัน'],['ธรรมชาติ','ประดิษฐ์'],['ง่าย','ยาก'],['น่ากลัว','น่ารัก'],['สั้น','ยาว'],['หวาน','ขม'],['สะอาด','สกปรก'],['สำคัญน้อย','สำคัญมาก']];
@@ -51,7 +52,37 @@
    a.keys=shuffle([...Array(9).fill('red'),...Array(8).fill('blue'),...Array(7).fill('neutral'),'assassin'],rng);
    a.revealed=[];a.remaining={red:9,blue:8};a.turn='red';a.phase='clue';a.clue=null;a.guesses=0;
   }
+  if(a.mode==='fake_artist'){
+   a.master=a.order[0];a.artists=a.order.slice(1);a.fake=a.artists[Math.floor(rng()*a.artists.length)];
+   a.category='';a.secret='';a.phase='topic';a.strokes=[];a.turn=0;a.votes={};a.last=null;
+  }
   return true;
+ }
+ function fakeMove(r,id,type,value){
+  const a=r.arcade;
+  if(a.phase==='topic'&&type==='topic'&&id===a.master&&value&&typeof value.category==='string'&&typeof value.secret==='string'&&norm(value.category).length>=2&&norm(value.category).length<=45&&norm(value.secret).length>=2&&norm(value.secret).length<=45&&norm(value.category)!==norm(value.secret)){
+   a.category=value.category.trim();a.secret=value.secret.trim();a.phase='draw';log(a,'fake_topic',{category:a.category});return true;
+  }
+  if(a.phase==='draw'&&type==='draw'&&id===a.artists[a.turn%a.artists.length]&&Array.isArray(value)&&value.length>=2&&value.length<=120&&value.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isInteger(n)&&n>=0&&n<=1000))){
+   a.strokes.push({by:id,points:value});a.turn++;log(a,'fake_draw',{by:id,stroke:a.turn});
+   if(a.turn===a.artists.length*2)a.phase='vote';return true;
+  }
+  if(a.phase==='vote'&&type==='vote'&&a.artists.includes(id)&&!Object.hasOwn(a.votes,id)&&a.artists.includes(value)&&value!==id){
+   a.votes[id]=value;log(a,'fake_vote',{by:id});
+   if(Object.keys(a.votes).length===a.artists.length){
+    const counts=Object.fromEntries(a.artists.map(p=>[p,Object.values(a.votes).filter(v=>v===p).length]));
+    const max=Math.max(...Object.values(counts));const leaders=a.artists.filter(p=>counts[p]===max);
+    a.last={leaders,counts};
+    if(leaders.length===1&&leaders[0]===a.fake){a.phase='fake_guess';log(a,'fake_caught',{by:a.fake});}
+    else finish(r,[a.master,a.fake]);
+   }
+   return true;
+  }
+  if(a.phase==='fake_guess'&&type==='fake_guess'&&id===a.fake&&typeof value==='string'&&norm(value).length>=1&&norm(value).length<=80){
+   const correct=norm(value)===norm(a.secret);a.last.guess=value.trim();a.last.correct=correct;
+   finish(r,correct?[a.master,a.fake]:a.artists.filter(p=>p!==a.fake));return true;
+  }
+  return false;
  }
  function codeMove(r,id,type,value){
   const a=r.arcade,team=a.turn,members=a.teams[team],spymaster=a.spymasters[team];
@@ -187,7 +218,7 @@
   if(type==='abort'&&id!==r.hostId)return false;
   const next=clone(r);
   const valid=type==='abort'?(next.status='results',next.arcade.phase='finished',next.result={type:r.gameMode,aborted:true,points:0},log(next.arcade,'abort'),true):
-   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value)||next.arcade.mode==='codenames'&&codeMove(next,id,type,value));
+   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value)||next.arcade.mode==='codenames'&&codeMove(next,id,type,value)||next.arcade.mode==='fake_artist'&&fakeMove(next,id,type,value));
   if(!valid)return false;
   next.arcade.revision++;
   Object.assign(r,next);return true;
@@ -209,6 +240,12 @@
    const master=Object.values(a.spymasters).includes(id),done=r.status==='results';
    return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],teams:clone(a.teams),spymasters:{...a.spymasters},turn:a.turn,remaining:{...a.remaining},clue:a.clue?{...a.clue}:null,guesses:a.guesses,
     cells:a.words.map((word,i)=>({word,key:master||done||a.revealed.includes(i)?a.keys[i]:undefined,revealed:a.revealed.includes(i)})),history:Object.values(a.history).slice(-10),result:r.result?clone(r.result):null};
+  }
+  if(a.mode==='fake_artist'){
+   const done=r.status==='results',role=id===a.master?'master':id===a.fake?'fake':'artist';
+   return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],master:a.master,artists:[...a.artists],role,
+    fake:role==='master'||done||a.phase==='fake_guess'?a.fake:undefined,category:a.category,secret:role==='fake'&&!done?undefined:a.secret,
+    turn:a.turn,drawer:a.phase==='draw'?a.artists[a.turn%a.artists.length]:null,strokes:clone(a.strokes),votes:Object.keys(a.votes).length,voted:Object.hasOwn(a.votes,id),last:a.last?clone(a.last):null,result:r.result?clone(r.result):null};
   }
   return {mode:a.mode,phase:a.phase,revision:a.revision,round:a.round,step:a.step,order:[...a.order],
    people:Object.fromEntries(a.order.map(p=>[p,{penalty:a.people[p].penalty,count:a.people[p].hand.length,hand:p===id?[...a.people[p].hand]:undefined,chosen:Object.hasOwn(a.picks,p)}])),

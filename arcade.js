@@ -103,6 +103,7 @@ function renderArcade(r){
  if(v.mode==='just_one'){renderArcadeJust(r,v,root);return;}
  if(v.mode==='wavelength'){renderArcadeWave(r,v,root);return;}
  if(v.mode==='codenames'){renderArcadeCode(r,v,root);return;}
+ if(v.mode==='fake_artist'){renderArcadeFake(r,v,root);return;}
  renderArcadeTake6(r,v,root);
 }
 function arcadeBase(root,title,kicker,progress){
@@ -185,6 +186,49 @@ function renderArcadeCode(r,v,root){
  const board=document.createElement('div');board.className='ag-code-grid';root.append(board);
  v.cells.forEach((cell,i)=>{const b=document.createElement('button');b.type='button';b.className='ag-code-cell'+(cell.key?' is-'+cell.key:'')+(cell.revealed?' is-open':'');b.textContent=cell.word;b.disabled=arcadeBusy||done||v.phase!=='guess'||!active||master||cell.revealed;b.title=cell.key&&master?'ทีม '+cell.key:'';b.onclick=()=>arcadeSend('code_guess',i);board.append(b);});
  const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>หัวหน้าสายลับเห็นสีคำทั้งหมด ให้คำใบ้หนึ่งคำพร้อมตัวเลข ผู้ทายเปิดได้ไม่เกินตัวเลข+1 ใบ และหยุดเองได้</p><p>เปิดคำทีมตัวเองให้ครบก่อนชนะ คำกลางหรือคำทีมตรงข้ามจบตา เปิดมือสังหารแพ้ทันที</p>';root.append(help);
+ arcadeHostControls(root,r,done);
+}
+function renderArcadeFake(r,v,root){
+ const done=r.status==='results',myTurn=v.phase==='draw'&&v.drawer===myId;
+ const p=arcadeBase(root,'A Fake Artist Goes to New York','วาดคนละเส้น · จับคนไม่รู้คำ',`${Math.min(v.turn,2*v.artists.length)}/${2*v.artists.length} เส้น`);
+ const info=document.createElement('p');info.className='ag-status';info.textContent=done?v.result?.aborted?'ยุติเกมแล้ว':`${v.result?.winners?.map(id=>arcadeName(r,id)).join(', ')} ชนะ`:v.phase==='topic'?`รอ ${arcadeName(r,v.master)} ตั้งคำ`:v.phase==='draw'?`ตาของ ${arcadeName(r,v.drawer)} · รอบ ${Math.floor(v.turn/v.artists.length)+1}/2`:v.phase==='vote'?'โหวตว่าใครคือศิลปินปลอม':`จับศิลปินปลอมได้ · รอทายคำสุดท้าย`;p.append(info);
+ const role=document.createElement('p');role.textContent=v.role==='master'?'คุณเป็นผู้จัดคำ (ไม่ต้องวาด)':v.role==='fake'?'คุณเป็นศิลปินปลอม · รู้แค่หมวด':'คุณเป็นศิลปิน · ช่วยกันวาด';p.append(role);
+ if(v.phase==='topic'&&!done&&v.role==='master'){
+  const cat=arcadeInput(p,'หมวด','เช่น สัตว์');const secret=arcadeInput(p,'คำที่จะวาด','เช่น นกเพนกวิน');cat.maxLength=45;secret.maxLength=45;
+  arcadeButton(p,'เริ่มวาด',()=>arcadeSend('topic',{category:cat.value,secret:secret.value}));
+ }
+ if(v.phase!=='topic'){
+  const t=document.createElement('p');t.textContent=`หมวด: ${v.category} · ${v.secret?'คำลับ: '+v.secret:'คุณไม่เห็นคำลับ'}`;p.append(t);
+  if(v.role==='master'&&!done){const note=document.createElement('p');note.className='muted';note.textContent=`ศิลปินปลอม: ${arcadeName(r,v.fake)} · ช่วยรักษาคำลับ`;p.append(note);}
+ }
+ if(v.phase==='draw'||v.phase==='vote'||v.phase==='fake_guess'||done){
+  const board=document.createElement('section');board.className='ag-drawing';root.append(board);
+  const title=document.createElement('h3');title.textContent='กระดานวาด';board.append(title);
+  const canvas=document.createElement('canvas');canvas.width=900;canvas.height=520;canvas.className='ag-canvas';canvas.setAttribute('aria-label','ภาพวาดของผู้เล่น');board.append(canvas);
+  const colors=['#376b88','#b15e4f','#688b50','#7d6694','#bf8b40','#4a8775','#7c5962','#497caa','#676c45'];
+  const ctx=canvas.getContext?.('2d');let points=[],drawing=false;
+  const paint=(stroke,color)=>{if(!ctx||!stroke.length)return;ctx.beginPath();ctx.moveTo(stroke[0][0]*.9,stroke[0][1]*.52);for(const [x,y] of stroke.slice(1))ctx.lineTo(x*.9,y*.52);ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();};
+  const repaint=()=>{if(!ctx)return;ctx.fillStyle='#fffdf9';ctx.fillRect(0,0,900,520);v.strokes.forEach(s=>paint(s.points,colors[v.artists.indexOf(s.by)%colors.length]));paint(points,colors[v.artists.indexOf(myId)%colors.length]);};repaint();
+  if(myTurn){
+   const hint=document.createElement('p');hint.className='muted';hint.textContent='วาดเส้นเดียวด้วยเมาส์หรือนิ้ว แล้วยืนยัน';board.append(hint);
+   const pos=e=>{const box=canvas.getBoundingClientRect();return [Math.max(0,Math.min(1000,Math.round((e.clientX-box.left)/box.width*1000))),Math.max(0,Math.min(1000,Math.round((e.clientY-box.top)/box.height*1000)))];};
+   canvas.onpointerdown=e=>{e.preventDefault();points=[pos(e)];drawing=true;canvas.setPointerCapture?.(e.pointerId);repaint();};
+   canvas.onpointermove=e=>{if(!drawing)return;e.preventDefault();const point=pos(e);if(points.length<120&&(point[0]!==points.at(-1)[0]||point[1]!==points.at(-1)[1]))points.push(point);repaint();};
+   canvas.onpointerup=e=>{if(!drawing)return;e.preventDefault();drawing=false;send.disabled=points.length<2;};
+   const actions=document.createElement('div');actions.className='ag-actions';board.append(actions);
+   arcadeButton(actions,'ล้างเส้น',()=>{points=[];send.disabled=true;repaint();},true);
+   const send=arcadeButton(actions,'ส่งเส้นนี้',()=>arcadeSend('draw',points));send.disabled=true;
+  }
+  const order=document.createElement('p');order.className='muted';order.textContent='สีเส้นตามผู้วาด: '+v.artists.map((id,i)=>`${arcadeName(r,id)} (${i+1})`).join(' · ');board.append(order);
+ }
+ if(v.phase==='vote'&&!done){const t=document.createElement('p');t.textContent=`โหวตแล้ว ${v.votes}/${v.artists.length} คน`;p.append(t);
+  if(v.role!=='master'&&!v.voted){const actions=document.createElement('div');actions.className='ag-actions';p.append(actions);for(const id of v.artists.filter(id=>id!==myId))arcadeButton(actions,arcadeName(r,id),()=>arcadeSend('vote',id),true);}
+ }
+ if(v.phase==='fake_guess'&&!done){const t=document.createElement('p');t.textContent=`ทุกคนโหวตโดน ${arcadeName(r,v.fake||myId)} · ศิลปินปลอมมีสิทธิ์ทายคำหนึ่งครั้ง`;p.append(t);
+  if(v.role==='fake'){const input=arcadeInput(p,'คำที่ทุกคนวาด','ทายคำลับ');arcadeButton(p,'ยืนยันคำตอบ',()=>arcadeSend('fake_guess',input.value));}
+ }
+ if(done&&!v.result?.aborted){const t=document.createElement('p');t.textContent=`คำ: ${v.secret} · ศิลปินปลอม: ${arcadeName(r,v.fake)}`;p.append(t);}
+ const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>ผู้จัดคำเลือกหมวดและคำลับ ศิลปินทุกคนรู้คำ ยกเว้นศิลปินปลอมที่รู้แค่หมวด วาดคนละเส้นสองรอบโดยไม่เขียนตัวอักษร</p><p>ศิลปินโหวตหาคนปลอม ถ้าจับได้ คนปลอมยังทายคำได้อีกหนึ่งครั้ง ถ้าทายถูกคนปลอมกับผู้จัดคำชนะ</p>';root.append(help);
  arcadeHostControls(root,r,done);
 }
 function arcadeHostControls(root,r,done){
