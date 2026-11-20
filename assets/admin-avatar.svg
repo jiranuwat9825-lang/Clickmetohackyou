@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges" role="img" aria-label="ใบหน้าพิกเซล Admin">
+ <path fill="#2e3433" d="M4 2h24v3h2v23h-3v2H5v-2H2V5h2z"/>
+ <path fill="#594437" d="M5 4h22v6H5z"/>
+ <path fill="#3d302b" d="M4 5h5v3h4V5h7v3h4V5h4v5H4z"/>
+ <path fill="#cfad89" d="M5 10h22v16H5z"/>
+ <path fill="#e1bc94" d="M8 10h17v12H8z"/>
+ <path fill="#a98369" d="M4 12h3v10H4zm21 0h3v10h-3z"/>
+ <path fill="#493b35" d="M8 15h6v2H8zm11 0h6v2h-6z"/>
+ <path fill="#ecf0e4" d="M8 17h6v4H8zm11 0h6v4h-6z"/>
+ <path fill="#477e71" d="M11 17h3v4h-3zm8 0h3v4h-3z"/>
+ <path fill="#243b3a" d="M12 17h2v4h-2zm7 0h2v4h-2z"/>
+ <path fill="#ae8269" d="M14 21h5v3h-5z"/>
+ <path fill="#6b473d" d="M11 25h11v2H11z"/>
+ <path fill="#f0c4a0" d="M13 24h7v1h-7z"/>
+ <path fill="#50827d" d="M5 28h22v2H5z"/>
+</svg>

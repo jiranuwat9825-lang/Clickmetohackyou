@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="assets/dice-favicon.svg">
-<link rel="stylesheet" href="style.css?v=cryptid-events-20261121">
+<link rel="stylesheet" href="style.css?v=admin-avatar-20261121">
 <link rel="stylesheet" href="theme-fixes.css?v=contrast-20261120">
 </head>
 <body>
@@ -44,7 +44,7 @@
       <div class="join-room-row"><input id="joinRoomCodeInput" type="text" maxlength="24" placeholder="เช่น 4827" autocomplete="off"><div class="join-room-actions"><button id="joinRoomCodeBtn" class="btn primary" type="button">เข้าร่วม</button><button id="openCreateBtn" class="btn outline" type="button">สร้างห้อง</button></div></div>
     </section>
   </div>
-  <section class="room-browser panel pad"><div class="section-head"><h2>ห้องที่เปิดอยู่</h2><button id="openManagerBtn" class="btn outline small">จัดการหมวดคำ</button></div>
+  <section class="room-browser panel pad"><div class="section-head"><h2>ห้องที่เปิดอยู่</h2><button id="openManagerBtn" class="btn outline small" hidden>จัดการหมวดคำ</button></div>
     <div id="roomList" class="room-list"><p class="muted">กำลังโหลดห้อง…</p></div>
     <p class="hint muted">ห้องที่ไม่มีการใช้งานครบ 10 นาทีจะปิดอัตโนมัติ</p>
   </section>
@@ -334,6 +334,15 @@
    <div class="section-head"><h2 id="guideTitle">คู่มือเกม</h2><form method="dialog"><button class="btn outline small">ปิด</button></form></div>
    <div id="guideBody" aria-live="polite"></div>
  </dialog>
+ <dialog id="adminAvatarDialog" class="admin-avatar-dialog" aria-labelledby="adminAvatarTitle">
+  <form id="adminAvatarForm" autocomplete="off">
+   <div class="admin-avatar-dialog-head"><img src="assets/admin-avatar.svg" alt="" width="44" height="44"><div><h2 id="adminAvatarTitle">อวาตาร์ Admin</h2><p>กรอกรหัสเพื่อใช้งาน 1 ชั่วโมง</p></div></div>
+   <label for="adminAvatarPin">รหัสผ่าน</label>
+   <input id="adminAvatarPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required autocomplete="off" aria-describedby="adminAvatarError">
+   <p id="adminAvatarError" class="admin-avatar-error" role="alert"></p>
+   <div class="admin-avatar-actions"><button type="button" id="adminAvatarCancel" class="btn outline">ยกเลิก</button><button type="submit" class="btn primary">ปลดล็อก</button></div>
+  </form>
+ </dialog>
  <dialog id="cryptidClueDialog" class="cryptid-clue-dialog" aria-labelledby="cryptidClueDialogTitle" aria-describedby="cryptidClueSummary">
   <header class="cryptid-clue-dialog-header">
    <div class="cryptid-clue-dialog-head"><h2 id="cryptidClueDialogTitle">ชนิดเบาะแสทั้งหมด</h2><button type="button" id="cryptidCloseClues" class="btn outline" aria-label="ปิดรายการเบาะแส">ปิด ✕</button></div>
@@ -344,7 +353,7 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=table-games-20261120"></script>
+<script src="script.js?v=admin-avatar-20261121"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
 <script src="avalon.js?v=avalon-eight-20261119"></script>

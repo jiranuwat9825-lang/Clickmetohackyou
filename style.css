@@ -1220,3 +1220,15 @@ label, .muted.hint { font-size: 13px; }
 .cryptid-last-move-row+.cryptid-last-move-row{border-top:1px solid var(--line);padding-top:8px}
 .cryptid-last-move-row strong{color:var(--accent)}
 .cryptid-last-move-row span{overflow-wrap:anywhere}
+
+/* Admin avatar is hand-drawn pixel art, sized consistently in every game. */
+.tone-admin{background:#dce9e5}
+.admin-avatar-art{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;image-rendering:pixelated}
+.admin-avatar-dialog{width:min(420px,calc(100% - 32px));margin:auto;padding:24px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.admin-avatar-dialog::backdrop{background:rgba(24,28,25,.58)}
+.admin-avatar-dialog-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.admin-avatar-dialog-head img{border-radius:10px;image-rendering:pixelated}
+.admin-avatar-dialog-head p{color:var(--muted);font-size:13px}
+.admin-avatar-error{min-height:22px;margin:6px 0;color:var(--red);font-size:13px}
+.admin-avatar-actions{display:flex;gap:10px;margin-top:12px}
+.admin-avatar-actions .btn{flex:1}

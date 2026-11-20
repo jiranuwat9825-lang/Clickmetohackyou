@@ -109,20 +109,39 @@ const AVATARS=[
 {id:"king",name:"ราชา",emoji:"🤴",tone:"gold",group:"fantasy"},
 {id:"teddy",name:"ตุ๊กตาหมี",emoji:"🧸",tone:"brown",group:"fantasy"},
 {id:"squid",name:"หมึกน้อย",emoji:"🦑",tone:"coral",group:"animals"},
-{id:"dragon2",name:"มังกรบิน",emoji:"🐉",tone:"green",group:"fantasy"}
+{id:"dragon2",name:"มังกรบิน",emoji:"🐉",tone:"green",group:"fantasy"},
+{id:"admin",name:"Admin",emoji:"",tone:"admin",group:"special"}
 ];
 const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
 if(!AVATARS.some(a=>a.id===myAvatar)){myAvatar='fox';try{localStorage.setItem('party_game_avatar_v1',myAvatar);}catch(e){}}
-const avatarMarkup=(player,cls='avatar-inline')=>{const a=avatarById(player?.avatar||'fox');return `<span class="avatar-token tone-${a.tone} ${cls}" title="${esc(a.name)}">${a.emoji}</span>`;};
+const ADMIN_AVATAR_SESSION='party_admin_avatar_until_v1';
+function adminSessionValid(){try{return Number(sessionStorage.getItem(ADMIN_AVATAR_SESSION))>Date.now();}catch{return false;}}
+function canManageCategories(){return myAvatar==='admin'&&adminSessionValid();}
+if(myAvatar==='admin'&&!adminSessionValid()){myAvatar='fox';localStorage.setItem('party_game_avatar_v1',myAvatar);}
+const avatarFace=a=>a.id==='admin'?'<img class="admin-avatar-art" src="assets/admin-avatar.svg" alt="">':a.emoji;
+const avatarMarkup=(player,cls='avatar-inline')=>{const a=avatarById(player?.avatar||'fox');return `<span class="avatar-token tone-${a.tone} ${cls}" title="${esc(a.name)}">${avatarFace(a)}</span>`;};
 const playerLabelHTML=(id,r,showYou=true)=>{const p=r?.players?.[id]||r?.gamePlayers?.[id]||r?.playerProfiles?.[id]||{};return `<span class="player-identity">${avatarMarkup(p)}<span>${esc(p.name||'ผู้เล่น')}${p.bot?' · BOT':''}${showYou&&id===myId?' (คุณ)':''}</span></span>`;};
-function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const a=avatarById(avatarId);el.textContent=a.emoji;el.className=`game-avatar tone-${a.tone}`;}
+function setGameAvatar(id,avatarId=myAvatar){const el=$(id);if(!el)return;const a=avatarById(avatarId);el.innerHTML=avatarFace(a);el.className=`game-avatar tone-${a.tone}`;}
 let avatarFilter='all';
 const AVATAR_FILTERS=[
  {id:'all',label:'ทั้งหมด'},
  {id:'animals',label:' สัตว์น่ารัก'},
  {id:'cool',label:' สายเท่'},
- {id:'fantasy',label:' แฟนตาซี'}
+ {id:'fantasy',label:' แฟนตาซี'},
+ {id:'special',label:' พิเศษ'}
 ];
+function chooseAvatar(a,announce=true){
+ myAvatar=a.id;localStorage.setItem('party_game_avatar_v1',myAvatar);
+ renderAvatarPicker();if(announce)toast(`เลือกตัวละคร ${a.name} แล้ว`,'success');
+ if(roomId&&roomState?.players?.[myId])getRef().child(`players/${myId}/avatar`).set(myAvatar).catch(error);
+}
+function expireAdminAvatar(){
+ if(myAvatar!=='admin'||adminSessionValid())return;
+ sessionStorage.removeItem(ADMIN_AVATAR_SESSION);
+ chooseAvatar(avatarById('fox'),false);
+ if(!$('managerView').hidden)showOnly('homeView');
+ toast('อวาตาร์ Admin หมดเวลาแล้ว กรุณากรอกรหัสอีกครั้ง');
+}
 function renderAvatarPicker(){
  const grid=$('avatarPicker'),filters=$('avatarFilterBar');
  if(!grid||!filters)return;
@@ -139,19 +158,34 @@ function renderAvatarPicker(){
   const b=document.createElement('button');b.type='button';
   b.className=`avatar-option ${myAvatar===a.id?'selected':''}`;
   b.dataset.avatar=a.id;b.setAttribute('aria-pressed',String(myAvatar===a.id));
-  b.innerHTML=`<span class="avatar-token tone-${a.tone}">${a.emoji}</span><small>${esc(a.name)}</small>`;
+  b.innerHTML=`<span class="avatar-token tone-${a.tone}">${avatarFace(a)}</span><small>${esc(a.name)}</small>`;
   b.onclick=()=>{
-   myAvatar=a.id;localStorage.setItem('party_game_avatar_v1',myAvatar);
-   renderAvatarPicker();toast(`เลือกตัวละคร ${a.name} แล้ว`,'success');
-   if(roomId&&roomState?.players?.[myId])getRef().child(`players/${myId}/avatar`).set(myAvatar).catch(error);
+   if(a.id==='admin'){
+    $('adminAvatarPin').value='';$('adminAvatarError').textContent='';
+    $('adminAvatarDialog').showModal();$('adminAvatarPin').focus();return;
+   }
+   chooseAvatar(a);
   };
   grid.append(b);
  });
  const chosen=avatarById(myAvatar);
- $('avatarPreview').textContent=chosen.emoji;$('avatarPreview').className=`avatar-preview tone-${chosen.tone}`;
+ $('avatarPreview').innerHTML=avatarFace(chosen);$('avatarPreview').className=`avatar-preview tone-${chosen.tone}`;
  $('avatarSelectedLabel').textContent=`${chosen.name}`;
- $('profileAvatar').textContent=chosen.emoji;$('profileAvatar').className=`panel-emoji avatar-profile tone-${chosen.tone}`;
+ $('profileAvatar').innerHTML=avatarFace(chosen);$('profileAvatar').className=`panel-emoji avatar-profile tone-${chosen.tone}`;
+ $('openManagerBtn').hidden=!canManageCategories();
 }
+$('adminAvatarForm').onsubmit=event=>{
+ event.preventDefault();
+ if($('adminAvatarPin').value!=='1011'){
+  $('adminAvatarPin').value='';$('adminAvatarError').textContent='รหัสไม่ถูกต้อง';$('adminAvatarPin').focus();return;
+ }
+ sessionStorage.setItem(ADMIN_AVATAR_SESSION,String(Date.now()+60*60*1000));
+ $('adminAvatarDialog').close();$('adminAvatarPin').value='';$('adminAvatarError').textContent='';
+ chooseAvatar(avatarById('admin'));
+};
+$('adminAvatarDialog').addEventListener('close',()=>{$('adminAvatarPin').value='';$('adminAvatarError').textContent='';});
+$('adminAvatarCancel').onclick=()=>$('adminAvatarDialog').close();
+setInterval(expireAdminAvatar,15000);
 const builtinCategories ={
   "rov": {
     "name": "ROV · ฮีโร่ 130 รายการ / แยกตามเลนหลัก",
@@ -2111,6 +2145,8 @@ document.addEventListener('keydown',e=>{
 });
 
 async function mutateSharedCategory(key,pack,create=false){
+ expireAdminAvatar();
+ if(!canManageCategories())throw new Error('ต้องปลดล็อกอวาตาร์ Admin ก่อนจัดการหมวดคำ');
  if(!sharedCategoryReady)throw new Error('ยังไม่ได้เชื่อมต่อข้อมูลหมวดส่วนกลาง');
  const recordedAt=Date.now(),actor=String(myName||'ไม่ระบุ').slice(0,30);
  const eventId=`edit_${recordedAt}_${Math.random().toString(36).slice(2,10)}`;
@@ -2273,6 +2309,8 @@ $('minusBtn').onclick=()=>{$('durationInput').value=Math.max(1,Number($('duratio
 $('openManagerBtn').onclick=()=>openManager('homeView');
 $('managerBackBtn').onclick=()=>{showOnly(managerReturn);if(managerReturn==='createView')renderCategoryChoices();};
 function openManager(from){
+ expireAdminAvatar();
+ if(!canManageCategories()){toast('ปลดล็อกอวาตาร์ Admin ก่อนจัดการหมวดคำ','error');return;}
  managerReturn=from;showOnly('managerView');
  if(!editDraft&&Object.keys(library).length)chooseCategory(Object.keys(library)[0]);
  else renderManager();

@@ -17,6 +17,22 @@ function base(mode='whoami_time'){
  return {gameMode:mode,status:'playing',hostId:'a',players,gamePlayers:structuredClone(players),playerProfiles:structuredClone(players),roles:{a:'แมว',b:'สุนัข',c:'ช้าง'},scores:{a:0,b:0,c:0},gamesPlayed:1,turnOrder:['a','b','c'],currentTurnIndex:0,currentRound:1,totalRounds:2,settingValue:1,attempts:{a:1,b:1,c:1},whoTimeRemaining:{a:60000,b:60000,c:60000},turnStartedAt:990000,lastActivityAt:1_000_000};
 }
 test('all game scripts initialize without a splash screen or missing element errors',()=>{const h=loadHub();assert.equal(h.run('typeof renderCryptid'), 'function');assert.deepEqual(h.errors,[]);});
+test('Admin avatar requires a PIN, alone reveals category management and expires after one hour',async()=>{
+ const h=loadHub({addons:false}),dialog=h.element('adminAvatarDialog');
+ dialog.showModal=()=>{dialog.open=true;};dialog.close=()=>{dialog.open=false;dialog.events.close?.();};
+ assert.equal(h.element('openManagerBtn').hidden,true);
+ const admin=h.element('avatarPicker').children.find(button=>button.dataset.avatar==='admin');
+ assert.ok(admin);admin.onclick();assert.equal(dialog.open,true);
+ h.element('adminAvatarPin').value='0000';h.element('adminAvatarForm').onsubmit({preventDefault(){}});
+ assert.equal(h.run('myAvatar'),'fox');assert.equal(h.element('openManagerBtn').hidden,true);
+ h.element('adminAvatarPin').value='1011';h.element('adminAvatarForm').onsubmit({preventDefault(){}});
+ assert.equal(h.run('myAvatar'),'admin');assert.equal(h.element('openManagerBtn').hidden,false);
+ h.element('openManagerBtn').onclick();assert.equal(h.element('managerView').hidden,false);
+ h.now(4_600_001);for(const tick of h.intervals)await tick();
+ assert.equal(h.run('myAvatar'),'fox');assert.equal(h.element('openManagerBtn').hidden,true);assert.equal(h.element('managerView').hidden,true);
+ h.run("openManager('homeView')");assert.equal(h.element('managerView').hidden,true);
+ await assert.rejects(h.run("mutateSharedCategory('x',null)"),/Admin/);
+});
 test('all five arcade screens render after Firebase drops empty children',()=>{
  for(const [mode,count] of [['take6',4],['just_one',3],['wavelength',2],['codenames',4],['fake_artist',5]]){
   const h=loadHub(),r=base(mode);r.status='lobby';r.arcadeCount=count;
