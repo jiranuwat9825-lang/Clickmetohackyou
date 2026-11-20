@@ -110,7 +110,7 @@ const AVATARS=[
 {id:"teddy",name:"ตุ๊กตาหมี",emoji:"🧸",tone:"brown",group:"fantasy"},
 {id:"squid",name:"หมึกน้อย",emoji:"🦑",tone:"coral",group:"animals"},
 {id:"dragon2",name:"มังกรบิน",emoji:"🐉",tone:"green",group:"fantasy"},
-{id:"admin",name:"Admin",emoji:"",tone:"admin",group:"special"}
+{id:"admin",name:"Admin",emoji:"",tone:"admin",group:"fantasy"}
 ];
 const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
 if(!AVATARS.some(a=>a.id===myAvatar)){myAvatar='fox';try{localStorage.setItem('party_game_avatar_v1',myAvatar);}catch(e){}}
@@ -127,8 +127,7 @@ const AVATAR_FILTERS=[
  {id:'all',label:'ทั้งหมด'},
  {id:'animals',label:' สัตว์น่ารัก'},
  {id:'cool',label:' สายเท่'},
- {id:'fantasy',label:' แฟนตาซี'},
- {id:'special',label:' พิเศษ'}
+ {id:'fantasy',label:' แฟนตาซี'}
 ];
 function chooseAvatar(a,announce=true){
  myAvatar=a.id;localStorage.setItem('party_game_avatar_v1',myAvatar);
