@@ -122,6 +122,11 @@ test('Wavelength starts in a human room and renders the private dial',()=>{
  assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
  h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
 });
+test('Codenames renders a team board without exposing other modes',()=>{
+ const h=loadHub(),r=base('codenames');r.status='lobby';r.players.d={name:'D'};r.arcadeCount=4;h.setRoom(r);
+ assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+ h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
+});
 
 test('Insider custom settings control all deadlines and are frozen for an active round',()=>{
  const h=loadHub(),r=base('insider');r.status='lobby';r.players.d={name:'D'};r.insiderSettings={prepSeconds:90,guessSeconds:420,voteSeconds:45,maxGuesses:2};h.setRoom(r);

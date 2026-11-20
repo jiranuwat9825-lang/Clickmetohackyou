@@ -110,3 +110,27 @@ test('Wavelength eight rounds produce a single shared award',()=>{
  assert.equal(r.status,'results');assert.equal(r.arcade.total,32);assert.deepEqual(r.result.winners,r.arcade.order);
  assert.equal(r.scores.p0,1);assert.equal(r.scores.p1,1);
 });
+test('Codenames has a balanced secret board and restricts who may clue and guess',()=>{
+ const r=room('codenames',4);E.setup(r,Object.keys(r.players),()=>.37);
+ const a=r.arcade,master=a.spymasters.red,guesser=a.teams.red.find(id=>id!==master),blue=a.teams.blue.find(id=>id!==a.spymasters.blue);
+ assert.equal(a.words.length,25);assert.equal(new Set(a.words).size,25);
+ assert.deepEqual(Object.values(a.keys).reduce((o,k)=>(o[k]=(o[k]||0)+1,o),{}),{red:9,blue:8,neutral:7,assassin:1});
+ assert.equal(E.view(r,master).cells.every(x=>x.key),true);assert.equal(E.view(r,guesser).cells.every(x=>!x.key),true);
+ assert.equal(E.apply(r,blue,'code_clue',{word:'สัตว์',number:2},0),false);
+ assert.equal(E.apply(r,master,'code_clue',{word:a.words[0],number:2},0),false);
+ assert.equal(E.apply(r,master,'code_clue',{word:'สัตว์',number:2},0),true);
+ assert.equal(E.apply(r,master,'code_guess',0,1),false);
+ const own=a.keys.findIndex(k=>k==='red');assert.equal(E.apply(r,guesser,'code_guess',own,1),true);
+ assert.equal(E.view(r,blue).cells[own].key,'red');
+ assert.equal(E.apply(r,guesser,'code_guess',own,2),false);
+ assert.equal(E.apply(r,guesser,'end_turn',null,2),true);assert.equal(r.arcade.turn,'blue');
+});
+test('Codenames assassin ends immediately and awards only the opposing team',()=>{
+ const r=room('codenames',6);E.setup(r,Object.keys(r.players),()=>.17);
+ const a=r.arcade,master=a.spymasters.red,guesser=a.teams.red.find(id=>id!==master),assassin=a.keys.indexOf('assassin');
+ assert.equal(E.apply(r,master,'code_clue',{word:'รหัส',number:1},0),true);
+ assert.equal(E.apply(r,guesser,'code_guess',assassin,1),true);
+ assert.equal(r.status,'results');assert.deepEqual(r.result.winners,a.teams.blue);
+ for(const id of a.order)assert.equal(r.scores[id]||0,a.teams.blue.includes(id)?1:0);
+ assert.equal(E.apply(r,guesser,'code_guess',0,2),false);
+});

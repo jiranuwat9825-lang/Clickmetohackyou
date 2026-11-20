@@ -5,7 +5,8 @@
  const GAMES={
   take6:{name:'6 nimmt!',min:2,max:10,mark:'Ⅵ',tag:'วางไพ่พร้อมกัน · เลี่ยงแต้มลบ',bots:true},
   just_one:{name:'Just One',min:3,max:7,defaultCount:4,mark:'✎',tag:'ใบ้คำร่วมกัน · คำซ้ำถูกตัด',bots:false,help:'ผู้ทายเลือกเลข 1–5 คนอื่นใบ้หนึ่งคำ · 3–4 คนใบ้คนละสองคำ'},
-  wavelength:{name:'Wavelength',min:2,max:10,defaultCount:4,mark:'◒',tag:'ใบ้ตำแหน่ง · ปรับหน้าปัด',bots:false,help:'เล่นร่วมกัน 8 รอบ คนใบ้เห็นเป้าหมาย คนอื่นช่วยกันปรับหน้าปัด'}
+  wavelength:{name:'Wavelength',min:2,max:10,defaultCount:4,mark:'◒',tag:'ใบ้ตำแหน่ง · ปรับหน้าปัด',bots:false,help:'เล่นร่วมกัน 8 รอบ คนใบ้เห็นเป้าหมาย คนอื่นช่วยกันปรับหน้าปัด'},
+  codenames:{name:'Codenames',min:4,max:10,defaultCount:4,mark:'▦',tag:'ใบ้คำ · ค้นหาสายลับ',bots:false,help:'แบ่งสองทีมอัตโนมัติ ทีมละหนึ่งหัวหน้าสายลับ · ผู้ทายผลัดกันเปิดคำ'}
  };
  const JUST_WORDS='ช้าง,รถไฟ,กาแฟ,ดวงจันทร์,ร่ม,ภูเขา,แมว,ทะเล,นาฬิกา,หุ่นยนต์,จักรยาน,โรงเรียน,ขนมปัง,นักบิน,สะพาน,มะม่วง,กล้อง,พายุ,กระเป๋า,ดอกไม้,คอมพิวเตอร์,ปลาโลมา,หนังสือ,ตู้เย็น,ฟุตบอล,ดวงดาว,เกาะ,ตลาด,เครื่องบิน,ป่า,ผีเสื้อ,น้ำตก,หมวก,เต่า,ช็อกโกแลต,วาฬ,ปราสาท,ลิฟต์,รถเมล์,พิซซ่า,โคมไฟ,สนามบิน,ไอศกรีม,หมาป่า,กีตาร์,สวนสัตว์,ส้ม,เต็นท์,ฝน,หมอน,พัดลม,แม่น้ำ,นักสืบ,เค้ก,มังกร,แมงมุม,โรงหนัง,ลูกโป่ง,โต๊ะ,คีย์บอร์ด,เรือ,รองเท้า,ดินสอ,สายรุ้ง,ปลาหมึก,เสือ,สิงโต,ปรอท,หมากรุก,กล้วย,ท้องฟ้า,รถถัง,ไวโอลิน,โทรศัพท์,น้ำแข็ง,สับปะรด,นักดนตรี,ลูกเต๋า,ประตู,เพชร,กระต่าย,ดาวอังคาร,เรือดำน้ำ,พีระมิด,กังหัน,พรม,อูฐ,หิมะ,สนามเด็กเล่น,เก้าอี้,ปลาวาฬ,แบตเตอรี่,มะเขือเทศ,รถแข่ง,พิพิธภัณฑ์'.split(',');
  const SPECTRA=[['เงียบ','เสียงดัง'],['ธรรมดา','หรูหรา'],['น่าเบื่อ','ตื่นเต้น'],['โบราณ','ทันสมัย'],['เบา','หนัก'],['ปลอดภัย','เสี่ยง'],['ร้อน','เย็น'],['ราคาถูก','ราคาแพง'],['เล็ก','ใหญ่'],['ช้า','เร็ว'],['คุ้นเคย','แปลกใหม่'],['มีประโยชน์','ไร้ประโยชน์'],['เป็นทางการ','สบาย ๆ'],['ส่วนตัว','สาธารณะ'],['จริงจัง','ขำขัน'],['ธรรมชาติ','ประดิษฐ์'],['ง่าย','ยาก'],['น่ากลัว','น่ารัก'],['สั้น','ยาว'],['หวาน','ขม'],['สะอาด','สกปรก'],['สำคัญน้อย','สำคัญมาก']];
@@ -43,7 +44,35 @@
    a.spectra=shuffle(SPECTRA,rng).slice(0,8);a.targets=Array.from({length:8},()=>Math.min(100,Math.floor(rng()*101)));
    a.round=1;a.total=0;a.dial=null;a.clue='';a.phase='clue';a.last=null;
   }
+  if(a.mode==='codenames'){
+   const members=shuffle(a.order,rng);a.teams={red:members.filter((_,i)=>i%2===0),blue:members.filter((_,i)=>i%2===1)};
+   a.spymasters={red:a.teams.red[0],blue:a.teams.blue[0]};
+   a.words=shuffle(JUST_WORDS,rng).slice(0,25);
+   a.keys=shuffle([...Array(9).fill('red'),...Array(8).fill('blue'),...Array(7).fill('neutral'),'assassin'],rng);
+   a.revealed=[];a.remaining={red:9,blue:8};a.turn='red';a.phase='clue';a.clue=null;a.guesses=0;
+  }
   return true;
+ }
+ function codeMove(r,id,type,value){
+  const a=r.arcade,team=a.turn,members=a.teams[team],spymaster=a.spymasters[team];
+  if(a.phase==='clue'&&type==='code_clue'&&id===spymaster&&value&&typeof value.word==='string'&&norm(value.word).length>=1&&norm(value.word).length<=35&&!/\s/.test(norm(value.word))&&!a.words.some(w=>norm(w)===norm(value.word))&&Number.isInteger(value.number)&&value.number>=1&&value.number<=9){
+   a.clue={word:value.word.trim(),number:value.number};a.guesses=0;a.phase='guess';log(a,'code_clue',{by:id,team,...a.clue});return true;
+  }
+  if(a.phase!=='guess'||!members.includes(id)||id===spymaster)return false;
+  if(type==='end_turn'){
+   a.turn=team==='red'?'blue':'red';a.phase='clue';a.clue=null;a.guesses=0;log(a,'code_end',{by:id});return true;
+  }
+  if(type==='code_guess'&&Number.isInteger(value)&&value>=0&&value<25&&!a.revealed.includes(value)){
+   const key=a.keys[value];a.revealed.push(value);a.guesses++;log(a,'code_guess',{by:id,index:value,key});
+   if(key==='assassin'){finish(r,a.teams[team==='red'?'blue':'red']);return true;}
+   if(key==='red'||key==='blue'){
+    a.remaining[key]--;
+    if(a.remaining[key]===0){finish(r,a.teams[key]);return true;}
+   }
+   if(key!==team||a.guesses>=a.clue.number+1){a.turn=team==='red'?'blue':'red';a.phase='clue';a.clue=null;a.guesses=0;}
+   return true;
+  }
+  return false;
  }
  function waveMove(r,id,type,value){
   const a=r.arcade,psychic=a.order[(a.round-1)%a.order.length],setter=a.order[a.round%a.order.length];
@@ -158,7 +187,7 @@
   if(type==='abort'&&id!==r.hostId)return false;
   const next=clone(r);
   const valid=type==='abort'?(next.status='results',next.arcade.phase='finished',next.result={type:r.gameMode,aborted:true,points:0},log(next.arcade,'abort'),true):
-   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value));
+   (next.arcade.mode==='take6'&&take6Move(next,id,type,value,rng)||next.arcade.mode==='just_one'&&justMove(next,id,type,value)||next.arcade.mode==='wavelength'&&waveMove(next,id,type,value)||next.arcade.mode==='codenames'&&codeMove(next,id,type,value));
   if(!valid)return false;
   next.arcade.revision++;
   Object.assign(r,next);return true;
@@ -175,6 +204,11 @@
    const psychic=a.order[(a.round-1)%a.order.length],setter=a.order[a.round%a.order.length];
    return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],round:a.round,total:a.total,spectrum:[...a.spectra[a.round-1]],psychic,setter,clue:a.clue,dial:a.dial,
     target:id===psychic||a.phase==='reveal'||a.phase==='finished'?a.targets[a.round-1]:undefined,last:a.last?clone(a.last):null,result:r.result?clone(r.result):null};
+  }
+  if(a.mode==='codenames'){
+   const master=Object.values(a.spymasters).includes(id),done=r.status==='results';
+   return {mode:a.mode,phase:a.phase,revision:a.revision,order:[...a.order],teams:clone(a.teams),spymasters:{...a.spymasters},turn:a.turn,remaining:{...a.remaining},clue:a.clue?{...a.clue}:null,guesses:a.guesses,
+    cells:a.words.map((word,i)=>({word,key:master||done||a.revealed.includes(i)?a.keys[i]:undefined,revealed:a.revealed.includes(i)})),history:Object.values(a.history).slice(-10),result:r.result?clone(r.result):null};
   }
   return {mode:a.mode,phase:a.phase,revision:a.revision,round:a.round,step:a.step,order:[...a.order],
    people:Object.fromEntries(a.order.map(p=>[p,{penalty:a.people[p].penalty,count:a.people[p].hand.length,hand:p===id?[...a.people[p].hand]:undefined,chosen:Object.hasOwn(a.picks,p)}])),

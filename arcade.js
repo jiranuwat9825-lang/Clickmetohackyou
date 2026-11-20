@@ -102,6 +102,7 @@ function renderArcade(r){
  const key=arcadeKey(r)+':'+arcadeBusy;if(arcadeRenderKey===key)return;arcadeRenderKey=key;
  if(v.mode==='just_one'){renderArcadeJust(r,v,root);return;}
  if(v.mode==='wavelength'){renderArcadeWave(r,v,root);return;}
+ if(v.mode==='codenames'){renderArcadeCode(r,v,root);return;}
  renderArcadeTake6(r,v,root);
 }
 function arcadeBase(root,title,kicker,progress){
@@ -165,6 +166,25 @@ function renderArcadeWave(r,v,root){
   if(setter)arcadeButton(p,v.round===8?'ดูผลเกม':'รอบถัดไป',()=>arcadeSend('next'));
  }
  const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>คนใบ้เห็นตำแหน่งลับระหว่างสองขั้ว แล้วให้คำใบ้ คนอื่นหารือกันและปรับหน้าปัด คนยืนยันเปิดเฉลย</p><p>โหมดร่วมมือ 8 รอบ ใกล้เป้าหมายได้ 1–4 แต้ม รวมอย่างน้อย 16 แต้ม ทุกคนได้ +1 คะแนนในห้อง</p>';root.append(help);
+ arcadeHostControls(root,r,done);
+}
+function renderArcadeCode(r,v,root){
+ const done=r.status==='results',team=v.teams.red.includes(myId)?'red':'blue',master=v.spymasters[team]===myId,active=v.turn===team;
+ const p=arcadeBase(root,'Codenames','สองทีม · หนึ่งคำใบ้',`แดง ${v.remaining.red} · น้ำเงิน ${v.remaining.blue}`);
+ const status=document.createElement('p');status.className='ag-status';status.textContent=done?v.result?.aborted?'ยุติเกมแล้ว':`ทีม${v.teams.red.includes(v.result?.winners?.[0])?'แดง':'น้ำเงิน'}ชนะ`:`ตาทีม${v.turn==='red'?'แดง':'น้ำเงิน'} · คุณอยู่ทีม${team==='red'?'แดง':'น้ำเงิน'}${master?' (หัวหน้าสายลับ)':' (ผู้ทาย)'}`;p.append(status);
+ const roles=document.createElement('div');roles.className='ag-teams';p.append(roles);
+ for(const color of ['red','blue']){const t=document.createElement('div');t.className='ag-team ag-'+color;t.textContent=`ทีม${color==='red'?'แดง':'น้ำเงิน'} · หัวหน้า ${arcadeName(r,v.spymasters[color])} · ${v.teams[color].map(id=>arcadeName(r,id)).join(', ')}`;roles.append(t);}
+ if(!done&&v.phase==='clue'){
+  const t=document.createElement('p');t.textContent=active&&master?'ดูสีของคำบนกระดานแล้วใบ้หนึ่งคำกับจำนวน':`รอหัวหน้าสายลับทีม${v.turn==='red'?'แดง':'น้ำเงิน'}ให้คำใบ้`;p.append(t);
+  if(active&&master){const word=arcadeInput(p,'คำใบ้หนึ่งคำ','ห้ามใช้คำบนกระดาน');word.maxLength=35;const num=document.createElement('label');num.className='ag-field';num.textContent='จำนวนคำที่เกี่ยวข้อง';const count=document.createElement('select');for(let n=1;n<=9;n++){const opt=document.createElement('option');opt.value=n;opt.textContent=n;count.append(opt);}num.append(count);p.append(num);arcadeButton(p,'ส่งคำใบ้',()=>arcadeSend('code_clue',{word:word.value,number:Number(count.value)}));}
+ }
+ if(!done&&v.phase==='guess'){
+  const t=document.createElement('p');t.className='ag-wave-clue';t.textContent=`คำใบ้: ${v.clue.word} · ${v.clue.number}`;p.append(t);
+  if(active&&!master)arcadeButton(p,'จบตา',()=>arcadeSend('end_turn'),true);
+ }
+ const board=document.createElement('div');board.className='ag-code-grid';root.append(board);
+ v.cells.forEach((cell,i)=>{const b=document.createElement('button');b.type='button';b.className='ag-code-cell'+(cell.key?' is-'+cell.key:'')+(cell.revealed?' is-open':'');b.textContent=cell.word;b.disabled=arcadeBusy||done||v.phase!=='guess'||!active||master||cell.revealed;b.title=cell.key&&master?'ทีม '+cell.key:'';b.onclick=()=>arcadeSend('code_guess',i);board.append(b);});
+ const help=document.createElement('details');help.className='ag-details';help.innerHTML='<summary>กติกาสั้น ๆ</summary><p>หัวหน้าสายลับเห็นสีคำทั้งหมด ให้คำใบ้หนึ่งคำพร้อมตัวเลข ผู้ทายเปิดได้ไม่เกินตัวเลข+1 ใบ และหยุดเองได้</p><p>เปิดคำทีมตัวเองให้ครบก่อนชนะ คำกลางหรือคำทีมตรงข้ามจบตา เปิดมือสังหารแพ้ทันที</p>';root.append(help);
  arcadeHostControls(root,r,done);
 }
 function arcadeHostControls(root,r,done){
