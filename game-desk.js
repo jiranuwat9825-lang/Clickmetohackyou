@@ -119,18 +119,3 @@ for (const [mode, game] of Object.entries(deskGames)) {
 }
 $('guideOpen').onclick = () => showGuide(gameFamily(!$('roomView').hidden ? roomState?.gameMode : !$('createView').hidden ? selectedMode : '') || 'spyfall');
 
-$('copyCodeBtn').onclick = async () => {
-  const code = roomState?.roomCode || roomId;
-  if (!code) return;
-  try {
-    await navigator.clipboard.writeText(code);
-    toast('คัดลอกรหัสห้องแล้ว', 'success');
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents($('roomCode'));
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    toast('เลือกรหัสให้แล้ว กดคัดลอกได้เลย');
-  }
-};
