@@ -17,6 +17,24 @@ function base(mode='whoami_time'){
  return {gameMode:mode,status:'playing',hostId:'a',players,gamePlayers:structuredClone(players),playerProfiles:structuredClone(players),roles:{a:'แมว',b:'สุนัข',c:'ช้าง'},scores:{a:0,b:0,c:0},gamesPlayed:1,turnOrder:['a','b','c'],currentTurnIndex:0,currentRound:1,totalRounds:2,settingValue:1,attempts:{a:1,b:1,c:1},whoTimeRemaining:{a:60000,b:60000,c:60000},turnStartedAt:990000,lastActivityAt:1_000_000};
 }
 test('all game scripts initialize without a splash screen or missing element errors',()=>{const h=loadHub();assert.equal(h.run('typeof renderCryptid'), 'function');assert.deepEqual(h.errors,[]);});
+test('confirming a name leaves a remembered room until the player joins it manually',async()=>{
+ const h=loadHub({addons:false,session:{pg_room_v6:'test',pg_tab_id:'a'}});
+ assert.equal(h.run('roomId'),'');
+ assert.equal(h.run("sessionStorage.getItem('pg_room_v6')"),null);
+ assert.equal(h.element('homeView').hidden,false);
+ h.element('nameInput').value='A';h.element('confirmNameBtn').events.click();
+ assert.equal(h.run('nameConfirmed'),true);
+ assert.equal(h.run('roomId'),'');
+ assert.equal(h.element('roomView').hidden,true);
+ const room=base('spyfall');room.status='lobby';h.setRoom(room);
+ h.run("roomId='';roomState=null;renderRoomList({test:testRoom})");
+ const join=h.element('roomList').children[0].children[1];
+ assert.equal(join.textContent,'เข้าร่วม');
+ await join.onclick();
+ assert.equal(h.run('roomId'),'test');
+ assert.equal(h.element('roomView').hidden,false);
+ assert.equal(h.run("sessionStorage.getItem('pg_room_v6')"),'test');
+});
 test('theme switch follows the active theme and keeps the saved preference',()=>{
  const h=loadHub({addons:false}),switcher=h.element('themeToggle');
  assert.equal(switcher['aria-checked'],'false');
