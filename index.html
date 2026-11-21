@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="assets/dice-favicon.svg">
-<link rel="stylesheet" href="style.css?v=lobby-save-spacing-20261121">
+<link rel="stylesheet" href="style.css?v=hero-carousel-20261121">
 <link rel="stylesheet" href="theme-fixes.css?v=contrast-20261120">
 </head>
 <body>
@@ -23,6 +23,13 @@
 <main>
 <section id="homeView" class="home-layout" aria-label="หน้าแรก">
   <div class="club-cover">
+    <div class="cover-slides" aria-hidden="true">
+      <span class="cover-slide is-active" style="background-image:url('assets/tabletop.webp')"></span>
+      <span class="cover-slide" style="background-image:url('assets/hero-chess.webp')"></span>
+      <span class="cover-slide" style="background-image:url('assets/hero-domino.webp')"></span>
+      <span class="cover-slide" style="background-image:url('assets/hero-cards.webp')"></span>
+      <span class="cover-slide" style="background-image:url('assets/hero-hex.webp')"></span>
+    </div>
     <div class="cover-copy"><h1>ตั้งโต๊ะ<br>เล่นเกมกัน</h1><p>เลือกเกม เปิดห้อง แล้วชวนเพื่อน</p></div>
   </div>
   <div class="home-tools">
@@ -350,6 +357,7 @@
   <div id="cryptidClueList" tabindex="0" role="region" aria-label="รายการเบาะแสทั้งหมด"></div>
  </dialog>
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
+<script src="hero-slideshow.js?v=20261121"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js?v=theme-switch-20261121"></script>

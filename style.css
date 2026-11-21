@@ -833,10 +833,14 @@ label, .muted.hint { font-size: 13px; }
 .club-cover {
   isolation: isolate; position: relative; overflow: hidden; border: 1px solid #c4c0b8; border-radius: 16px;
   display: flex; align-items: end; min-height: 350px; align-self: stretch;
-  background: #d8d4ca url("assets/tabletop.webp") center / cover no-repeat;
+  background: #d8d4ca;
 }
-.club-cover::before { content: ""; z-index: -1; position: absolute; inset: 0; background: linear-gradient(90deg,#e6e2d8 0%,#e6e2d8e3 27%,transparent 68%); }
-.cover-copy { padding: clamp(25px, 3.4vw, 48px); }
+.club-cover::before { content: ""; z-index: 1; position: absolute; inset: 0; pointer-events:none; background: linear-gradient(90deg,#e6e2d8 0%,#e6e2d8e3 27%,transparent 68%); }
+.cover-slides,.cover-slide{position:absolute;inset:0;pointer-events:none}
+.cover-slides{z-index:0}
+.cover-slide{background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity 1.1s ease-in-out}
+.cover-slide.is-active{opacity:1}
+.cover-copy { position:relative;z-index:2;padding: clamp(25px, 3.4vw, 48px); }
 .cover-copy h1 { color: #252721; font-size: clamp(43px, 5.2vw, 76px); line-height: 1.13; letter-spacing: -.055em; }
 .cover-copy p { max-width: 320px; margin: 13px 0 22px; font-size: 15px; color: #373b34; }
 .cover-copy .btn { gap: 26px; padding-inline: 20px; }
