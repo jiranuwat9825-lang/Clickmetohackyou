@@ -1243,3 +1243,6 @@ label, .muted.hint { font-size: 13px; }
 .theme-switch[aria-checked="true"] .theme-switch-thumb{transform:translateX(42px);background:#dfe9f4}
 @media(max-width:480px){.topbar .brand{gap:6px}.brand b{font-size:15px}.brand-die{font-size:25px}.theme-switch{flex-basis:72px;width:72px;height:38px;padding:0 9px}.theme-switch-thumb{width:28px;height:28px}.theme-switch[aria-checked="true"] .theme-switch-thumb{transform:translateX(34px)}.theme-switch-sun,.theme-switch-moon{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.theme-switch,.theme-switch-thumb{transition:none}}
+
+/* Keep player-count save actions away from the select and aligned to the right. */
+#tabletopLobbySave,#arcadeLobbySave{display:flex;width:max-content;margin:16px 0 0 auto}
