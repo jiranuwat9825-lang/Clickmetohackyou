@@ -117,5 +117,4 @@ for (const [mode, game] of Object.entries(deskGames)) {
   const mark = tile.firstElementChild.cloneNode(true);
   choice.prepend(mark);
 }
-$('guideOpen').onclick = () => showGuide(gameFamily(!$('roomView').hidden ? roomState?.gameMode : !$('createView').hidden ? selectedMode : '') || 'spyfall');
 
