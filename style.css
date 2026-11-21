@@ -1232,3 +1232,14 @@ label, .muted.hint { font-size: 13px; }
 .admin-avatar-error{min-height:22px;margin:6px 0;color:var(--red);font-size:13px}
 .admin-avatar-actions{display:flex;gap:10px;margin-top:12px}
 .admin-avatar-actions .btn{flex:1}
+
+/* Sun / moon theme switch. The thumb follows the selected theme. */
+.theme-switch{position:relative;display:inline-flex;align-items:center;justify-content:space-between;flex:0 0 84px;width:84px;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#e9ece7;color:var(--text);cursor:pointer;vertical-align:middle;transition:background .2s,border-color .2s}
+.theme-switch:hover{border-color:var(--accent)}
+.theme-switch:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.theme-switch-thumb{position:absolute;z-index:0;left:4px;top:4px;width:32px;height:32px;border-radius:50%;background:#fff;box-shadow:0 1px 5px #0002;transition:transform .22s ease,background .22s ease}
+.theme-switch-sun,.theme-switch-moon{position:relative;z-index:1;display:grid;place-items:center;width:19px;height:19px;font-size:17px;line-height:1}
+.theme-switch[aria-checked="true"]{background:#263444;border-color:#526378}
+.theme-switch[aria-checked="true"] .theme-switch-thumb{transform:translateX(42px);background:#dfe9f4}
+@media(max-width:480px){.topbar .brand{gap:6px}.brand b{font-size:15px}.brand-die{font-size:25px}.theme-switch{flex-basis:72px;width:72px;height:38px;padding:0 9px}.theme-switch-thumb{width:28px;height:28px}.theme-switch[aria-checked="true"] .theme-switch-thumb{transform:translateX(34px)}.theme-switch-sun,.theme-switch-moon{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.theme-switch,.theme-switch-thumb{transition:none}}

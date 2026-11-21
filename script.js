@@ -2226,13 +2226,11 @@ function applyTheme(theme, persist=false){
  const dark=theme==='dark';
  document.documentElement.dataset.theme=dark?'dark':'light';
  document.documentElement.style.colorScheme=dark?'dark':'light';
- const button=$('themeToggle'),icon=$('themeToggleIcon'),label=$('themeToggleLabel');
+ const button=$('themeToggle');
  if(button){
-  button.setAttribute('aria-pressed',String(dark));
-  button.setAttribute('aria-label',dark?'เปลี่ยนเป็นธีมสว่าง':'เปลี่ยนเป็นธีมมืด');
+  button.setAttribute('aria-checked',String(dark));
+  button.title=dark?'เปลี่ยนเป็นธีมสว่าง':'เปลี่ยนเป็นธีมมืด';
  }
- if(icon)icon.textContent=dark?'☀️':'🌙';
- if(label)label.textContent=dark?'ธีมสว่าง':'ธีมมืด';
  const meta=document.querySelector('meta[name="theme-color"]');
  if(meta)meta.content=dark?'#111318':'#f4f3ef';
  if(persist){try{localStorage.setItem(THEME_KEY,dark?'dark':'light');}catch(e){console.warn('Theme preference could not be saved',e);}}

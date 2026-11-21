@@ -17,6 +17,17 @@ function base(mode='whoami_time'){
  return {gameMode:mode,status:'playing',hostId:'a',players,gamePlayers:structuredClone(players),playerProfiles:structuredClone(players),roles:{a:'แมว',b:'สุนัข',c:'ช้าง'},scores:{a:0,b:0,c:0},gamesPlayed:1,turnOrder:['a','b','c'],currentTurnIndex:0,currentRound:1,totalRounds:2,settingValue:1,attempts:{a:1,b:1,c:1},whoTimeRemaining:{a:60000,b:60000,c:60000},turnStartedAt:990000,lastActivityAt:1_000_000};
 }
 test('all game scripts initialize without a splash screen or missing element errors',()=>{const h=loadHub();assert.equal(h.run('typeof renderCryptid'), 'function');assert.deepEqual(h.errors,[]);});
+test('theme switch follows the active theme and keeps the saved preference',()=>{
+ const h=loadHub({addons:false}),switcher=h.element('themeToggle');
+ assert.equal(switcher['aria-checked'],'false');
+ switcher.events.click();
+ assert.equal(switcher['aria-checked'],'true');
+ assert.equal(h.run('document.documentElement.dataset.theme'),'dark');
+ assert.equal(h.run("localStorage.getItem('party_game_theme_v1')"),'dark');
+ switcher.events.click();
+ assert.equal(switcher['aria-checked'],'false');
+ assert.equal(h.run('document.documentElement.dataset.theme'),'light');
+});
 test('Admin avatar requires a PIN, alone reveals category management and expires after one hour',async()=>{
  const h=loadHub({addons:false}),dialog=h.element('adminAvatarDialog');
  dialog.showModal=()=>{dialog.open=true;};dialog.close=()=>{dialog.open=false;dialog.events.close?.();};

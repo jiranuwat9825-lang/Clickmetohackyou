@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="assets/dice-favicon.svg">
-<link rel="stylesheet" href="style.css?v=avatar-grid-20261121">
+<link rel="stylesheet" href="style.css?v=theme-switch-20261121">
 <link rel="stylesheet" href="theme-fixes.css?v=contrast-20261120">
 </head>
 <body>
@@ -17,7 +17,7 @@
 <header class="topbar">
   <div class="brand"><span class="brand-die" aria-hidden="true">⚄</span><b>Party Game Hub</b></div>
   <div class="topbar-actions">
-    <button id="themeToggle" type="button" class="btn outline small" aria-label="เปลี่ยนเป็นธีมมืด" aria-pressed="false"><span id="themeToggleIcon" aria-hidden="true">🌙</span><span id="themeToggleLabel">ธีมมืด</span></button>
+    <button id="themeToggle" type="button" class="theme-switch" role="switch" aria-label="โหมดมืด" aria-checked="false" title="เปลี่ยนเป็นธีมมืด"><span class="theme-switch-thumb" aria-hidden="true"></span><span class="theme-switch-sun" aria-hidden="true">☀️</span><span class="theme-switch-moon" aria-hidden="true">🌙</span></button>
     <button id="guideOpen" type="button" class="btn outline small">คู่มือเกม</button>
   </div>
 </header>
@@ -353,7 +353,7 @@
  <div id="dialog" class="dialog-backdrop" hidden><div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">ยืนยัน</h2><p id="dialogMessage" class="muted"></p><div class="actions"><button id="dialogCancel" class="btn outline">ยกเลิก</button><button id="dialogYes" class="btn primary">ยืนยัน</button></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=admin-fantasy-20261121"></script>
+<script src="script.js?v=theme-switch-20261121"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
 <script src="avalon.js?v=avalon-eight-20261119"></script>
