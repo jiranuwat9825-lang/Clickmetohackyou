@@ -89,32 +89,38 @@
   event(a,'round',{by:a.actor,rank:a.rank||null});
  }
  function validBid(a,bid){return Number.isInteger(bid?.count)&&bid.count>=1&&bid.count<=living(a).length*5&&Number.isInteger(bid.face)&&bid.face>=1&&bid.face<=6&&(!a.last||bid.count>a.last.count||(bid.count===a.last.count&&bid.face>a.last.face));}
+ function resolveLiar(r,id,type,rng){
+  const a=r.tabletop,last=a.last;if(!last||last.by===id||(type==='spot_on'&&a.mode!=='liar_dice'))return false;
+  let truthful,actual=null;
+  if(a.mode==='liar_deck')truthful=last.cards.every(c=>c===a.rank||c==='J');
+  else{actual=living(a).reduce((n,p)=>n+a.people[p].dice.filter(x=>x===last.face).length,0);truthful=type==='spot_on'?actual===last.count:actual>=last.count;}
+  const losers=type==='spot_on'?(truthful?living(a).filter(p=>p!==id):[id]):[truthful?id:last.by];
+  for(const loser of losers){const p=a.people[loser];if(a.mode==='liar_deck'){p.pulls++;p.out=p.pulls===p.trigger;}else{p.penalties++;p.out=p.penalties>=2;}}
+  a.reveal={kind:type,challenger:id,bidder:last.by,loser:losers.length===1?losers[0]:null,losers,truthful,actual,cards:a.mode==='liar_deck'?[...last.cards]:[],dice:a.mode==='liar_dice'?Object.fromEntries(living(a).concat(losers).map(p=>[p,[...a.people[p].dice]])):{},out:losers.some(p=>a.people[p].out),outPlayers:losers.filter(p=>a.people[p].out),starter:type==='spot_on'&&truthful?id:losers[0]};
+  event(a,'reveal',a.reveal);a.ready={};a.phase='reveal';finish(r);return true;
+ }
  function liarApply(r,id,type,value,rng){
   const a=r.tabletop;
   if(type==='ready'){
    if(a.phase!=='reveal'||!living(a).includes(id)||a.ready?.[id])return false;a.ready||={};a.ready[id]=true;
-   if(living(a).every(p=>a.ready[p]))liarRound(a,rng,a.reveal.loser);return true;
+   if(living(a).every(p=>a.ready[p]))liarRound(a,rng,a.reveal.starter);return true;
   }
   if(a.phase!=='action'||a.actor!==id)return false;
   if(type==='play'&&a.mode==='liar_deck'){
    const hand=a.people[id].hand;
-   if(!Array.isArray(value)||value.length<1||value.length>3||new Set(value).size!==value.length||!value.every(n=>Number.isInteger(n)&&n>=0&&n<hand.length)||living(a).filter(p=>a.people[p].hand.length).length===1&&a.last)return false;
+   if(!Array.isArray(value)||value.length<1||value.length>3||new Set(value).size!==value.length||!value.every(n=>Number.isInteger(n)&&n>=0&&n<hand.length))return false;
    if(a.last)a.discard.push(...a.last.cards);
    const cards=value.map(i=>hand[i]);a.people[id].hand=hand.filter((_,i)=>!value.includes(i));a.last={by:id,cards,count:cards.length};
-   event(a,'play',{by:id,count:cards.length,rank:a.rank});a.actor=nextAfter(a,id,living(a).filter(p=>a.people[p].hand.length));return true;
+   event(a,'play',{by:id,count:cards.length,rank:a.rank});const holders=living(a).filter(p=>a.people[p].hand.length);
+   if(!holders.length){liarRound(a,rng,nextAfter(a,id));return true;}
+   a.actor=nextAfter(a,id,holders);
+   if(holders.length===1&&holders[0]!==id)return resolveLiar(r,holders[0],'challenge',rng);
+   return true;
   }
   if(type==='bid'&&a.mode==='liar_dice'){
    if(!validBid(a,value))return false;a.last={by:id,count:value.count,face:value.face};event(a,'bid',a.last);a.actor=nextAfter(a,id);return true;
   }
-  if(type==='challenge'){
-   if(!a.last||a.last.by===id)return false;const last=a.last;let truthful,actual=null;
-   if(a.mode==='liar_deck')truthful=last.cards.every(c=>c===a.rank||c==='J');
-   else{actual=living(a).reduce((n,p)=>n+a.people[p].dice.filter(x=>x===last.face).length,0);truthful=actual>=last.count;}
-   const loser=truthful?id:last.by,p=a.people[loser];
-   if(a.mode==='liar_deck'){p.pulls++;p.out=p.pulls===p.trigger;}else{p.penalties++;p.out=p.penalties>=2;}
-   a.reveal={challenger:id,bidder:last.by,loser,truthful,actual,cards:a.mode==='liar_deck'?[...last.cards]:[],dice:a.mode==='liar_dice'?Object.fromEntries(living(a).concat(p.out?[loser]:[]).map(p=>[p,[...a.people[p].dice]])):{},out:p.out};
-   event(a,'reveal',a.reveal);a.ready={};a.phase='reveal';finish(r);return true;
-  }
+  if(type==='challenge'||type==='spot_on')return resolveLiar(r,id,type,rng);
   return false;
  }
  function apply(r,id,type,value,revision,rng=Math.random){
@@ -165,6 +171,8 @@
   }
   const dice=v.people[id].dice,total=v.alive.length*5,unknown=total-5;
   function probability(b){const have=dice.filter(n=>n===b.face).length,need=Math.max(0,b.count-have);if(need>unknown)return 0;let result=0;for(let k=need;k<=unknown;k++){let comb=1;for(let j=1;j<=k;j++)comb=comb*(unknown-j+1)/j;result+=comb*(1/6)**k*(5/6)**(unknown-k);}return result;}
+  function exactProbability(b){const need=b.count-dice.filter(n=>n===b.face).length;if(need<0||need>unknown)return 0;let comb=1;for(let j=1;j<=need;j++)comb=comb*(unknown-j+1)/j;return comb*(1/6)**need*(5/6)**(unknown-need);}
+  if(v.last&&exactProbability(v.last)>.38)return {id,type:'spot_on'};
   if(v.last&&probability(v.last)<.34)return {id,type:'challenge'};
   let best=null,score=-1;
   for(let count=v.last?.count||1;count<=total;count++)for(let face=1;face<=6;face++){
