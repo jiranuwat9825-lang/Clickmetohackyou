@@ -64,7 +64,7 @@ test('Admin avatar requires a PIN, alone reveals category management and expires
  await assert.rejects(h.run("mutateSharedCategory('x',null)"),/Admin/);
 });
 test('all five arcade screens render after Firebase drops empty children',()=>{
- for(const [mode,count] of [['take6',4],['just_one',3],['wavelength',2],['codenames',4],['fake_artist',5]]){
+ for(const [mode,count] of [['take6',4],['just_one',3],['wavelength',2],['codenames',4],['fake_artist',4]]){
   const h=loadHub(),r=base(mode);r.status='lobby';r.arcadeCount=count;
   r.players=Object.fromEntries(Array.from({length:count},(_,i)=>[String.fromCharCode(97+i),{name:'Player '+i}]));
   h.setRoom(r);assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
@@ -224,9 +224,11 @@ test('Codenames renders a team board without exposing other modes',()=>{
  assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
  h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);
 });
-test('Fake Artist starts a human room and renders topic and drawing safely',()=>{
- const h=loadHub(),r=base('fake_artist');r.status='lobby';r.players.d={name:'D'};r.players.e={name:'E'};r.arcadeCount=5;h.setRoom(r);
- assert.equal(h.run('ArcadeEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+test('Fake Artist starts a four-person human room and renders topic and drawing safely',async()=>{
+ const h=loadHub(),r=base('fake_artist');r.status='lobby';r.players.d={name:'D'};r.arcadeCount=4;h.setRoom(r);
+ h.run('chooseMode("fake_artist")');assert.equal(h.element('arcadeCreateCount').value,'4');
+ h.run('renderArcadeRoom(roomState)');assert.equal(h.element('startBtn').disabled,false);
+ await h.element('startBtn').onclick();h.sync();assert.equal(h.getRoom().status,'arcade_playing');
  h.run('roomState=testRoom;renderArcadeRoom(roomState)');assert.deepEqual(h.errors,[]);
  h.run('ArcadeEngine.apply(testRoom,testRoom.arcade.master,"topic",{category:"สัตว์",secret:"วาฬ"},testRoom.arcade.revision);roomState=testRoom;renderArcadeRoom(roomState)');
  assert.equal(h.element('arcadeScreen').hidden,false);assert.deepEqual(h.errors,[]);

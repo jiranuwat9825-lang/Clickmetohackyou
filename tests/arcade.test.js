@@ -191,6 +191,18 @@ function fakeReady(){
  const a=r.arcade;assert.equal(E.apply(r,a.master,'topic',{category:'สัตว์',secret:'นกเพนกวิน'},0),true);
  return r;
 }
+test('Fake Artist plays a complete four-player game with three artists and a single award',()=>{
+ let r=room('fake_artist',4);assert.equal(E.GAMES.fake_artist.min,4);assert.equal(E.setup(r,Object.keys(r.players),()=>.23),true);
+ r=stored(r);const a=r.arcade,fake=a.fake,real=a.artists.filter(id=>id!==fake);
+ assert.equal(a.artists.length,3);assert.equal(new Set([a.master,...a.artists]).size,4);
+ assert.equal(E.apply(r,a.master,'topic',{category:'สัตว์',secret:'วาฬ'},a.revision),true);r=stored(r);
+ for(let i=0;i<6;i++){assert.equal(E.apply(r,a.artists[i%3],'draw',[[10,10],[20,20]],r.arcade.revision),true);r=stored(r);}
+ assert.equal(r.arcade.phase,'vote');
+ for(const id of a.artists){assert.equal(E.apply(r,id,'vote',id===fake?real[0]:fake,r.arcade.revision),true);r=stored(r);}
+ assert.equal(r.arcade.phase,'fake_guess');assert.equal(E.apply(r,fake,'fake_guess','ผิด',r.arcade.revision),true);
+ assert.deepEqual(r.result.winners,real);for(const id of real)assert.equal(r.scores[id],1);
+ assert.equal(E.apply(r,fake,'fake_guess','วาฬ',r.arcade.revision),false);
+});
 test('Fake Artist hides the word and fake identity, then collects two drawing passes',()=>{
  const r=fakeReady(),a=r.arcade,fake=a.fake,real=a.artists.find(id=>id!==fake);
  assert.equal(E.view(r,fake).secret,undefined);assert.equal(E.view(r,real).secret,'นกเพนกวิน');
