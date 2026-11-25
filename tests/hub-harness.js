@@ -26,7 +26,7 @@ module.exports=function loadHub(options={}){
  class Clock extends Date{static now(){return now;}}
  const session=store();for(const [key,value] of Object.entries(options.session||{}))session.setItem(key,value);
  const context=vm.createContext({document,firebase,console:{log(){},info(){},warn(){},error(...args){errors.push(args);}},localStorage:store(),sessionStorage:session,setTimeout(){return 1;},clearTimeout(){},setInterval(fn){intervals.push(fn);return intervals.length;},Date:Clock,Math,structuredClone,window:{matchMedia:()=>({matches:false}),location:{}},navigator:{clipboard:{writeText:async()=>{}}},URL,URLSearchParams});
- for(const file of (options.addons===false?['script.js']:['script.js','insider.js','whoami_custom.js','avalon.js','cryptid-engine.js','cryptid.js','cheese-engine.js','cheese.js','tabletop-engine.js','tabletop.js','arcade-engine.js','arcade.js']))vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});
+ for(const file of (options.addons===false?['script.js']:['script.js','forbidden-engine.js','forbidden.js','insider.js','whoami_custom.js','avalon.js','cryptid-engine.js','cryptid.js','cheese-engine.js','cheese.js','tabletop-engine.js','tabletop.js','arcade-engine.js','arcade.js']))vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});
  return {run:s=>vm.runInContext(s,context),element:id=>document.getElementById(id),errors,intervals,listeners,now:v=>{now=v;},getRoom:()=>state,setRoom(r,me='a'){
   state=structuredClone(r);context.testRoom=structuredClone(r);context.testMe=me;
   vm.runInContext("roomId='test';myId=testMe;myName=testMe;nameConfirmed=true;roomState=testRoom;isHost=roomState.hostId===myId;",context);

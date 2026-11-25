@@ -66,6 +66,7 @@
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
+<button type="button" class="choice mode" data-mode="forbidden"><strong>คำต้องห้าม</strong><small>ล่อให้เพื่อนพูดคำบนหัว · 5 นาที</small></button>
 <button type="button" class="choice mode" data-mode="cheese"><strong>Steal Cheese</strong><small>หนูขโมยชีส · 4–8 คน</small></button>
 <button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 8–10 คน</small></button>
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid</strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
@@ -128,6 +129,7 @@
 <label><input type="checkbox" value="spyfall"> Spyfall</label>
 <label><input type="checkbox" value="whoami_time"> Who Am I จับเวลา</label>
 <label><input type="checkbox" value="whoami_rounds"> Who Am I นับรอบ</label>
+<label><input type="checkbox" value="forbidden"> คำต้องห้าม</label>
 </div>
 <div class="subhead"><h3>กลุ่มย่อยและรายการคำ</h3><button id="addGroupBtn" class="btn soft small">＋ เพิ่มกลุ่ม</button></div>
 <p class="muted hint">ใส่คำละหนึ่งบรรทัด หรือคั่นด้วยจุลภาค</p><div id="groupEditors" class="groups-edit"></div>
@@ -210,6 +212,7 @@
 </div>
 </section>
 <section id="cheeseScreen" class="panel page cheese-page" hidden><div id="cheeseContent"></div></section>
+<section id="forbiddenScreen" class="panel page forbidden-page" hidden><div id="forbiddenContent"></div></section>
 <section id="cryptidScreen" class="panel page cryptid-page" hidden><div id="cryptidContent"></div></section>
 <section id="tabletopScreen" class="panel page tabletop-page" hidden><div id="tabletopContent"></div></section>
 <section id="arcadeScreen" class="panel page tabletop-page" hidden><div id="arcadeContent"></div></section>
@@ -361,6 +364,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js?v=theme-switch-20261121"></script>
+<script src="forbidden-engine.js?v=forbidden-20261125"></script>
+<script src="forbidden.js?v=forbidden-20261125"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
 <script src="avalon.js?v=avalon-eight-20261119"></script>
