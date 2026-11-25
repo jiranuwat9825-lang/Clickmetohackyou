@@ -71,7 +71,7 @@ function tabletopLog(entry,r){const name=id=>tabletopName(r,id);switch(entry.typ
 function renderTabletop(r){
  const v=TT.view(r,myId),root=$('tabletopContent');if(!v){root.textContent='กำลังโหลดเกม…';return;}
  const key=tabletopKey(r)+':'+tabletopBusy+':'+Object.keys(r.players||{}).join(',');if(tabletopRenderKey===key)return;tabletopRenderKey=key;
- const roundKey=[roomId,r.gameMode,r.gamesPlayed,v.round].join(':');if(tabletopRoundKey!==roundKey){tabletopRoundKey=roundKey;tabletopUI.show=false;tabletopUI.selected.clear();}
+ const roundKey=[roomId,r.gameMode,r.gamesPlayed,v.round].join(':');if(tabletopRoundKey!==roundKey){tabletopRoundKey=roundKey;tabletopUI.show=r.gameMode==='liar_deck'||r.gameMode==='liar_dice';tabletopUI.selected.clear();}
  if(tabletopUI.revision!==v.revision){tabletopUI.selected.clear();tabletopUI.revision=v.revision;tabletopUI.count=v.last?.count||1;tabletopUI.face=v.last&&v.last.face<6?v.last.face+1:1;if(v.last?.face===6)tabletopUI.count++;}
  const meta=TT.GAMES[v.mode],name=id=>esc(tabletopName(r,id)),me=v.people[myId],done=r.status==='results';
  const phaseLabel=v.phase==='loss'?'เลือกไพ่ที่เสียอิทธิพล':v.phase==='proof'?'พิสูจน์บทบาทที่อ้าง':v.phase==='exchange'?'เลือกไพ่เก็บ':v.phase==='claim'?'ท้าพิสูจน์บทบาทได้':v.phase==='block'?'ขวางแอ็กชันได้':v.phase==='counter'?'ท้าพิสูจน์การขวางได้':v.phase==='reveal'?'เปิดผลการท้า':done?'จบเกม':v.actor===myId?'ถึงตาคุณ':'ตาของ '+tabletopName(r,v.actor);

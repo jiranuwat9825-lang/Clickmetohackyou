@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const loadHub=require('./hub-harness');
 const plain=v=>JSON.parse(JSON.stringify(v));
 function databaseShape(value){
@@ -77,6 +78,32 @@ test('all five arcade screens render after Firebase drops empty children',()=>{
 test('room browser names all new games before optional game scripts load',()=>{
  const h=loadHub({addons:false});
  for(const [mode,title] of [['take6','6 nimmt!'],['just_one','Just One'],['wavelength','Wavelength'],['codenames','Codenames'],['fake_artist','A Fake Artist Goes to New York']])assert.equal(h.run(`modeTitle(${JSON.stringify(mode)})`),title);
+});
+test('a shared category library awaiting migration still offers the bundled Forbidden Word packs',()=>{
+ const h=loadHub();h.element('categoryHistoryOverlay').hidden=true;
+ h.run('applySharedCategoryDocument(JSON.stringify({categories:{sample:{name:"Sample",groups:{words:["one","two"]},enabledModes:["whoami_time"]}}}))');
+ assert.equal(h.run('Object.keys(library).filter(key=>key.startsWith("forbidden_")).length'),4);
+ h.run('chooseMode("forbidden")');
+ assert.equal(h.element('categoryOptions').children.length,4);
+});
+test('Liar’s Deck and Dice expose the player’s hand at the start of each round',()=>{
+ for(const mode of ['liar_deck','liar_dice']){
+  const h=loadHub(),r=base(mode);r.status='lobby';r.tabletopCount=4;r.players.d={name:'D'};
+  h.setRoom(r);assert.equal(h.run('TabletopEngine.setup(testRoom,Object.keys(testRoom.players))'),true);
+  h.setRoom(plain(h.run('testRoom')));h.run('renderTabletopRoom(roomState)');
+  assert.equal(h.run('tabletopUI.show'),true,mode);
+  assert.equal(h.element('tabletopScreen').hidden,false,mode);
+ }
+});
+test('the home game guide opens room creation with its game selected',()=>{
+ const elements=new Map(),selected=[];
+ const element=id=>{if(!elements.has(id))elements.set(id,{hidden:id==='createView',open:false,children:[],append(child){this.children.push(child);},replaceChildren(...children){this.children=children;},showModal(){this.open=true;},close(){this.open=false;},click(){this.hidden=false;element('createView').hidden=false;}});return elements.get(id);};
+ const context=vm.createContext({$:element,chooseMode:mode=>selected.push(mode),document:{createElement:()=>({children:[],firstElementChild:{cloneNode:()=>({})},append(child){this.children.push(child);},setAttribute(){}}),querySelector:()=>({prepend(){}})}});
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../game-desk.js'),'utf8'),context);
+ vm.runInContext('showGuide("forbidden")',context);
+ assert.equal(element('gameGuide').open,true);
+ element('guideBody').children.at(-1).onclick();
+ assert.deepEqual(selected,['forbidden']);assert.equal(element('createView').hidden,false);assert.equal(element('gameGuide').open,false);
 });
 test('connected rooms keep alive while players talk without pointer or keyboard input',async()=>{
  const h=loadHub(),r=base('spyfall');h.setRoom(r);h.now(1_050_000);

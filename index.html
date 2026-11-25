@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="assets/dice-favicon.svg">
-<link rel="stylesheet" href="style.css?v=hero-carousel-20261121">
+<link rel="stylesheet" href="style.css?v=game-controls-20261125">
 <link rel="stylesheet" href="theme-fixes.css?v=contrast-20261120">
 </head>
 <body>
@@ -66,7 +66,7 @@
 <button class="choice mode" data-mode="spyfall"><strong>Spyfall</strong><small>จับสายลับ</small></button>
 <button class="choice mode" data-mode="whoami"><strong>Who Am I</strong><small>ทายว่าฉันคือใคร</small></button>
 <button type="button" class="choice mode" data-mode="insider"><strong>Insider</strong><small>หาคำตอบและจับจอมบงการ</small></button>
-<button type="button" class="choice mode" data-mode="forbidden"><strong>คำต้องห้าม</strong><small>ล่อให้เพื่อนพูดคำบนหัว · 5 นาที</small></button>
+<button type="button" class="choice mode" data-mode="forbidden"><strong>Forbidden Word</strong><small>ล่อให้เพื่อนพูดคำบนหัว · 5 นาที</small></button>
 <button type="button" class="choice mode" data-mode="cheese"><strong>Steal Cheese</strong><small>หนูขโมยชีส · 4–8 คน</small></button>
 <button type="button" class="choice mode" data-mode="avalon"><strong>Avalon</strong><small>ภารกิจลับ · 8–10 คน</small></button>
 <button type="button" class="choice mode" data-mode="cryptid"><strong>Cryptid</strong><small>ไขเบาะแส · ตามหาสัตว์ลึกลับ</small></button>
@@ -129,7 +129,7 @@
 <label><input type="checkbox" value="spyfall"> Spyfall</label>
 <label><input type="checkbox" value="whoami_time"> Who Am I จับเวลา</label>
 <label><input type="checkbox" value="whoami_rounds"> Who Am I นับรอบ</label>
-<label><input type="checkbox" value="forbidden"> คำต้องห้าม</label>
+<label><input type="checkbox" value="forbidden"> Forbidden Word</label>
 </div>
 <div class="subhead"><h3>กลุ่มย่อยและรายการคำ</h3><button id="addGroupBtn" class="btn soft small">＋ เพิ่มกลุ่ม</button></div>
 <p class="muted hint">ใส่คำละหนึ่งบรรทัด หรือคั่นด้วยจุลภาค</p><div id="groupEditors" class="groups-edit"></div>
@@ -363,9 +363,9 @@
 <script src="hero-slideshow.js?v=20261121"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="script.js?v=theme-switch-20261121"></script>
+<script src="script.js?v=game-controls-20261125"></script>
 <script src="forbidden-engine.js?v=forbidden-20261125"></script>
-<script src="forbidden.js?v=forbidden-20261125"></script>
+<script src="forbidden.js?v=game-controls-20261125"></script>
 <script src="insider.js?v=hub-update-20261118"></script>
 <script src="whoami_custom.js?v=who-custom-settings-20261119"></script>
 <script src="avalon.js?v=avalon-eight-20261119"></script>
@@ -374,9 +374,9 @@
 <script src="cheese-engine.js?v=hub-update-20261118"></script>
 <script src="cheese.js?v=streamlined-20261119"></script>
 <script src="tabletop-engine.js?v=table-games-20261120"></script>
-<script src="tabletop.js?v=table-games-20261120"></script>
+<script src="tabletop.js?v=game-controls-20261125"></script>
 <script src="arcade-engine.js?v=firebase-state-20261121"></script>
 <script src="arcade.js?v=fake-artist-20261121"></script>
-<script src="game-desk.js?v=guide-header-20261121"></script>
+<script src="game-desk.js?v=game-controls-20261125"></script>
 </body>
 </html>

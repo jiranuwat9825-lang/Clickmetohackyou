@@ -15,7 +15,7 @@ const deskGames = {
     'ช่วยกันถามและทายให้ทันเวลา Insider ต้องพาเพื่อนไปถึงคำตอบโดยไม่ถูกจับได้',
     'เมื่อทายถูก ให้โหวตหา Insider จับได้คนอื่นได้คนละ 1 คะแนน ถ้ารอด Insider ได้ 2 คะแนน'
   ]},
-  forbidden: {name:'คำต้องห้าม',seats:'2 คนขึ้นไป',mark:'✦',rules:[
+  forbidden: {name:'Forbidden Word',seats:'2 คนขึ้นไป',mark:'✦',rules:[
     'เลือกหมวดคำก่อนสร้างห้อง ระบบสุ่มคำต่างกันให้ทุกคนเมื่อเริ่มเกม',
     'เห็นคำของเพื่อนแต่ไม่เห็นคำของตัวเอง ซ่อนหรือแสดงคำของเพื่อนแต่ละคนได้บนหน้าจอของคุณ',
     'คุยและชวนเพื่อนให้เผลอพูดคำบนหัวของตัวเอง หากพูดแล้วให้กดปุ่ม “ตาย”',
@@ -108,6 +108,10 @@ function showGuide(mode) {
   count.textContent = game.seats;
   $('guideBody').replaceChildren(count, steps);
   if(game.source){const link=document.createElement('a');link.href=game.source;link.target='_blank';link.rel='noopener';link.textContent='กติกาจากผู้สร้างเกม';$('guideBody').append(link);}
+  const play=document.createElement('button');play.type='button';play.className='btn primary full';play.textContent='เล่นเกมนี้';play.onclick=()=>{
+    $('gameGuide').close();$('openCreateBtn').click();
+    if(!$('createView').hidden)chooseMode(mode==='whoami'?'whoami_time':mode);
+  };$('guideBody').append(play);
   if (!$('gameGuide').open) $('gameGuide').showModal();
 }
 

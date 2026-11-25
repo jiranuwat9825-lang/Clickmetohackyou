@@ -34,6 +34,7 @@ test('room controls select a new word category, start, hide words independently,
  r.players.p1={name:'B'};r.players.p2={name:'C'};h.setRoom(r,r.hostId);await h.element('startBtn').onclick();r=h.getRoom();
  assert.equal(r.status,'playing');assert.equal(r.forbidden.deadline,1_300_000);assert.equal(new Set(Object.values(r.forbidden.words)).size,3);
  h.setRoom(r,r.hostId);h.run('renderRoom(roomState)');assert.equal(h.element('forbiddenScreen').hidden,false);
+ assert.equal(h.element('roomMeta').textContent.startsWith('Forbidden Word · คำติดปาก'),true);
  const first=h.element('forbiddenCards').children.find(c=>c.children[2]);assert.ok(first);const other=h.element('forbiddenCards').children.find(c=>c!==first&&c.children[2]);
  const visible=other.children[1].textContent;first.children[2].onclick();
  assert.equal(h.element('forbiddenCards').children.find(c=>c.children[0].children[0].textContent===first.children[0].children[0].textContent).children[1].textContent,'••••••');

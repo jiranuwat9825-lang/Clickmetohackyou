@@ -42,7 +42,7 @@ function renderForbidden(r){
  const v=ForbiddenEngine.view(r,myId),root=$('forbiddenContent');if(!v){root.textContent='กำลังโหลดเกม…';return;}
  const key=roomId+':'+r.gamesPlayed;if(forbiddenRoundKey!==key){forbiddenRoundKey=key;forbiddenHidden=new Set();}
  const done=r.status==='results',alive=v.order.filter(id=>!v.dead[id]);
- root.innerHTML='<div class="forbidden-head"><div><span class="forbidden-kicker">พูดคุย · ล่อให้เพื่อนหลุดคำ</span><h2>คำต้องห้าม</h2><p>คุณจะไม่เห็นคำของตัวเอง · ซ่อนคำของเพื่อนบนหน้าจอนี้ได้ทีละคน</p></div><div class="forbidden-clock"><small>เวลาที่เหลือ</small><strong id="forbiddenTimer">05:00</strong></div></div><div id="forbiddenMessage" class="forbidden-message" role="status"></div><div id="forbiddenCards" class="forbidden-cards"></div><div id="forbiddenActions" class="forbidden-actions"></div>';
+ root.innerHTML='<div class="forbidden-head"><div><span class="forbidden-kicker">พูดคุย · ล่อให้เพื่อนหลุดคำ</span><h2>Forbidden Word</h2><p>คุณจะไม่เห็นคำของตัวเอง · ซ่อนคำของเพื่อนบนหน้าจอนี้ได้ทีละคน</p></div><div class="forbidden-clock"><small>เวลาที่เหลือ</small><strong id="forbiddenTimer">05:00</strong></div></div><div id="forbiddenMessage" class="forbidden-message" role="status"></div><div id="forbiddenCards" class="forbidden-cards"></div><div id="forbiddenActions" class="forbidden-actions"></div>';
  const message=$('forbiddenMessage');
  if(done)message.textContent=v.result?.reason==='time'?'หมดเวลา · ผู้ที่ยังอยู่ชนะร่วมกัน':'เหลือผู้รอดคนสุดท้าย · ชนะ!';
  else message.textContent=v.dead[myId]?'คุณตายแล้ว · ช่วยฟังเพื่อนต่อได้':`เหลือ ${alive.length} คน · เมื่อพูดคำของตัวเอง ให้กด “ตาย”`;
